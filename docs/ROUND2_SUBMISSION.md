@@ -35,10 +35,18 @@ The main workflow (Connect → Reconstruct → Verify → Review → Handover) r
 11. **Day-one handover.** Each reader gets an ownership-transfer table, an ordered list of first-week actions, risks and blockers, and decisions with how things run. It is built by code only from approved claims that reader may see. Gap rows read exactly "No answer found in your view. It may be undocumented or restricted" and look the same whether an item is missing or hidden. There is a Request access button, and only the reviewer sees the real reason behind a request.
 12. **Versions and receipts.** Approved versions are immutable snapshots with a SHA-256 hash and can be retracted. The incoming person acknowledges each item. There is an audit log of who did what.
 13. **Leak and guard tests, runnable in the app and in Node:**
-    - 44 quote mutations (changed digit, negation or identifier, wrong source) with 0 false accepts;
+    - 44 quote mutations on the sample (changed digit, negation or identifier, wrong source) with 0 false accepts (the proposal targeted about 100);
     - a canary scan across 3 readers with 0 canaries;
     - a differential test where removing a hidden source leaves each reader's output byte-identical;
-    - a check that gap rows have an identical shape.
+    - a check that gap rows have an identical shape;
+    - a planted-injection test: an "ignore previous instructions" message is quarantined, never becomes a claim, and no link is rendered.
+14. **Timeline.** Decisions, ownership changes and open discussions are shown in date order in Reconstruct (with superseded facts kept as history). Each reader's handover also has its own timeline, built only from what that reader may see.
+15. **Leaver dispute.** The departing lead can dispute any claim about their work, with a note. A disputed claim is held out of every new version, and the publish gate blocks, until the reviewer rules: keep the claim, or agree and reject it.
+16. **Reviewer can answer gaps (sudden exit).** When the leaver can't be reached, the reviewer answers the gaps instead. Those answers are labelled "Stated by Prof. Rao" and unanswered gaps stay visible to readers.
+17. **Draft status.** The Studio shows "Draft · not shared" until a version is approved, then the approved version. The view-as preview is marked as a draft.
+18. **Review cap.** At most 60 claims reach review, chosen by checklist weight. Any held-back claims are counted and explained.
+19. **Rejections survive a re-run.** A claim the reviewer rejected stays rejected when Reconstruct runs again, as long as it comes from the same source and quote ("returns only with new evidence").
+20. **Guidance for judges.** Every Studio step shows the next action with a button. **Fast-forward the demo review** makes the standard reviewer decisions, logged and changeable, and stops at the publish gate, so a person still makes the final decision. It never overrules a leaver dispute.
 
 ## Technology and implementation
 
@@ -58,7 +66,6 @@ The main workflow (Connect → Reconstruct → Verify → Review → Handover) r
 | Hosted LLM proposes claims; a second model call does the support check | Deterministic extraction rules and a lexical support check | It's free and works offline, so judges always get the same results, and there is no API key to leak. The quote verifier is the same code either way. |
 | RapidFuzz for fuzzy matching | Our own Levenshtein distance with sliding windows | No dependencies in the browser. It keeps the sliding-window behaviour the plan required for long quotes. |
 | pytest in CI | `node:test` (CI not wired yet) | Same language as the engine. |
-| Timeline view | Decisions sorted by date inside the handover | Time; a dedicated timeline is polish. |
 | PDF importer | Not built | It was on the plan's cut list. |
 
 Kept as planned: the Core Rule, the labels, the exact gap text, the reviewer's view-as and publish gate, the manual gap interview in Round 2, seeded demo personas, and the rule that nothing is shared before approval.

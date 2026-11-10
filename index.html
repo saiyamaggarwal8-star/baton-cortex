@@ -7,10 +7,14 @@
 <meta name="description" content="Baton turns scattered project activity into a handover where every statement cites its evidence, every gap is labelled, and each reader sees only what they may see.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap">
-<link rel="stylesheet" href="css/base.css?v=5">
-<link rel="stylesheet" href="css/studio.css?v=5">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23c9e2d3'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-family='Arial' font-weight='900' font-size='32' fill='%23192720'%3Eb.%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
+<link rel="stylesheet" href="css/base.css?v=12">
+<link rel="stylesheet" href="css/studio.css?v=10">
+<link rel="stylesheet" href="css/theme.css?v=19">
+<link rel="stylesheet" href="css/circular-carousel.css?v=1">
+<link rel="stylesheet" href="vendor/lenis.css">
+<link rel="stylesheet" href="css/motion.css?v=10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23F28C38'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-family='Arial' font-weight='900' font-size='32' fill='%23192720'%3Eb.%3C/text%3E%3C/svg%3E">
 </head>
 <body>
 <div class="shell">
@@ -35,54 +39,41 @@
 <main>
 <!-- LANDING -->
 <section class="landing" id="landing">
- <div class="welcome">
+ <section class="hero" aria-labelledby="heroTitle">
+  <div class="hero-main">
    <div>
-     <div class="eyebrow">TEAM CORTEX · VERIFIABLE KNOWLEDGE HANDOVER</div>
-     <h1>Projects move forward. Knowledge stays.</h1>
-     <p style="max-width:720px;line-height:1.65">When someone leaves a project, Baton rebuilds what they knew from your notes, chats, task boards and GitHub as small claims, each with an exact source quote that code checks. The newcomer gets a handover written only from those claims, limited to what they are allowed to see. Anything Baton cannot prove is shown as a labelled gap.</p>
-     <div class="hero-cta">
-       <a class="btn btn-primary" href="#/studio/connect" data-start-sample>Try it with the Meridian sample →</a>
-       <a class="btn btn-ghost" href="#/studio/connect">Start with your own sources</a>
-       <a class="btn btn-ghost" href="#/spec/meridian">Read the product spec</a>
-     </div>
+    <span class="hero-badge"><span class="hero-badge-dot"></span>WRITES ONLY WHAT IT CAN CITE</span>
+    <h1 id="heroTitle">Projects move forward. <span class="hero-accent">Knowledge stays.</span></h1>
+    <p class="hero-copy">Baton turns meeting notes, chat, task boards and commits into a handover where every line carries a quote and a source. Anything it can&rsquo;t cite shows up as a labelled gap.</p>
    </div>
- </div>
+   <div class="hero-cta">
+    <a class="btn btn-primary btn-lg" href="#/studio/connect">Start a handover <span aria-hidden="true">&rarr;</span></a>
+    <a class="btn btn-ghost btn-lg" href="#/studio/connect" data-start-sample>Try the Meridian sample</a>
+   </div>
+   <div class="label-row" aria-label="Claim labels">
+    <span class="pill p-src">Sourced</span><span class="pill p-quo">Quote-only</span><span class="pill p-inf">Inferred</span><span class="pill p-sta">Stated by</span><span class="pill p-con">Confirmed by</span><span class="pill p-cfl">Possible conflict</span><span class="pill p-sup">Superseded</span><span class="pill p-mis">Missing</span>
+   </div>
+  </div>
+  <div class="hero-side">
+   <section class="bento bento-honey" aria-labelledby="actTitle">
+    <div class="bento-head"><h2 id="actTitle" class="bento-eyebrow">RECENT ACTIVITY</h2><span class="bento-chip">Meridian</span></div>
+    <div class="activity-list" id="landingActivity"></div>
+   </section>
+   <section class="bento bento-tangerine" aria-labelledby="progTitle">
+    <div class="bento-head"><h2 id="progTitle" class="bento-eyebrow">IN-PROGRESS PROJECTS</h2><span class="bento-meta" id="landingVersion">Draft</span></div>
+    <div class="bento-title">Meridian Campus Backend</div>
+    <div class="bento-sub">Aarav Sharma &rarr; Meera Nair</div>
+    <div class="bars" id="landingBars"></div>
+   </section>
+  </div>
+ </section>
 
  <div class="how-strip" aria-label="How Baton works">
-   <div class="how-step"><span class="how-num">01 · CONNECT</span><b>Add sources</b><span>Notes, chat export, task CSV, public GitHub repo. Pick who may see each. Secrets are masked on import.</span></div>
+   <div class="how-step"><span class="how-num">01 · CONNECT</span><b>Add sources</b><span>Review six Meridian sample sources, choose who may see each, and inspect what masking catches.</span></div>
    <div class="how-step"><span class="how-num">02 · RECONSTRUCT</span><b>Extract claims</b><span>Rules propose typed claims with an exact quote. Instruction-like text is quarantined.</span></div>
    <div class="how-step"><span class="how-num">03 · VERIFY</span><b>Check in code</b><span>Quote match, exact-token guard, support check. Failed claims are never stored.</span></div>
    <div class="how-step"><span class="how-num">04 · REVIEW</span><b>Human gate</b><span>Accept, edit or reject; resolve conflicts; answer gaps; view as each reader; then publish.</span></div>
    <div class="how-step"><span class="how-num">05 · HANDOVER</span><b>Day-one plan</b><span>Per-reader plan with receipts. Hidden and missing items look identical.</span></div>
- </div>
-
- <!-- THE 2 TOP MENUS (RECENT ACTIVITY + IN-PROGRESS PROJECTS) -->
- <div class="landing-grid">
-  <section class="panel recent">
-   <div class="panel-head">
-     <div><h2>RECENT ACTIVITY</h2><div class="panel-sub">The latest updates across your workspace</div></div>
-     <span class="small-pill">TODAY</span>
-   </div>
-   <div class="activity">
-    <div class="activity-item"><div class="activity-icon">✓</div><div><strong>Claim accepted by reviewer</strong><p>Payment webhook retries · 10:42 AM</p></div></div>
-    <div class="activity-item"><div class="activity-icon">↗</div><div><strong>New source connected</strong><p>Meridian / sprint-planning.md · 9:18 AM</p></div></div>
-    <div class="activity-item"><div class="activity-icon">!</div><div><strong>Conflict needs a decision</strong><p>Deployment ownership · Yesterday</p></div></div>
-    <div class="activity-item"><div class="activity-icon">✎</div><div><strong>Gap interview updated</strong><p>Vendor API contact · Yesterday</p></div></div>
-   </div>
-  </section>
-
-  <section class="panel projects">
-   <div class="panel-head">
-     <div><h2>IN-PROGRESS PROJECTS</h2><div class="panel-sub">Pick up where your team left off</div></div>
-     <span class="small-pill">VIEW ALL ↗</span>
-   </div>
-   <div class="project-list">
-    <div class="project-card" onclick="openProjectDossier('meridian')"><div class="project-top"><div class="project-name">Meridian Campus App</div><span class="project-tag">IN REVIEW</span></div><p>Knowledge transfer · Aarav → Meera</p><div class="progress"><span style="--w:78%"></span></div><div class="project-foot"><span>78% COMPLETE</span><span>8 gaps · 3 conflicts</span></div></div>
-    <div class="project-card" onclick="openProjectDossier('silicon')"><div class="project-top"><div class="project-name">+se VLSI Verification</div><span class="project-tag">RECONSTRUCT</span></div><p>Hardware harness · Arjun → Neha</p><div class="progress"><span style="--w:46%"></span></div><div class="project-foot"><span>46% COMPLETE</span><span>22 claims found</span></div></div>
-    <div class="project-card" onclick="openProjectDossier('cosmic')"><div class="project-top"><div class="project-name">COSMIC AI Router</div><span class="project-tag">CONNECT</span></div><p>Prompt guardrails · Devika → Rohan</p><div class="progress"><span style="--w:94%"></span></div><div class="project-foot"><span>94% SOURCED</span><span>0 canaries</span></div></div>
-    <div class="project-card" onclick="openProjectDossier('sentinel')"><div class="project-top"><div class="project-name">Sentinel Verifier Lab</div><span class="project-tag">HANDOVER</span></div><p>Quote guard suite · Saiyam → Anushka</p><div class="progress"><span style="--w:100%"></span></div><div class="project-foot"><span>100% SOURCED</span><span>0 false accepts</span></div></div>
-   </div>
-  </section>
  </div>
 
  <!-- =========================================================================
@@ -92,15 +83,15 @@
    <div class="dock-topbar">
      <div class="dock-badge">
        <span class="dock-badge-pulse"></span>
-       <span>BATON // VERIFIABLE HANDOVER DOCK</span>
+      <span>BATON // HANDOVER FILES</span>
      </div>
      <div class="dock-hint">
-       <span>Hover or scroll wheel to pull file up • Click any dossier to view PRD specification</span>
+       <span>Hover, scroll or use ↑ ↓ to lift a file · Meridian is the working sample, the others are illustrative</span>
      </div>
-     <div class="dock-counter" id="dockCounter">06 / 08 PROJECTS</div>
+     <div class="dock-counter" id="dockCounter" aria-live="polite">06 / 08 · WORKING SAMPLE</div>
    </div>
 
-   <!-- 3D Cascading Stage holding 8 Physical Handover Files -->
+   <!-- 3D cascading handover files (built once by js/dock.js, animated with GSAP) -->
    <div class="dock-stage" id="dockStage">
      <!-- Rendered dynamically by JavaScript with physics & full PRD linkage -->
    </div>
@@ -112,7 +103,7 @@
      </div>
      <div class="dock-kb-help">
        <span>[↑ / ↓] Step through files</span>
-       <span>[Enter] Open Dossier</span>
+       <span>[Enter] Open</span>
      </div>
    </div>
  </section>
@@ -134,14 +125,14 @@
    </div>
    <div class="detail-actions">
      <select class="project-switcher" id="projectSwitcher" onchange="openProjectDossier(this.value)">
-       <option value="cosmic">COSMIC // AI Core</option>
-       <option value="precision">PRECISION LABS // CNC Parts</option>
-       <option value="modular">MODULAR AUDIO // WebAudio DSP</option>
-       <option value="silicon">+se // VLSI Timing Closure</option>
-       <option value="hyve">HYVE:SYSTEMS // Kubernetes Mesh</option>
-       <option value="meridian" selected>MERIDIAN // Campus Backend (Primary Demo)</option>
-       <option value="archon">archon // Enterprise Software</option>
-       <option value="sentinel">SENTINEL // Verifier Lab</option>
+       <option value="cosmic">COSMIC // AI Core (example)</option>
+       <option value="precision">PRECISION LABS // CNC Parts (example)</option>
+       <option value="modular">MODULAR AUDIO // WebAudio DSP (example)</option>
+       <option value="silicon">+se // VLSI Timing Closure (example)</option>
+       <option value="hyve">HYVE:SYSTEMS // Kubernetes Mesh (example)</option>
+       <option value="meridian" selected>MERIDIAN // Campus App (working sample)</option>
+       <option value="archon">archon // Enterprise Software (example)</option>
+       <option value="sentinel">SENTINEL // Verifier Lab (example)</option>
      </select>
      <a class="btn btn-primary btn-sm" href="#/studio/connect" data-start-sample>Try it in the Studio →</a>
      <a class="action-btn" href="https://pin.it/5luAy0Tds" target="_blank" rel="noopener noreferrer">Design inspiration ↗</a>
@@ -150,11 +141,12 @@
  </div>
 
  <!-- HERO STATS -->
+ <div class="illustrative-banner" id="illustrativeBanner" role="note" hidden><span aria-hidden="true">◇</span><div><b>Illustrative example.</b> This file shows what a Baton handover looks like for another kind of project. Its claims and numbers are examples, not results. Only the Meridian sample runs end to end in the Handover Studio.</div></div>
  <div class="hero-stats">
   <div class="stat"><b id="statSteps">5 steps</b><span>CONNECT → HANDOVER</span></div>
   <div class="stat"><b id="statFeatures">10 core</b><span>PRODUCT FEATURES</span></div>
-  <div class="stat"><b id="statRoles">4 roles</b><span>ROLE-BASED ACCESS</span></div>
-  <div class="stat"><b id="statSourced">92%</b><span>SOURCED RATE (0 CANARIES)</span></div>
+  <div class="stat"><b id="statRoles">3 reader views</b><span>SYNTHETIC READER VIEWS</span></div>
+  <div class="stat"><b id="statSourced">Not run</b><span>CHECKS RUN AFTER RECONSTRUCTION</span></div>
  </div>
 
  <!-- ACTIVE PROJECT CLAIMS LEDGER BANNER -->
@@ -162,7 +154,7 @@
    <div class="dossier-head">
      <div>
        <span class="eyebrow" id="dossierEyebrow">EVIDENCE-FIRST LEDGER</span>
-       <h3 style="margin:4px 0 0;font-size:16px" id="dossierTitle">Project Claims for Meridian Campus Backend</h3>
+       <h3 style="margin:4px 0 0;font-size:16px" id="dossierTitle">Meridian handover dossier</h3>
      </div>
      <span class="small-pill" id="dossierPill">AARAV → MEERA HANDOVER</span>
    </div>
@@ -185,6 +177,20 @@
   <button data-target="doneInfo">10 DoD & Testing</button>
   <button data-target="scopeInfo">11 Scope & Honest Rules</button>
  </div>
+
+ <!-- SPEC EXPLORER: CircularCarousel (React Bits port) instead of one long scroll -->
+ <section class="spec-explorer" aria-labelledby="specExplorerTitle">
+  <div class="spec-explorer-head">
+   <div>
+    <span class="eyebrow">SPEC EXPLORER · 11 SECTIONS</span>
+    <h3 id="specExplorerTitle">Spin to a section, open it below</h3>
+    <p class="hint">Drag the ring, use ← → (or scroll sideways), then click or press Enter to open a section. No long scroll.</p>
+   </div>
+   <button class="action-btn" type="button" id="specShowAll" aria-pressed="false">Show all sections</button>
+  </div>
+  <div class="spec-carousel" id="specCarousel"></div>
+  <div class="spec-current"><span class="lbl">OPEN SECTION</span><b id="specCurrent" aria-live="polite"></b></div>
+ </section>
 
  <!-- ALL 11 PRD SECTIONS ACCORDING TO ATTACHED PRD -->
  <div class="content-grid">
@@ -543,12 +549,34 @@
  <span>Evidence before prose. Permission before sharing.</span>
 </footer>
 </div>
+<dialog class="studio-confirm" id="studioConfirm" aria-labelledby="studioConfirmTitle" aria-describedby="studioConfirmDescription">
+ <form method="dialog">
+  <span class="eyebrow">CONFIRM THIS CHANGE</span>
+  <h2 id="studioConfirmTitle">Confirm action</h2>
+  <p id="studioConfirmDescription"></p>
+  <div class="confirm-actions">
+   <button class="btn btn-ghost" type="button" data-confirm-cancel autofocus>Keep working</button>
+   <button class="btn btn-coral" type="button" data-confirm-accept>Confirm</button>
+  </div>
+ </form>
+</dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="js/engine.js?v=5"></script>
-<script src="js/sample.js?v=5"></script>
-<script src="js/dock.js?v=5"></script>
-<script src="js/studio.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/SplitText.min.js"></script>
+<script src="vendor/CustomEase.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+<script src="js/engine.js?v=10"></script>
+<script src="js/sample.js?v=10"></script>
+<script src="js/dock.js?v=15"></script>
+<script src="js/config.js?v=1"></script>
+<script src="js/db.js?v=1"></script>
+<script src="js/studio.js?v=15"></script>
+<script src="js/app.js?v=12"></script>
+<script src="js/landing.js?v=10"></script>
+<script src="js/circular-carousel.js?v=2"></script>
+<script src="js/spec-carousel.js?v=1"></script>
+<script src="js/motion.js?v=14"></script>
 </body>
 </html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Baton — Round 2 Project Document · Team Cortex</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  :root { --ink:#22242F; --muted:#5F5947; --cream:#FCF4DD; --line:#E2D2A2; --tan:#F28C38; --tan-soft:#FDE2C2; --tan-ink:#8F4609; --sage:#2C6A50; --sage-soft:#E1EEE5; --crimson:#A8233F; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #fff; color: var(--ink); font: 10.4pt/1.5 "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+  h1, h2, h3 { font-family: "Segoe UI Semibold", "Segoe UI", Arial, sans-serif; letter-spacing: -.01em; margin: 0; }
+  h1 { font-size: 26pt; line-height: 1.05; font-weight: 800; }
+  h2 { font-size: 14.5pt; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--tan); break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12px 0 4px; break-after: avoid; }
+  p { margin: 0 0 7px; }
+  ul, ol { margin: 0 0 8px; padding-left: 18px; }
+  li { margin: 2px 0; }
+  .mono { font-family: Consolas, "Courier New", monospace; font-size: 9pt; }
+  .eyebrow { font: 600 8pt Consolas, monospace; letter-spacing: 1.2px; color: var(--tan-ink); text-transform: uppercase; }
+  .cover { background: var(--cream); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; margin-bottom: 14px; }
+  .cover .hl { background: linear-gradient(transparent 62%, #F7B877 62%); }
+  .cover p.lede { font-size: 11.2pt; margin: 10px 0 12px; color: #3B3A33; }
+  .links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .link { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .link b { display: block; font-size: 8pt; color: var(--muted); letter-spacing: .6px; text-transform: uppercase; }
+  .link span { font: 9.5pt Consolas, monospace; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 9.2pt; break-inside: auto; }
+  th { text-align: left; background: var(--cream); border-bottom: 1.5px solid var(--line); padding: 5px 7px; font-weight: 700; }
+  td { border-bottom: 1px solid #EFE5C8; padding: 5px 7px; vertical-align: top; }
+  tr { break-inside: avoid; }
+  .tag { display: inline-block; font: 600 7.6pt Consolas, monospace; border-radius: 8px; padding: 1px 6px; white-space: nowrap; }
+  .done { background: var(--sage-soft); color: var(--sage); }
+  .part { background: var(--tan-soft); color: var(--tan-ink); }
+  .r3 { background: #E7E4F6; color: #4B4299; }
+  .callout { background: var(--cream); border-left: 4px solid var(--tan); border-radius: 0 10px 10px 0; padding: 8px 12px; margin: 8px 0 10px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .box { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; break-inside: avoid; }
+  .flow { display: flex; align-items: stretch; gap: 6px; margin: 8px 0 10px; }
+  .flow div { flex: 1; background: var(--cream); border: 1px solid var(--line); border-radius: 9px; padding: 6px 7px; font-size: 8.6pt; text-align: center; }
+  .flow div b { display: block; font-size: 9pt; }
+  .flow .db { background: var(--ink); color: #FCF4DD; border-color: var(--ink); }
+  .num { font-size: 15pt; font-weight: 800; color: var(--ink); }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 6px 0 10px; }
+  .kpis .box { text-align: center; padding: 8px 6px; }
+  .kpis small { display: block; font-size: 8pt; color: var(--muted); }
+  .footer-note { font-size: 8.4pt; color: var(--muted); }
+  .page-break { break-before: page; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="eyebrow">CodersInPune Hackathon · Round 2 · Team Cortex</div>
+  <h1 style="margin-top:8px">Baton: a handover that <span class="hl">writes only what it can cite</span></h1>
+  <p class="lede">Baton turns a project's notes, chat, task board, commits and GitHub issues into a handover where every line carries an exact source quote checked by code, every gap is labelled, a human reviewer approves before anything is shared, and each reader receives only the rows Postgres row-level security lets them see.</p>
+  <div class="links">
+    <div class="link"><b>Working project link</b><span>{{LIVE_URL}}</span></div>
+    <div class="link"><b>Source code</b><span>{{REPO_URL}}</span></div>
+  </div>
+  <p class="footer-note" style="margin:10px 0 0">Updated project document for Round 2 · 11 Nov 2026 · Builds on the Round 1 proposal (19 pages). Synthetic demo data only.</p>
+</div>
+
+<h2>1. Try it in two minutes</h2>
+<ol>
+  <li>Open the link and click <b>Try the Meridian sample</b>. Six synthetic sources load (meeting notes, chat export, task CSV, GitHub comments, commit log, a treasurer-only note).</li>
+  <li>Follow the <b>Next step</b> bar. <b>Reconstruct</b> extracts 26 claims with exact quotes, masks 3 planted secrets and quarantines one planted "ignore previous instructions" message.</li>
+  <li><b>Verify</b> shows every claim's checks. In the Quote guard lab, change "100" to "200" or add "not" and watch the claim get rejected. <b>Run tests</b> and <b>Run database probes</b> show the leak tests live.</li>
+  <li><b>Review</b>: decide claims, resolve the deploy-owner conflict, answer gaps, view the handover as each reader. Or press <b>Fast-forward the demo review</b>: it makes the standard decisions (logged, changeable) and stops at the gate. <b>Approving and publishing is always a human click.</b></li>
+  <li><b>Handover</b>: switch between Meera, Rohan and Kavya. Each receives a different plan from the same approved version, served by Postgres row-level security; a hidden item looks exactly like a missing one.</li>
+</ol>
+
+<h2>2. The problem, briefly</h2>
+<p>When someone leaves a project, the reasons behind decisions, work in flight, dependencies and contacts leave with them. That knowledge sits in chats, pull requests, meeting notes and task boards. Studies of open-source turnover show the risk is real: Avelino et al. found 315 of 1,932 popular projects lost all their truck-factor developers; Nourry et al. found 32,689 of 36,464 projects lost all core developers at least once. A generic AI summary is fluent but can invent details, hide uncertainty and repeat confidential text to the wrong reader. Baton's rule: <b>the system may write only what it can cite; everything else is shown as a labelled gap.</b></p>
+
+<h2>3. Completed features (Round 2)</h2>
+<table>
+  <thead><tr><th style="width:28%">Feature (Round 1 numbering)</th><th>What works now</th><th style="width:9%">Status</th></tr></thead>
+  <tbody>
+    <tr><td>1. Source import</td><td>Paste or upload Markdown, text, CSV and JSON chat exports; CSV column-mapping screen for unfamiliar headers; public GitHub import (README + latest 20 issues/PRs via the REST API); an access tag on every source.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>Masking on import</td><td>API keys, tokens, passwords, emails and phone numbers masked before storage or display; gap answers masked too.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>2. Claim extraction and quote verification</td><td>Typed claims (decision, owner, open question, risk, blocker, next action, recurring problem, dependency, contact, process), each with the exact sentence as its quote. Verifier: exact match after normalisation, fuzzy fallback over sliding word windows (long quotes), exact-token guard for numbers, versions, ports, paths, identifiers and negations, and a separate support check. Failed claims are never stored and the reason is shown.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>3. Evidence panel</td><td>Source passage with the quote highlighted, match method, token guard and support verdict, who decided and why the label was given.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>4. Timeline, ownership and risk views</td><td>Timeline of decisions, ownership changes and open discussions in date order (superseded facts kept as history); ownership inferred from commit counts, shown with its numbers.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>5. Conflict and gap flags</td><td>Same-subject conflicts side by side, never auto-decided; superseded facts; handover checklist gaps computed per reader.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>6. Review and approval</td><td>Accept, edit (re-checked against the quote), reject; a random 10% sample (at least 5) decided one by one before bulk approval of the narrow low-risk class; cap of 60 claims by checklist weight; stale-fact hazards; view-as for each reader with a confirmation that resets after any change; leaver disputes held out until the reviewer rules; publish gate checked by code.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>Gap interview (manual, Round 2 version)</td><td>Leaver answers gaps with a chosen access tag ("Stated by Aarav"); in a sudden exit the reviewer answers instead ("Stated by Prof. Rao"); the leaver can confirm one side of a conflict.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>7. Role-based handover with redaction</td><td>Ownership table, ordered first-week actions, risks and blockers, decisions, timeline. The exact gap text "No answer found in your view. It may be undocumented or restricted" with Request access; the reviewer sees the real reason. Served from Postgres under row-level security.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>8. Version history and receipt</td><td>Immutable versions with a SHA-256 hash, retraction (with the "rotate leaked credentials" note), per-item acknowledgement, audit log.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>Database with row-level security</td><td>Supabase Postgres: sources, claims, versions, handover items, receipts, access requests and the audit log. RLS on every table; publishable key only; readers can never read sources or the raw ledger; reader rows come through a <span class="mono">security_invoker</span> view.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>Leak, guard and injection tests</td><td>Quote mutations, canary scan per reader, differential test, identical gap rows, planted-injection test, and live database probes as each persona. Also 20 automated engine tests in Node.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>Judge guidance</td><td>A "Next step" bar on every screen and a Fast-forward that stops at the publish gate.</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>Product spec explorer</td><td>The full plan as a 3D ring of 11 sections (one opens at a time), plus 8 handover files (Meridian is the working sample; 7 are labelled illustrative).</td><td><span class="tag done">Done</span></td></tr>
+    <tr><td>PDF upload, GitHub comments and commits via API</td><td>Not built (PDF importer was on the plan's cut list; commits currently come from an exported log).</td><td><span class="tag part">Partial</span></td></tr>
+  </tbody>
+</table>
+
+<h2 class="page-break">4. Technology and implementation</h2>
+<div class="flow">
+  <div><b>Sources</b>notes · chat · CSV · GitHub · commits</div>
+  <div><b>Ingest &amp; protect</b>mask secrets, split into passages</div>
+  <div><b>Extract</b>typed claims with exact quotes</div>
+  <div><b>Verify (code)</b>quote match · token guard · support check</div>
+  <div><b>Compare (code)</b>conflicts · superseded · gaps per reader</div>
+  <div class="db"><b>Postgres + RLS</b>ledger · versions · receipts</div>
+  <div><b>Compose per reader</b>only permitted rows</div>
+</div>
+<table>
+  <thead><tr><th style="width:20%">Layer</th><th style="width:34%">Choice</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td>Static HTML, CSS and JavaScript; hash router; GSAP 3.15 (ScrollTrigger, SplitText, CustomEase), Lenis smooth scroll, View Transitions API</td><td>One link that opens instantly with no sign-in or cold start; no build step to fail on deploy.</td></tr>
+    <tr><td>Trust-critical engine</td><td><span class="mono">js/engine.js</span>: pure functions for masking, extraction, verification, labels, per-reader views, composition and leak tests</td><td>Plain code, not model instructions; the same file runs in the browser and in the Node test suite.</td></tr>
+    <tr><td>Database</td><td>Supabase Postgres with row-level security on every table</td><td>One store for the ledger; the reader role cannot bypass RLS; the service key is never deployed; the reader view uses <span class="mono">security_invoker</span>.</td></tr>
+    <tr><td>Identity</td><td>Seeded demo personas (data owner, reviewer, leaver, three readers) sent as a request header; each browser gets its own workspace id</td><td>For demonstration only, not production authentication (Supabase Auth replaces it in Round 3). Judges switch readers in one click and never see each other's data.</td></tr>
+    <tr><td>Extraction</td><td>Deterministic rules (typed patterns per sentence)</td><td>Free, works offline, identical for every judge, no API key to leak. The same verifier will check model-proposed claims in Round 3.</td></tr>
+    <tr><td>Hosting</td><td>Vercel (static) + Supabase (database)</td><td>Free tiers, HTTPS, a public link that opens without sign-in.</td></tr>
+    <tr><td>Tests</td><td>Node <span class="mono">node:test</span> (20 engine tests) + in-app leak tests + live database probes</td><td>Same language as the engine; results are visible to judges, not just claimed.</td></tr>
+  </tbody>
+</table>
+
+<h3>How permissions are enforced (twice)</h3>
+<div class="grid2">
+  <div class="box"><b>1. In Postgres.</b> Policies read the request's workspace and persona. Staff personas may write the ledger; readers may only select their own handover rows: <span class="mono">baton_can_read(access) and not withheld and version approved</span>. Readers get zero rows from <span class="mono">sources</span> and <span class="mono">claims</span>, and nothing at all without a workspace id.</div>
+  <div class="box"><b>2. In composition.</b> Each reader's handover is built only from the rows that reader may see; conflicts, superseded labels and gaps are computed per reader; the gap row is identical whether an item is missing or hidden. The app compares the database's answer with its own permission check and shows whether they match.</div>
+</div>
+
+<h2>5. Results so far (synthetic Meridian sample)</h2>
+<div class="kpis">
+  <div class="box"><span class="num">0</span><small>false accepts in 44 quote mutations (digit, negation, identifier, wrong source)</small></div>
+  <div class="box"><span class="num">0</span><small>canaries across 3 readers (3 masked secrets + restricted phrases)</small></div>
+  <div class="box"><span class="num">3/3</span><small>readers byte-identical in the differential test</small></div>
+  <div class="box"><span class="num">1/1</span><small>planted injection quarantined, 0 links rendered</small></div>
+</div>
+<p>From 6 sources: 43 passages, 26 claims stored, 1 conflict, 2 superseded facts, 3 stale-fact hazards, and reader views of 22 items (Meera), 16 (Rohan) and 17 (Kavya). We report "zero canaries across the readers tested", never "no secrets leak": masking is heuristic. The mutation test ran 44 mutations on this sample, fewer than the roughly 100 the proposal targeted; Round 3 extends it.</p>
+
+<h2 class="page-break">6. Changes from the Round 1 plan, and why</h2>
+<table>
+  <thead><tr><th style="width:24%">Round 1 plan</th><th style="width:34%">Round 2 build</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Next.js + Tailwind frontend</td><td>Static HTML/CSS/JS with GSAP and Lenis</td><td>A judge must open one link with no build or cold start. The engine is written as portable functions, so moving to Next.js later is mechanical.</td></tr>
+    <tr><td>FastAPI service for ingestion, jobs and the model layer</td><td>Not built; ingestion and verification run in the browser, persistence in Supabase</td><td>Time: the build was done by one member. The verifier and permission checks, which the plan says are never cut, are complete; the API layer moves to Round 3.</td></tr>
+    <tr><td>Hosted LLM proposes claims; second model call as support check</td><td>Deterministic extraction rules; lexical support check</td><td>Identical, free and offline for every judge, with no API key in the browser. Code still decides what may be stored either way.</td></tr>
+    <tr><td>RapidFuzz fuzzy matching</td><td>Own Levenshtein matcher with sliding windows</td><td>No Python service in Round 2; keeps the sliding-window behaviour the plan required for quotes over 64 characters.</td></tr>
+    <tr><td>Supabase Auth if time allows</td><td>Seeded demo personas sent as a header, workspace per browser</td><td>As planned, personas are for demonstration only. RLS is real; the identity it trusts becomes a signed Supabase Auth JWT in Round 3.</td></tr>
+    <tr><td>pytest and leak tests in CI</td><td>Node tests, in-app leak tests and database probes; CI not wired yet</td><td>Same language as the engine. CI on the repository is part of Round 3 improvement 1.</td></tr>
+    <tr><td>PDF importer; GitHub comments and commits</td><td>Not built (commit history from an exported log)</td><td>The PDF importer and live connector were on the plan's cut list.</td></tr>
+    <tr><td>User interviews in the first week of Round 2</td><td>Not done</td><td>Not completed in the build window; reported honestly and moved to Round 3 together with the teammate pilot.</td></tr>
+  </tbody>
+</table>
+<p>Kept exactly as planned: the Core Rule, the label vocabulary (no "Verified"), the exact gap text, the reviewer's view-as and publish gate, the manual gap interview in Round 2, synthetic data only, and "nothing is shared before an approver signs off". Two promised items were added late in Round 2 after re-checking the proposal: the timeline and leaver disputes.</p>
+
+<h2>7. Three major improvements for Round 3</h2>
+<div class="box" style="margin-bottom:8px">
+  <h3 style="margin-top:0">1. Real identities and permission hardening, enforced end to end</h3>
+  <p>Replace demo personas with Supabase Auth so RLS trusts a signed JWT instead of a header; a data-owner approval flow for access requests that actually grants a tag for one item; server-side logging of who viewed what; and the canary, differential, injection and database-probe suites running in GitHub Actions against a fresh database on every push. <b>Why it matters:</b> it turns "readers only see their rows" from a demo property into a production one.</p>
+</div>
+<div class="box" style="margin-bottom:8px">
+  <h3 style="margin-top:0">2. Model-assisted extraction and a guided gap interview</h3>
+  <p>A server-side function (FastAPI or a Supabase Edge Function) calls Claude through a provider interface with responses cached per reader, proposes richer claims from messy sources, and makes the separate support-check call. The same code verifier still decides what may be stored. The manual gap answers become a guided interview with ranked, targeted questions for the departing person (aim: 15 to 20 minutes). <b>Why it matters:</b> real-world sources are messier than rules can cover, while the trust guarantee stays in code.</p>
+</div>
+<div class="box">
+  <h3 style="margin-top:0">3. Handover quality report and an honest benchmark</h3>
+  <p>A scored coverage view (share Sourced, open gaps, unresolved conflicts, single-owner risks), evaluated against the seeded Meridian benchmark (about 40 planted facts, 5 only in the leaver's answers) and a held-out set in different export formats written by a teammate who did not build the importers; recall, support-check precision and fabrication rate reported, including misses; plus the teammate pilot timing raw sources vs a plain LLM summary vs Baton. <b>Why it matters:</b> it measures whether Baton is right, not just whether it runs.</p>
+</div>
+
+<h2 class="page-break">8. Round 2 against the plan's milestones</h2>
+<table>
+  <thead><tr><th style="width:22%">Milestone (Round 1 §10)</th><th>Gate</th><th style="width:30%">Status</th></tr></thead>
+  <tbody>
+    <tr><td>Round 2, first third: deployed skeleton</td><td>A judge can open the link and import a source</td><td><span class="tag done">Met</span> link, paste/upload, CSV mapping, GitHub import</td></tr>
+    <tr><td>Round 2, middle: core pipeline</td><td>A source goes in and a labelled, cited claim list comes out</td><td><span class="tag done">Met</span> masking, extraction, verifier, support check, labels, evidence panel</td></tr>
+    <tr><td>Round 2, last third: end-to-end workflow</td><td>One approved handover reaches a successor and the leak tests pass</td><td><span class="tag done">Met</span> reviewer gate, view-as, manual gaps, day-one view, versions, receipts, leak tests (CI pending)</td></tr>
+  </tbody>
+</table>
+
+<h2>9. Team and disclosures</h2>
+<p><b>Team Cortex</b> (Bennett University): Saiyam Aggarwal, Divyansh Somani, Kaustabh Chowdhury, Anushka Verma. The Round 1 role split stands for Round 3. <b>The Round 2 build was carried out by Saiyam Aggarwal</b> (role D: verification, permissions and security), who wrote the verifier, permission model, RLS policies and leak tests and assembled the product.</p>
+<ul>
+  <li><b>AI assistance:</b> Claude (Anthropic) was used as a coding and writing assistant for the frontend, engine, database schema and this document; an earlier website draft came from ChatGPT. All output was reviewed and tested.</li>
+  <li><b>Libraries and components:</b> GSAP 3.15 with ScrollTrigger, SplitText and CustomEase (GreenSock standard licence), Lenis smooth scroll, and a plain-JavaScript port of React Bits' CircularCarousel (credited in the code). The landing page design grew out of an earlier team website draft. No other pre-existing product code.</li>
+  <li><b>No language model is called at runtime in Round 2</b>, so no provider receives data; the provider's data-use terms will be named when the model layer arrives in Round 3.</li>
+  <li><b>Data:</b> all demonstration data is synthetic (the Meridian project). Planted secrets are fake canaries.</li>
+</ul>
+<p class="footer-note">Baton · Team Cortex · Round 2 project document · Evidence before prose. Permission before sharing.</p>
+</body>
+</html>

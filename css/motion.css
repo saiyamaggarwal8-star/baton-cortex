@@ -1,0 +1,74 @@
+/* =========================================================================
+   MOTION & POLISH · compositor-only (transform / opacity / clip-path), opt-in.
+   Static by default; travel and reveal motion is added only under
+   prefers-reduced-motion: no-preference (CSS here, GSAP in js/motion.js).
+   Resting CSS is always the final state, so nothing is left hidden if motion is off.
+   ========================================================================= */
+:root{scrollbar-color:#CDB98A var(--shell);scrollbar-width:thin}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--shell)}
+::-webkit-scrollbar-thumb{background:#CDB98A;border:2px solid var(--shell);border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:var(--tangerine)}
+
+.dock-card,.dock-pill-btn,.project-card,.stepper button,.chip-btn{-webkit-tap-highlight-color:transparent}
+.detail-head,.active-project-dossier,.info-card,.card{scroll-margin-top:96px}
+.dossier-empty{grid-column:1/-1;margin:0;padding:18px;border:1px dashed var(--line-2);border-radius:14px;color:var(--muted);font-size:13px;line-height:1.6}
+
+/* Confirmation dialog (replaces window.confirm) */
+.studio-confirm{width:min(480px,calc(100vw - 32px));padding:28px;border:1px solid var(--line);border-radius:24px;background:var(--panel);color:var(--ink);box-shadow:0 24px 80px #22242F55}
+.studio-confirm::backdrop{background:#22242Fb3;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.studio-confirm h2{margin:12px 0 6px;font:800 26px/1.1 var(--display);letter-spacing:-.02em}
+.studio-confirm p{margin:0;max-width:58ch;color:var(--muted);font-size:14px;line-height:1.6}
+.confirm-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:24px}
+.studio-confirm [data-confirm-accept]{background:var(--crimson);color:#FFF5F7;border-color:var(--crimson)}
+.studio-confirm [data-confirm-accept]:hover{background:#8F1C35}
+
+/* Signature: one quiet orbit in the progress card (knowledge moving between people). */
+.bento-tangerine{position:relative;isolation:isolate;overflow:hidden}
+.bento-tangerine::after{content:"";position:absolute;z-index:0;pointer-events:none;width:112px;height:112px;right:-26px;top:-51px;border:1px solid #22242F38;border-radius:50%;box-shadow:0 0 0 12px #22242F0a,0 0 0 24px #22242F07}
+.bento-tangerine::before{content:"";position:absolute;z-index:0;pointer-events:none;width:7px;height:7px;right:57px;top:4px;border-radius:50%;background:var(--ink);transform-origin:0 51px;transform:rotate(30deg) translateX(51px)}
+.bento-tangerine > *{position:relative;z-index:1}
+
+/* Dock cards: persistent DOM; GSAP drives transform + clip-path (never height or filter). */
+.dock-stage{contain:layout style}
+.dock-card{height:250px!important;transition:none!important;filter:none!important;will-change:transform,clip-path;backface-visibility:hidden;box-shadow:0 -10px 26px rgba(0,0,0,.34);clip-path:inset(-40px -40px 130px -40px)}
+.dock-card .dock-expanded{display:block!important;transition:none!important}
+.dock-card:not(.active) .dock-expanded{visibility:hidden}
+.dock-card:hover{filter:none}
+.dock-card .dock-open-btn{transition:transform .2s var(--ease-out),background-color .2s}
+
+/* Sliding indicators behind the active nav link / step (positioned by js/motion.js) */
+.topnav.has-indicator a.active{background:transparent}
+.stepper.has-indicator button.active{background:transparent}
+.step-indicator{position:absolute;z-index:0;border-radius:16px;background:var(--ink);pointer-events:none;top:0;left:0;width:0;height:0}
+
+@media (prefers-reduced-motion:no-preference){
+  .bento-tangerine::before{animation:handoff-orbit 4.2s cubic-bezier(.4,0,.2,1) infinite}
+  .hero-badge-dot,.dock-badge-pulse{animation:status-breathe 2.6s ease-in-out infinite}
+  .bar-track span{transition:width .75s var(--ease-out)}
+  ::view-transition-old(root){animation:vt-out .22s var(--ease-out) both}
+  ::view-transition-new(root){animation:vt-in .42s var(--ease-out) both}
+  ::view-transition-group(dossier-hero){animation-duration:.55s;animation-timing-function:var(--ease-out)}
+  ::view-transition-old(dossier-hero),::view-transition-new(dossier-hero){animation-duration:.42s;height:100%;object-fit:cover}
+}
+
+@keyframes status-breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 #F28C3800}50%{opacity:.8;box-shadow:0 0 0 5px #F28C3826}}
+@keyframes handoff-orbit{from{transform:rotate(0deg) translateX(51px)}to{transform:rotate(360deg) translateX(51px)}}
+@keyframes vt-out{to{opacity:0;transform:translateY(-10px) scale(.995)}}
+@keyframes vt-in{from{opacity:0;transform:translateY(14px)}}
+
+@media (max-width:760px){
+  .hero{gap:20px}
+  .hero-main{gap:24px}
+  .hero-side{flex-basis:100%}
+  .bento{border-radius:22px}
+  .detail-actions{align-items:flex-start}
+  .studio-confirm{padding:22px}
+  .confirm-actions{flex-wrap:wrap}
+}
+@media (forced-colors:active){
+  :root{scrollbar-color:auto}
+  ::-webkit-scrollbar-thumb{background:CanvasText;border-color:Canvas}
+  .bento-tangerine::before,.bento-tangerine::after,.step-indicator,.nav-indicator{display:none}
+  .stepper.has-indicator button.active,.topnav.has-indicator a.active{background:Highlight;color:HighlightText}
+}

@@ -109,8 +109,8 @@ const DOCK_PROJECTS = [
     id: 'meridian',
     index: 5,
     brand: 'MERIDIAN // CORTEX BU',
-    headline: 'Meridian Campus Backend, NY/BU',
-    subtitle: 'Billing Webhooks, Redis Locks & Escrow Governance (Primary Demo)',
+    headline: 'Meridian Campus App',
+    subtitle: 'Synthetic campus-app handover · primary demo',
     leaver: 'Aarav Sharma',
     incoming: 'Meera Nair',
     sourcedRate: '92%',
@@ -173,7 +173,20 @@ const DOCK_PROJECTS = [
   }
 ];
 
-let currentHoverIndex = 5; // Default focused on Meridian (Index 5)
+// Meridian is the working sample. The other seven files are illustrative examples of the
+// same handover format: they are labelled as such and never presented as live results.
+const meridianSample = DOCK_PROJECTS.find(project => project.id === 'meridian');
+Object.assign(meridianSample, {
+  sourcedRate: 'WORKING SAMPLE',
+  claimsCount: 0,
+  conflictsCount: 0,
+  canariesCount: null,
+  stats: { steps: '5 steps', features: '10 core', roles: '3 reader views', sourced: 'Not run' },
+  claims: []
+});
+DOCK_PROJECTS.forEach(p => { p.illustrative = p.id !== 'meridian'; });
+
+let currentHoverIndex = meridianSample.index;
 let currentSelectedProject = 'meridian';
 
 const landing = document.getElementById('landing');
@@ -182,157 +195,200 @@ const dockStage = document.getElementById('dockStage');
 const dockCounter = document.getElementById('dockCounter');
 const dockPillSelector = document.getElementById('dockPillSelector');
 const projectSwitcher = document.getElementById('projectSwitcher');
+const dockSection = document.getElementById('dockSection');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-// Render 3D Cascading File Dock
-function renderDock() {
+// Clip the bottom of resting files instead of animating height: clip-path and
+// transforms stay off the layout path, so the stack moves at full frame rate.
+const CLIP_REST = 'inset(-40px -40px 130px -40px)';
+const CLIP_OPEN = 'inset(-40px -40px -40px -40px)';
+let dockCards = [];
+let dockPills = [];
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function poseFor(idx, active) {
+  const isActive = idx === active;
+  const isBefore = idx < active;
+  return {
+    y: isActive ? -95 : (isBefore ? -12 : 52),
+    z: isActive ? 60 : (isBefore ? -idx * 3 : 10),
+    rotationX: isActive ? 0 : (isBefore ? -14 : -12),
+    scale: isActive ? 1.035 : 1,
+    clipPath: isActive ? CLIP_OPEN : CLIP_REST,
+    zIndex: isActive ? 60 : 10 + idx
+  };
+}
+
+function cardMarkup(proj) {
+  const flag = proj.illustrative
+    ? '<span class="dock-illustrative">ILLUSTRATIVE</span>'
+    : '<span class="dock-sample-flag">★ WORKING SAMPLE</span>';
+  const metrics = proj.illustrative
+    ? [['Example ledger', proj.claimsCount + ' example claims'], ['Example conflicts', proj.conflictsCount + ' flagged'], ['Status', 'Illustrative · not live']]
+    : [['Synthetic source set', '6 Meridian sources'], ['Current pipeline', 'Run it in the Studio'], ['Persistence & access', 'Browser demo · simulated']];
+  return `
+    <div class="dock-card-tab">
+      <div class="dock-brand-pill"><span class="dock-dot"></span><span>${esc(proj.brand)}</span>${flag}</div>
+      <div class="dock-meta"><span>${esc(proj.leaver)} → ${esc(proj.incoming)}</span></div>
+    </div>
+    <div class="dock-card-body">
+      <div class="dock-peek">
+        <div>
+          <h3 class="dock-title">${esc(proj.headline)}</h3>
+          <p class="dock-sub">${esc(proj.subtitle)}</p>
+        </div>
+        <button class="dock-open-btn" type="button" data-open="${esc(proj.id)}">
+          <span>${proj.illustrative ? 'View example' : 'Open spec'}</span> ↗
+        </button>
+      </div>
+      <div class="dock-expanded">
+        <div class="dock-metrics">
+          ${metrics.map(m => `<div class="dock-metric-box"><div class="dock-metric-label">${esc(m[0])}</div><div class="dock-metric-val">${esc(m[1])}</div></div>`).join('')}
+        </div>
+        <div class="dock-drawer-foot">
+          <span>Departing: <strong>${esc(proj.leaver)}</strong> → Successor: <strong>${esc(proj.incoming)}</strong></span>
+          <span>${proj.illustrative ? 'Example of the format, not live data' : 'Open the spec, then run it in the Studio →'}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+// Build the stack once. Later state changes only move it.
+function buildDock() {
   dockStage.innerHTML = '';
   dockPillSelector.innerHTML = '';
-
-  DOCK_PROJECTS.forEach((proj, idx) => {
-    const isHovered = currentHoverIndex === idx;
-    const isBefore = idx < currentHoverIndex;
-    const isAfter = idx > currentHoverIndex;
-
-    // Physical File Pull-Out Animation:
-    // Hovered file pulls UP by -95px, forward +60px, straightens to 0deg, scales 1.035
-    // Files before tuck back (-12px)
-    // Files after drop down (+52px) so lifted sheet is unobstructed!
-    const pullY = isHovered ? -95 : (isBefore ? -12 : 52);
-    const transZ = isHovered ? 60 : (isBefore ? -idx * 3 : 10);
-    const rotX = isHovered ? 0 : (isBefore ? -14 : -12);
-    const zIdx = isHovered ? 60 : 10 + idx;
-    const heightPx = isHovered ? 250 : 120;
-    const widthPct = 60 + (idx * 5.1);
-    const topPx = 25 + (idx * 40);
-
+  dockCards = DOCK_PROJECTS.map((proj, idx) => {
     const card = document.createElement('div');
-    card.className = `dock-card ${proj.cssClass} ${isHovered ? 'active' : (isBefore ? 'before-active' : 'after-active')}`;
-    card.style.width = `${widthPct}%`;
-    card.style.top = `${topPx}px`;
-    card.style.transform = `translate3d(0, ${pullY}px, ${transZ}px) rotateX(${rotX}deg) scale(${isHovered ? 1.035 : 1})`;
-    card.style.zIndex = zIdx;
-    card.style.height = `${heightPx}px`;
-
-    card.innerHTML = `
-      <div class="dock-card-tab">
-        <div class="dock-brand-pill">
-          <span class="dock-dot"></span>
-          <span>${proj.brand}</span>
-          ${proj.isPrimaryDemo ? '<span class="dock-demo-flag">★ PRIMARY DEMO</span>' : ''}
-        </div>
-        <div class="dock-meta">
-          <span>${proj.leaver} → ${proj.incoming}</span>
-          <span class="dock-rate-badge">${proj.sourcedRate} Sourced</span>
-        </div>
-      </div>
-      <div class="dock-card-body">
-        <div class="dock-peek">
-          <div>
-            <h3 class="dock-title">${proj.headline}</h3>
-            <p class="dock-sub">${proj.subtitle}</p>
-          </div>
-          <button class="dock-open-btn" onclick="event.stopPropagation(); openProjectDossier('${proj.id}')">
-            <span>Open PRD File</span> ↗
-          </button>
-        </div>
-
-        <div class="dock-expanded">
-          <div class="dock-metrics">
-            <div class="dock-metric-box">
-              <div class="dock-metric-label">Verified Ledger</div>
-              <div class="dock-metric-val">${proj.claimsCount} Cited Claims</div>
-            </div>
-            <div class="dock-metric-box">
-              <div class="dock-metric-label">Open Contradictions</div>
-              <div class="dock-metric-val">${proj.conflictsCount === 0 ? '0 Conflicts' : proj.conflictsCount + ' Active Conflict'}</div>
-            </div>
-            <div class="dock-metric-box">
-              <div class="dock-metric-label">Leak & Guard Suite</div>
-              <div class="dock-metric-val">0 Canaries • 100%</div>
-            </div>
-          </div>
-          <div class="dock-drawer-foot">
-            <span>Departing: <strong>${proj.leaver}</strong> → Successor: <strong>${proj.incoming}</strong></span>
-            <span style="text-decoration:underline">Click lifted sheet to open full PRD specification →</span>
-          </div>
-        </div>
-      </div>
-    `;
-
-    card.addEventListener('mouseenter', () => {
-      currentHoverIndex = idx;
-      updateDockState();
+    card.className = `dock-card ${proj.cssClass}`;
+    card.dataset.idx = idx;
+    card.style.width = `${60 + idx * 5.1}%`;
+    card.style.top = `${105 + idx * 40}px`; // 105px headroom so a lifted first file clears the top bar
+    card.innerHTML = cardMarkup(proj);
+    card.addEventListener('pointerenter', e => onCardEnter(e, idx));
+    card.addEventListener('pointerleave', cancelHoverIntent);
+    card.addEventListener('click', e => {
+      if (idx !== currentHoverIndex) { setActive(idx); return; } // first tap lifts, second opens
+      openProjectDossier(proj.id, card);
     });
-
-    card.addEventListener('click', () => {
-      openProjectDossier(proj.id);
+    card.querySelector('[data-open]').addEventListener('click', e => {
+      e.stopPropagation();
+      openProjectDossier(proj.id, card);
     });
-
     dockStage.appendChild(card);
 
-    // Pill for bottom direct selector
     const pill = document.createElement('button');
-    pill.className = `dock-pill-btn ${currentHoverIndex === idx ? 'active' : ''}`;
+    pill.type = 'button';
+    pill.className = 'dock-pill-btn';
     pill.textContent = `${idx + 1}. ${proj.brand.split(' ')[0]}`;
-    pill.addEventListener('mouseenter', () => {
-      currentHoverIndex = idx;
-      updateDockState();
-    });
-    pill.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openProjectDossier(proj.id);
-    });
+    pill.setAttribute('aria-label', `${proj.headline}${proj.illustrative ? ' (illustrative example)' : ' (working sample)'}`);
+    pill.addEventListener('pointerenter', () => setActive(idx));
+    pill.addEventListener('focus', () => setActive(idx));
+    pill.addEventListener('click', () => openProjectDossier(proj.id, dockCards[idx]));
     dockPillSelector.appendChild(pill);
+    return card;
   });
-
-  dockCounter.textContent = `0${currentHoverIndex + 1} / 0${DOCK_PROJECTS.length} PROJECTS`;
+  dockPills = Array.from(dockPillSelector.children);
+  layoutDock(false);
 }
 
-function updateDockState() {
-  renderDock();
+function layoutDock(animate) {
+  const gsap = window.gsap;
+  const moving = animate && gsap && !reduceMotion.matches;
+  dockCards.forEach((card, idx) => {
+    const p = poseFor(idx, currentHoverIndex);
+    const isActive = idx === currentHoverIndex;
+    card.classList.toggle('active', isActive);
+    card.style.zIndex = p.zIndex;
+    const vars = { y: p.y, z: p.z, rotationX: p.rotationX, scale: p.scale, clipPath: p.clipPath, force3D: true };
+    if (moving) {
+      gsap.to(card, Object.assign(vars, { duration: 0.62, ease: 'expo.out', overwrite: 'auto' }));
+    } else if (gsap) {
+      gsap.set(card, vars);
+    } else {
+      card.style.transform = `translate3d(0, ${p.y}px, ${p.z}px) rotateX(${p.rotationX}deg) scale(${p.scale})`;
+      card.style.clipPath = p.clipPath;
+    }
+    const drawer = card.querySelector('.dock-expanded');
+    if (isActive && moving) {
+      gsap.fromTo(drawer, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.4, delay: 0.12, ease: 'power3.out', overwrite: 'auto' });
+    } else if (gsap) {
+      gsap.set(drawer, { clearProps: 'opacity,visibility,transform' });
+    }
+  });
+  dockPills.forEach((pill, idx) => {
+    const on = idx === currentHoverIndex;
+    pill.classList.toggle('active', on);
+    if (on) pill.setAttribute('aria-current', 'true'); else pill.removeAttribute('aria-current');
+  });
+  const pad = n => String(n).padStart(2, '0');
+  dockCounter.textContent = `${pad(currentHoverIndex + 1)} / ${pad(DOCK_PROJECTS.length)} · ${DOCK_PROJECTS[currentHoverIndex].illustrative ? 'EXAMPLE' : 'WORKING SAMPLE'}`;
 }
 
-// Mousewheel navigation inside dock
-const dockSection = document.getElementById('dockSection');
-dockSection.addEventListener('wheel', (e) => {
-  // Only capture the scroll when the dock can actually move.
-  if (e.deltaY > 15 && currentHoverIndex < DOCK_PROJECTS.length - 1) {
-    e.preventDefault();
-    currentHoverIndex++;
-    updateDockState();
-  } else if (e.deltaY < -15 && currentHoverIndex > 0) {
-    e.preventDefault();
-    currentHoverIndex--;
-    updateDockState();
-  }
+function setActive(idx) {
+  idx = Math.max(0, Math.min(DOCK_PROJECTS.length - 1, idx));
+  if (idx === currentHoverIndex) return;
+  currentHoverIndex = idx;
+  layoutDock(true);
+}
+
+// Kept for older callers (router, keyboard).
+function renderDock() { if (!dockCards.length) buildDock(); else layoutDock(false); }
+function updateDockState() { layoutDock(true); }
+
+// Hover intent: a card that slides under a still pointer must not steal focus
+// (that feedback loop made the stack jitter). Only real pointer movement counts.
+let lastPointerMove = 0;
+let hoverTimer = null;
+dockStage.addEventListener('pointermove', () => { lastPointerMove = performance.now(); }, { passive: true });
+function onCardEnter(e, idx) {
+  if (e.pointerType === 'touch') return;
+  cancelHoverIntent();
+  if (performance.now() - lastPointerMove > 90) return;
+  hoverTimer = setTimeout(() => setActive(idx), 60);
+}
+function cancelHoverIntent() { clearTimeout(hoverTimer); }
+
+// Wheel: one file per gesture notch, throttled; page scroll resumes at either end.
+let wheelAcc = 0;
+let wheelLockUntil = 0;
+dockSection.addEventListener('wheel', e => {
+  const dir = Math.sign(e.deltaY);
+  const canMove = dir > 0 ? currentHoverIndex < DOCK_PROJECTS.length - 1 : currentHoverIndex > 0;
+  if (!dir || !canMove) { wheelAcc = 0; return; } // at either end the page (Lenis) scrolls normally
+  e.preventDefault();
+  e.stopPropagation(); // the dock consumed this notch, so the smooth scroller must not see it
+  const now = performance.now();
+  wheelAcc += e.deltaY;
+  if (now < wheelLockUntil || Math.abs(wheelAcc) < 40) return;
+  wheelAcc = 0;
+  wheelLockUntil = now + 170;
+  setActive(currentHoverIndex + dir);
 }, { passive: false });
 
-// Keyboard arrows navigation
-window.addEventListener('keydown', (e) => {
-  // Only on the landing view, never while typing.
-  if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable]')) return;
+// Keyboard: arrows step through files on the workspace view, Enter opens, Escape goes back.
+window.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable], dialog')) return;
   if (!landing.classList.contains('hide')) {
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      currentHoverIndex = Math.max(0, currentHoverIndex - 1);
-      updateDockState();
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      currentHoverIndex = Math.min(DOCK_PROJECTS.length - 1, currentHoverIndex + 1);
-      updateDockState();
-    } else if (e.key === 'Enter') {
+    const dockVisible = dockSection.getBoundingClientRect().top < window.innerHeight;
+    if (!dockVisible) return;
+    if (e.key === 'ArrowUp') { e.preventDefault(); setActive(currentHoverIndex - 1); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); setActive(currentHoverIndex + 1); }
+    else if (e.key === 'Enter' && e.target === document.body) {
       e.preventDefault();
       const proj = DOCK_PROJECTS[currentHoverIndex];
-      if (proj) openProjectDossier(proj.id);
+      if (proj) openProjectDossier(proj.id, dockCards[currentHoverIndex]);
     }
-  } else if (e.key === 'Escape') {
+  } else if (e.key === 'Escape' && detail.classList.contains('show')) {
     closeProjectDossier();
   }
 });
 
 // OPEN PROJECT DOSSIER ACCORDING TO PRD
 function renderDossier(projectId) {
-  const proj = DOCK_PROJECTS.find(p => p.id === projectId) || DOCK_PROJECTS[5];
+  const proj = DOCK_PROJECTS.find(p => p.id === projectId) || DOCK_PROJECTS[0];
   currentSelectedProject = proj.id;
   currentHoverIndex = proj.index;
   projectSwitcher.value = proj.id;
@@ -340,7 +396,11 @@ function renderDossier(projectId) {
   // Update Detail Header
   document.getElementById('detailEyebrow').textContent = `PROJECT DOSSIER · ${proj.brand} · PRD SPECIFICATION`;
   document.getElementById('detailTitle').innerHTML = `${proj.headline}<span style="color:var(--mint)">.</span>`;
-  document.getElementById('detailLede').innerHTML = `<b>Knowledge Handover:</b> Departing Lead <b>${proj.leaver}</b> → Successor <b>${proj.incoming}</b>. A verifiable knowledge-handover ledger reconstructed strictly according to the Baton Product Requirements Document. Sourced accuracy: <b>${proj.sourcedRate}</b>, 0 canaries leaked.`;
+  document.getElementById('detailLede').innerHTML = proj.illustrative
+    ? `<b>Illustrative example:</b> <b>${esc(proj.leaver)}</b> → <b>${esc(proj.incoming)}</b> · ${esc(proj.subtitle)}. This file shows the handover format with example claims; it is not connected to live data.`
+    : `<b>Synthetic Meridian demo:</b> <b>${esc(proj.leaver)}</b> → <b>${esc(proj.incoming)}</b>. Start the Studio to reconstruct claims from the six sample sources. No accuracy or leak result is assumed before running the checks.`;
+  const banner = document.getElementById('illustrativeBanner');
+  if (banner) banner.hidden = !proj.illustrative;
 
   // Update Hero Stats
   document.getElementById('statSteps').textContent = proj.stats.steps;
@@ -349,7 +409,7 @@ function renderDossier(projectId) {
   document.getElementById('statSourced').textContent = proj.stats.sourced;
 
   // Update Active Project Dossier Claims
-  document.getElementById('dossierTitle').textContent = `Verified Claims Ledger: ${proj.headline}`;
+  document.getElementById('dossierTitle').textContent = `Meridian handover: ${proj.headline}`;
   document.getElementById('dossierPill').textContent = `${proj.leaver.toUpperCase()} → ${proj.incoming.toUpperCase()}`;
 
   const claimsContainer = document.getElementById('dossierClaimsGrid');
@@ -364,15 +424,26 @@ function renderDossier(projectId) {
       </div>
       <p class="claim-stmt">${c.stmt}</p>
       <div class="claim-quote">
-        ${c.label === 'Missing' ? '<span style="color:#f87171">' + c.quote + '</span>' : 'Source: ' + c.source + ' — <mark>“' + c.quote + '”</mark>'}
+        ${c.label === 'Missing' ? '<span style="color:#B4462F">' + c.quote + '</span>' : 'Source: ' + c.source + ' — <mark>“' + c.quote + '”</mark>'}
       </div>
     `;
     claimsContainer.appendChild(card);
   });
+  if (!proj.claims.length) {
+    const empty = document.createElement('p');
+    empty.className = 'dossier-empty';
+    empty.textContent = 'Claims appear here after you reconstruct the Meridian sample in the Handover Studio.';
+    claimsContainer.appendChild(empty);
+  }
 
 }
 
-function openProjectDossier(projectId) { location.hash = '#/spec/' + projectId; }
+function openProjectDossier(projectId, sourceEl) {
+  // The lifted file morphs into the dossier header (view transition, js/app.js).
+  document.querySelectorAll('.dock-card').forEach(c => { c.style.viewTransitionName = ''; });
+  if (sourceEl && 'startViewTransition' in document) sourceEl.style.viewTransitionName = 'dossier-hero';
+  location.hash = '#/spec/' + projectId;
+}
 function closeProjectDossier() { location.hash = '#/'; }
 
 document.getElementById('backBtn').addEventListener('click', closeProjectDossier);
@@ -383,9 +454,10 @@ document.querySelectorAll('#detailNav button').forEach(btn => {
     document.querySelectorAll('#detailNav button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const target = document.getElementById(btn.dataset.target);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (window.BatonSpec) { window.BatonSpec.select(btn.dataset.target); return; }
+    if (target) { if (window.BatonScroll) window.BatonScroll.to(target); else target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
 });
 
 // Initialize Dock on page load
-renderDock();
+buildDock();

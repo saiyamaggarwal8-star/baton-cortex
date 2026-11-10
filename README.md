@@ -60,6 +60,16 @@ There are 20 tests on the engine:
 
 Any static host works: Vercel, Netlify, GitHub Pages or Cloudflare Pages. Use the folder root as the output directory, with no build command.
 
+## Design and motion
+
+- **Palette:** butter cream (about 60%), midnight ink (about 20%), honey tangerine (about 15%) and semantic label colours. Tokens are in `css/theme.css`.
+- **Type:** Bricolage Grotesque for display text, DM Sans for body text, DM Mono for labels.
+- **Motion:** GSAP 3.15 (with ScrollTrigger, SplitText and CustomEase) and Lenis smooth scroll, kept locally in `vendor/`. Switching views uses the View Transitions API: the lifted dock file morphs into the dossier header.
+- **Dock:** built once and animated by GSAP using only transform and clip-path. A hover-intent guard stops the stack from jittering when a card slides under a pointer that isn't moving.
+- **Reduced motion:** the page is static by default and motion is opt-in. Lenis, the reveals and the orbit only start under `prefers-reduced-motion: no-preference`, and every element rests in its final state.
+
+- **Spec explorer:** the product spec page opens one section at a time from a 3D ring of the 11 sections, using CircularCarousel by [React Bits](https://reactbits.dev/components/circular-carousel) (JS-CSS variant). The site has no React, so `js/circular-carousel.js` ports the component to plain JavaScript (same presets, physics, input and reduced-motion handling), and `css/circular-carousel.css` is the registry stylesheet unchanged. Section covers are generated SVGs. Use **Show all sections** (or print) to see the full spec.
+
 ## Project structure
 
 ```
@@ -70,7 +80,10 @@ js/engine.js        Trust-critical logic (pure functions, also runs in Node)
 js/sample.js        Synthetic "Meridian" project and demo personas
 js/studio.js        Studio UI: Connect → Reconstruct → Verify → Review → Handover
 js/dock.js          3D project dock and PRD dossier on the landing page
-js/app.js           Hash router (#/, #/studio/<step>, #/spec/<project>)
+js/app.js           Hash router (#/, #/studio/<step>, #/spec/<project>) with view transitions
+js/motion.js        GSAP + Lenis motion layer (opt-in, reduced-motion safe)
+js/circular-carousel.js  CircularCarousel (React Bits) ported to plain JS
+js/spec-carousel.js Spec explorer: the 11 PRD sections on the carousel
 tests/              node:test suite for the engine
 ```
 

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baton — Knowledge, carried forward.</title>
+<meta name="description" content="Baton turns scattered project activity into a handover where every statement cites its evidence, every gap is labelled, and each reader sees only what they may see.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap">
+<link rel="stylesheet" href="css/base.css?v=5">
+<link rel="stylesheet" href="css/studio.css?v=5">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23c9e2d3'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-family='Arial' font-weight='900' font-size='32' fill='%23192720'%3Eb.%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<div class="shell">
+<header>
+ <a class="brand" href="#/" style="text-decoration:none;color:inherit">
+   <div class="brandmark">b.</div>
+   <div>
+     <div class="brandname">baton<span>.</span></div>
+     <div class="tagline">KNOWLEDGE, CARRIED FORWARD.</div>
+   </div>
+ </a>
+ <nav class="topnav" aria-label="Main">
+   <a href="#/" data-nav="home">Workspace</a>
+   <a href="#/studio/connect" data-nav="studio">Handover Studio</a>
+   <a href="#/spec/meridian" data-nav="spec">Product spec</a>
+ </nav>
+ <div class="header-right">
+   <div class="workspace"><span class="workspace-dot"></span>CORTEX WORKSPACE</div>
+ </div>
+</header>
+
+<main>
+<!-- LANDING -->
+<section class="landing" id="landing">
+ <div class="welcome">
+   <div>
+     <div class="eyebrow">TEAM CORTEX · VERIFIABLE KNOWLEDGE HANDOVER</div>
+     <h1>Projects move forward. Knowledge stays.</h1>
+     <p style="max-width:720px;line-height:1.65">When someone leaves a project, Baton rebuilds what they knew from your notes, chats, task boards and GitHub as small claims, each with an exact source quote that code checks. The newcomer gets a handover written only from those claims, limited to what they are allowed to see. Anything Baton cannot prove is shown as a labelled gap.</p>
+     <div class="hero-cta">
+       <a class="btn btn-primary" href="#/studio/connect" data-start-sample>Try it with the Meridian sample →</a>
+       <a class="btn btn-ghost" href="#/studio/connect">Start with your own sources</a>
+       <a class="btn btn-ghost" href="#/spec/meridian">Read the product spec</a>
+     </div>
+   </div>
+ </div>
+
+ <div class="how-strip" aria-label="How Baton works">
+   <div class="how-step"><span class="how-num">01 · CONNECT</span><b>Add sources</b><span>Notes, chat export, task CSV, public GitHub repo. Pick who may see each. Secrets are masked on import.</span></div>
+   <div class="how-step"><span class="how-num">02 · RECONSTRUCT</span><b>Extract claims</b><span>Rules propose typed claims with an exact quote. Instruction-like text is quarantined.</span></div>
+   <div class="how-step"><span class="how-num">03 · VERIFY</span><b>Check in code</b><span>Quote match, exact-token guard, support check. Failed claims are never stored.</span></div>
+   <div class="how-step"><span class="how-num">04 · REVIEW</span><b>Human gate</b><span>Accept, edit or reject; resolve conflicts; answer gaps; view as each reader; then publish.</span></div>
+   <div class="how-step"><span class="how-num">05 · HANDOVER</span><b>Day-one plan</b><span>Per-reader plan with receipts. Hidden and missing items look identical.</span></div>
+ </div>
+
+ <!-- THE 2 TOP MENUS (RECENT ACTIVITY + IN-PROGRESS PROJECTS) -->
+ <div class="landing-grid">
+  <section class="panel recent">
+   <div class="panel-head">
+     <div><h2>RECENT ACTIVITY</h2><div class="panel-sub">The latest updates across your workspace</div></div>
+     <span class="small-pill">TODAY</span>
+   </div>
+   <div class="activity">
+    <div class="activity-item"><div class="activity-icon">✓</div><div><strong>Claim accepted by reviewer</strong><p>Payment webhook retries · 10:42 AM</p></div></div>
+    <div class="activity-item"><div class="activity-icon">↗</div><div><strong>New source connected</strong><p>Meridian / sprint-planning.md · 9:18 AM</p></div></div>
+    <div class="activity-item"><div class="activity-icon">!</div><div><strong>Conflict needs a decision</strong><p>Deployment ownership · Yesterday</p></div></div>
+    <div class="activity-item"><div class="activity-icon">✎</div><div><strong>Gap interview updated</strong><p>Vendor API contact · Yesterday</p></div></div>
+   </div>
+  </section>
+
+  <section class="panel projects">
+   <div class="panel-head">
+     <div><h2>IN-PROGRESS PROJECTS</h2><div class="panel-sub">Pick up where your team left off</div></div>
+     <span class="small-pill">VIEW ALL ↗</span>
+   </div>
+   <div class="project-list">
+    <div class="project-card" onclick="openProjectDossier('meridian')"><div class="project-top"><div class="project-name">Meridian Campus App</div><span class="project-tag">IN REVIEW</span></div><p>Knowledge transfer · Aarav → Meera</p><div class="progress"><span style="--w:78%"></span></div><div class="project-foot"><span>78% COMPLETE</span><span>8 gaps · 3 conflicts</span></div></div>
+    <div class="project-card" onclick="openProjectDossier('silicon')"><div class="project-top"><div class="project-name">+se VLSI Verification</div><span class="project-tag">RECONSTRUCT</span></div><p>Hardware harness · Arjun → Neha</p><div class="progress"><span style="--w:46%"></span></div><div class="project-foot"><span>46% COMPLETE</span><span>22 claims found</span></div></div>
+    <div class="project-card" onclick="openProjectDossier('cosmic')"><div class="project-top"><div class="project-name">COSMIC AI Router</div><span class="project-tag">CONNECT</span></div><p>Prompt guardrails · Devika → Rohan</p><div class="progress"><span style="--w:94%"></span></div><div class="project-foot"><span>94% SOURCED</span><span>0 canaries</span></div></div>
+    <div class="project-card" onclick="openProjectDossier('sentinel')"><div class="project-top"><div class="project-name">Sentinel Verifier Lab</div><span class="project-tag">HANDOVER</span></div><p>Quote guard suite · Saiyam → Anushka</p><div class="progress"><span style="--w:100%"></span></div><div class="project-foot"><span>100% SOURCED</span><span>0 false accepts</span></div></div>
+   </div>
+  </section>
+ </div>
+
+ <!-- =========================================================================
+      CASCADING 3D FILE DOCK (PLACED DIRECTLY BENEATH THE 2 MENUS)
+      ========================================================================= -->
+ <section class="dock-section" id="dockSection">
+   <div class="dock-topbar">
+     <div class="dock-badge">
+       <span class="dock-badge-pulse"></span>
+       <span>BATON // VERIFIABLE HANDOVER DOCK</span>
+     </div>
+     <div class="dock-hint">
+       <span>Hover or scroll wheel to pull file up • Click any dossier to view PRD specification</span>
+     </div>
+     <div class="dock-counter" id="dockCounter">06 / 08 PROJECTS</div>
+   </div>
+
+   <!-- 3D Cascading Stage holding 8 Physical Handover Files -->
+   <div class="dock-stage" id="dockStage">
+     <!-- Rendered dynamically by JavaScript with physics & full PRD linkage -->
+   </div>
+
+   <!-- Dock Bottom Navigation & Direct Project Selector -->
+   <div class="dock-footer">
+     <div class="dock-pill-selector" id="dockPillSelector">
+       <!-- Pills 1..8 populated by JS -->
+     </div>
+     <div class="dock-kb-help">
+       <span>[↑ / ↓] Step through files</span>
+       <span>[Enter] Open Dossier</span>
+     </div>
+   </div>
+ </section>
+</section>
+
+<!-- HANDOVER STUDIO (working workflow) -->
+<section class="studio" id="studio" aria-label="Handover Studio">
+  <div id="studioRoot"></div>
+</section>
+
+<!-- PROJECT DOSSIER & PRD SPECIFICATION -->
+<section class="detail" id="detail">
+ <div class="detail-head">
+   <div>
+     <button class="back-btn" id="backBtn">← Back to workspace</button>
+     <div class="eyebrow" style="margin-top:18px" id="detailEyebrow">PROJECT DOSSIER · PRD SPECIFICATION</div>
+     <h1 class="detail-title" id="detailTitle">Baton<span style="color:var(--mint)">.</span> Knowledge, carried forward.</h1>
+     <p class="detail-lede" id="detailLede">A verifiable knowledge-handover tool that rebuilds a project's current state from authorised sources as a ledger of small, checkable claims. This page expands the project file into its product, technical, security and delivery details.</p>
+   </div>
+   <div class="detail-actions">
+     <select class="project-switcher" id="projectSwitcher" onchange="openProjectDossier(this.value)">
+       <option value="cosmic">COSMIC // AI Core</option>
+       <option value="precision">PRECISION LABS // CNC Parts</option>
+       <option value="modular">MODULAR AUDIO // WebAudio DSP</option>
+       <option value="silicon">+se // VLSI Timing Closure</option>
+       <option value="hyve">HYVE:SYSTEMS // Kubernetes Mesh</option>
+       <option value="meridian" selected>MERIDIAN // Campus Backend (Primary Demo)</option>
+       <option value="archon">archon // Enterprise Software</option>
+       <option value="sentinel">SENTINEL // Verifier Lab</option>
+     </select>
+     <a class="btn btn-primary btn-sm" href="#/studio/connect" data-start-sample>Try it in the Studio →</a>
+     <a class="action-btn" href="https://pin.it/5luAy0Tds" target="_blank" rel="noopener noreferrer">Design inspiration ↗</a>
+     <button class="action-btn" onclick="window.print()">Print PRD File</button>
+   </div>
+ </div>
+
+ <!-- HERO STATS -->
+ <div class="hero-stats">
+  <div class="stat"><b id="statSteps">5 steps</b><span>CONNECT → HANDOVER</span></div>
+  <div class="stat"><b id="statFeatures">10 core</b><span>PRODUCT FEATURES</span></div>
+  <div class="stat"><b id="statRoles">4 roles</b><span>ROLE-BASED ACCESS</span></div>
+  <div class="stat"><b id="statSourced">92%</b><span>SOURCED RATE (0 CANARIES)</span></div>
+ </div>
+
+ <!-- ACTIVE PROJECT CLAIMS LEDGER BANNER -->
+ <div class="active-project-dossier" id="activeProjectDossier">
+   <div class="dossier-head">
+     <div>
+       <span class="eyebrow" id="dossierEyebrow">EVIDENCE-FIRST LEDGER</span>
+       <h3 style="margin:4px 0 0;font-size:16px" id="dossierTitle">Project Claims for Meridian Campus Backend</h3>
+     </div>
+     <span class="small-pill" id="dossierPill">AARAV → MEERA HANDOVER</span>
+   </div>
+   <div class="dossier-claims-grid" id="dossierClaimsGrid">
+     <!-- Populated dynamically based on chosen file -->
+   </div>
+ </div>
+
+ <!-- PRD SPECIFICATION QUICK TABS -->
+ <div class="detail-nav" id="detailNav">
+  <button class="active" data-target="overviewInfo">01 Overview</button>
+  <button data-target="workflowInfo">02 Workflow</button>
+  <button data-target="featuresInfo">03 Features</button>
+  <button data-target="claimsInfo">04 Claim System</button>
+  <button data-target="securityInfo">05 Security & Privacy</button>
+  <button data-target="architectureInfo">06 Architecture</button>
+  <button data-target="dataInfo">07 Data & API</button>
+  <button data-target="demoInfo">08 Demo & Benchmark</button>
+  <button data-target="teamInfo">09 Team & Build Plan</button>
+  <button data-target="doneInfo">10 DoD & Testing</button>
+  <button data-target="scopeInfo">11 Scope & Honest Rules</button>
+ </div>
+
+ <!-- ALL 11 PRD SECTIONS ACCORDING TO ATTACHED PRD -->
+ <div class="content-grid">
+  <!-- 01 PRODUCT OVERVIEW -->
+  <article class="info-card full" id="overviewInfo">
+    <h3>01 · PRODUCT OVERVIEW & CORE RULE</h3>
+    <p><b>Product:</b> Baton, a verifiable knowledge-handover tool<br>
+    <b>Team:</b> Cortex (Bennett University)<br>
+    <b>Stage:</b> Build window (Rounds 2 and 3); Round 1 was planning only.<br>
+    <b>Audience of this file:</b> an AI coding agent (Antigravity) and the four team members building the product.</p>
+
+    <h4>The problem (PRD Section 1.1)</h4>
+    <p>When someone leaves a project (graduating club lead, intern at term end, volunteer stepping down), the reasoning behind decisions, unfinished work, dependencies and contacts leaves with them. That knowledge is scattered across chats, pull requests, meeting notes and task boards. The new person reads months of threads or guesses.</p>
+
+    <h4>The solution (PRD Section 1.2)</h4>
+    <p>Baton rebuilds a project's current state from authorised sources as a <b>ledger of small, checkable claims</b>. Each claim has a source quote, a confidence label and a permission tag. The handover is written <b>only from claims</b>. Anything the system cannot prove is shown as a <b>labelled gap</b>, never as a guess. Each reader sees only the claims they are allowed to see.</p>
+
+    <h4>Three differentiators (PRD Section 1.3)</h4>
+    <ul>
+      <li><b>Evidence before prose:</b> A claim is labelled <code>Sourced</code> only if its quote is found in the source by code and a separate check agrees the quote supports the statement.</li>
+      <li><b>Gap interview:</b> Ask the departing person only what the sources cannot answer (target 15 to 20 minutes).</li>
+      <li><b>Permission-first generation:</b> Each reader's handover is built only from claims that reader may see.</li>
+    </ul>
+
+    <h4>The Core Rule (must always hold, PRD Section 2)</h4>
+    <div class="quote"><b>“The system may write only what it can cite. Everything else is shown as a labelled gap.”</b></div>
+    <ul style="margin-top:10px">
+      <li>A claim whose quote cannot be found, or whose support check says no, is <b>never stored</b>.</li>
+      <li>The handover composer sees <b>claim IDs and statements only</b>, never raw sources.</li>
+      <li>A sentence in a handover with no claim citation is <b>rejected by a code check</b>.</li>
+      <li>Nothing reaches the incoming person before an approver signs off.</li>
+    </ul>
+  </article>
+
+  <!-- 02 END-TO-END WORKFLOW -->
+  <article class="info-card full" id="workflowInfo">
+    <h3>02 · END-TO-END WORKFLOW (5 STEPS)</h3>
+    <div class="chips">
+      <span class="chip">1. CONNECT</span>
+      <span class="chip">2. RECONSTRUCT</span>
+      <span class="chip">3. VERIFY</span>
+      <span class="chip">4. REVIEW (HUMAN GATE)</span>
+      <span class="chip">5. HANDOVER</span>
+    </div>
+    
+    <h4>Step 1 — Connect · Data owner</h4>
+    <ul>
+      <li>Link a GitHub repo (issues, PRs, comments, commits, README) via the GitHub REST API.</li>
+      <li>Upload meeting notes (Markdown, text, PDF), a chat export (JSON or text) and a task board (CSV).</li>
+      <li>CSV column-mapping screen so unfamiliar headers can be mapped before import.</li>
+      <li>For each source choose an <b>access tag</b> (for example <code>all_members</code>, <code>core_team</code>, <code>treasurer_only</code>).</li>
+      <li><b>Secrets and personal data are masked on import</b>, before text is stored for display or sent to any model.</li>
+    </ul>
+
+    <h4>Step 2 — Reconstruct · System</h4>
+    <ul>
+      <li>Split sources into <b>passages</b> that keep source, position and author.</li>
+      <li>Ask the LLM to propose <b>typed claims</b>, each with an <b>exact source quote and location</b>.</li>
+      <li>Build a timeline of decisions, changes and open discussions.</li>
+      <li>Infer who works on which area from commit and review activity (labelled <code>Inferred</code>, with the numbers shown).</li>
+    </ul>
+
+    <h4>Step 3 — Verify · System, plain code</h4>
+    <ul>
+      <li>Match each quote against the source passage (exact first, fuzzy fallback, exact-token guard).</li>
+      <li>Run the support check (does the quote support the statement?).</li>
+      <li>Assign labels. Failed claims are <b>never stored</b>.</li>
+      <li>Run slot-based conflict detection and checklist-based gap detection, <b>computed per reader</b>.</li>
+    </ul>
+
+    <h4>Step 4 — Review · Human gate (Reviewer + Leaver)</h4>
+    <ul>
+      <li>Reviewer accepts, edits or rejects each claim and resolves conflicts.</li>
+      <li>Reviewer uses <b>View as</b> to see each reader role's real view and must confirm they read it for each role.</li>
+      <li>Leaver answers gap questions (typed answers become <code>Confirmed by</code> or <code>Stated by</code> claims).</li>
+      <li>Every change is versioned. Document stays marked <b>Draft</b> until approval.</li>
+      <li>Rejecting or correcting sends the ledger back to Reconstruct.</li>
+    </ul>
+
+    <h4>Step 5 — Handover · Incoming member</h4>
+    <ul>
+      <li>Build a <b>continuation plan</b> only from claims that reader may see: ownership-transfer table, first-week action list (ordered), open risks and blockers, timeline.</li>
+      <li>The incoming person <b>acknowledges each item</b> (receipt).</li>
+      <li>Every approved version is stored and immutable (can be retracted).</li>
+    </ul>
+  </article>
+
+  <!-- 03 FEATURES -->
+  <article class="info-card full" id="featuresInfo">
+    <h3>03 · PRODUCT FEATURES (10 CORE + ROUND 3 IMPROVEMENTS)</h3>
+    <table class="table">
+      <thead><tr><th>#</th><th>FEATURE</th><th>BEHAVIOUR</th></tr></thead>
+      <tbody>
+        <tr><td>01</td><td><b>Source import</b></td><td>GitHub API plus uploads (MD/TXT/PDF notes, JSON/TXT chat, CSV tasks). Access tag set per source on import.</td></tr>
+        <tr><td>02</td><td><b>Claim extraction</b></td><td>Structured typed claims with exact source quote for each.</td></tr>
+        <tr><td>03</td><td><b>Quote verification</b></td><td>Exact-first matching, exact-token guard, separate support check decide if a claim may be Sourced.</td></tr>
+        <tr><td>04</td><td><b>Evidence panel</b></td><td>Click a claim, see the source passage highlighted in place.</td></tr>
+        <tr><td>05</td><td><b>Timeline</b></td><td>Key decisions, changes, unresolved discussions in date order.</td></tr>
+        <tr><td>06</td><td><b>Ownership / risk views</b></td><td>Includes ownership inferred from commit and review activity, labelled Inferred.</td></tr>
+        <tr><td>07</td><td><b>Conflict & gap flags</b></td><td>Contradictions side by side; missing owners or reasons listed as gaps.</td></tr>
+        <tr><td>08</td><td><b>Review & approval</b></td><td>Accept, edit, reject each claim. Nothing shared before approver signs off.</td></tr>
+        <tr><td>09</td><td><b>Role-based handover</b></td><td>Reader-specific view; secrets and personal data masked.</td></tr>
+        <tr><td>10</td><td><b>Version history & receipt</b></td><td>Every approved version stored; incoming person acknowledges each item.</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Round 3 Improvements (PRD Section 6)</h4>
+    <ul>
+      <li><b>Guided gap interview:</b> Ranked, targeted questions for the leaver; each answer becomes a <code>Confirmed by</code> claim.</li>
+      <li><b>Permission hardening:</b> Per-item access-request flow with data-owner approval, audit log of who viewed what, automated leak test with planted canary secrets.</li>
+      <li><b>Handover quality report:</b> Scored view of coverage (share of claims Sourced, open gaps, unresolved conflicts, single-owner risks), tested against the seeded benchmark.</li>
+    </ul>
+  </article>
+
+  <!-- 04 CLAIM SYSTEM -->
+  <article class="info-card full" id="claimsInfo">
+    <h3>04 · CLAIM MODEL & VERIFICATION LABELS</h3>
+    <h4>9 Claim types (PRD Section 7.1)</h4>
+    <div class="chips">
+      <span class="chip">decision</span>
+      <span class="chip">open_question</span>
+      <span class="chip">owner</span>
+      <span class="chip">dependency</span>
+      <span class="chip">risk</span>
+      <span class="chip">blocker</span>
+      <span class="chip">next_action</span>
+      <span class="chip">recurring_problem</span>
+      <span class="chip">contact</span>
+    </div>
+    <p><b>Priority-5 types</b> (retained if time is short): <code>decision</code>, <code>owner</code>, <code>open_question</code>, <code>risk</code>, <code>next_action</code>.</p>
+
+    <h4>Claim fields</h4>
+    <p>Each claim stores: <code>id</code>, <code>project_id</code>, <code>type</code>, <code>subject</code>, <code>slot</code>, <code>statement</code>, <code>label</code>, <code>quote</code>, <code>quote_start</code>, <code>quote_end</code>, <code>source_id</code>, <code>passage_id</code>, <code>match_method</code>, <code>access_list</code>, <code>origin</code>, <code>review_state</code>, <code>created_by</code>, <code>created_at</code>, <code>version</code>.</p>
+
+    <h4>Verification Labels & Strict Meaning (PRD Section 7.3 & Section 19)</h4>
+    <p class="note"><b>Critical Rule:</b> Do NOT use the word "Verified" in the UI. Use only the exact labels below.</p>
+    <table class="table">
+      <thead><tr><th>LABEL</th><th>MEANING</th><th>WHAT IT DOES NOT PROVE</th></tr></thead>
+      <tbody>
+        <tr><td><span class="claim-label lbl-sourced">Sourced</span></td><td>Quote found in source (exact or fuzzy), exact-token guard passed, and support check agrees quote supports statement.</td><td>That statement is true or still current.</td></tr>
+        <tr><td><span class="claim-label">Quote-only</span></td><td>Quote found and guarded, but support check was unavailable or over budget.</td><td>Everything Sourced does not prove, plus that quote supports statement.</td></tr>
+        <tr><td><span class="claim-label lbl-inferred">Inferred</span></td><td>Support check says "partly", or derived from a pattern (e.g. commit counts), shown with numbers behind it.</td><td>Anything beyond the numbers shown.</td></tr>
+        <tr><td><span class="claim-label lbl-stated">Stated by [person], [date]</span></td><td>The leaver's or reviewer's own typed words. Never labelled Sourced.</td><td>That any other source agrees.</td></tr>
+        <tr><td><span class="claim-label lbl-stated">Confirmed by [person], [date]</span></td><td>Leaver confirms an extracted claim shown to them.</td><td>Truth beyond that person's word.</td></tr>
+        <tr><td><span class="claim-label lbl-conflict">Possible conflict / Superseded</span></td><td>Computed per reader: same subject and slot, different values. Stays side by side until human resolution.</td><td>Which side is right. Never a verdict.</td></tr>
+        <tr><td><span class="claim-label lbl-missing">Missing</span></td><td>A handover-checklist item has no claim in the reader's view.</td><td>That nothing exists (may be undocumented or restricted).</td></tr>
+      </tbody>
+    </table>
+  </article>
+
+  <!-- 05 SECURITY & PERMISSIONS -->
+  <article class="info-card full" id="securityInfo">
+    <h3>05 · PERMISSIONS, PRIVACY & ZERO EXISTENCE LEAKAGE</h3>
+    <h4>Permission Principles (PRD Section 9.1)</h4>
+    <ul>
+      <li>Each <b>source</b> has an access tag. Each extracted claim has <b>exactly one source</b> and <b>inherits</b> that source's access list.</li>
+      <li>Claims with no single source (leaver answers, reviewer edits, derived claims) carry an <b>explicit access list never wider than the claims they rest on</b>.</li>
+      <li>A claim built on several sources takes the <b>strictest</b> access tag among them unless split by the reviewer.</li>
+      <li>Permissions are enforced <b>twice</b>: (1) PostgreSQL Row-Level Security (RLS), (2) composing each handover only from claims the reader may see.</li>
+    </ul>
+
+    <h4>Zero Existence Leakage Rule (PRD Section 9.2)</h4>
+    <p>Where a reader's view has no answer, show exactly:</p>
+    <div class="quote"><b>“No answer found in your view. It may be undocumented or restricted”</b></div>
+    <p>accompanied by a <i>Request access</i> button. The row must be <b>identical whether the item is missing or hidden</b>. No counts, no stubs like "2 items need access", no existence signals.</p>
+
+    <h4>Generation Safety & Prompt Containment</h4>
+    <ul>
+      <li>Retrieval and composition run <b>per reader and per request</b>, after database filtering.</li>
+      <li>Text the reader may not see is <b>never placed in the prompt</b>.</li>
+      <li><b>Nothing is cached across readers.</b></li>
+      <li>The composer sees only permitted claim IDs and statements, never raw sources.</li>
+      <li>Default handover is <b>rendered by code</b> from claim statements. Any model-written sentence must cite one claim ID; uncited sentences are rejected.</li>
+    </ul>
+  </article>
+
+  <!-- 06 ARCHITECTURE -->
+  <article class="info-card full" id="architectureInfo">
+    <h3>06 · ARCHITECTURE & TECH STACK</h3>
+    <div class="quote">Sources → Ingest & Protect → Extract (LLM) → Verify (Code) → Compare (Code) → PostgreSQL (RLS) → Compose per reader → Web App</div>
+    <table class="table" style="margin-top:14px">
+      <thead><tr><th>LAYER</th><th>CHOICE</th><th>NOTES</th></tr></thead>
+      <tbody>
+        <tr><td>Frontend</td><td>Next.js (React, TypeScript), Tailwind CSS</td><td>Split-pane review: claim list left, highlighted source right.</td></tr>
+        <tr><td>API</td><td>Python, FastAPI</td><td>Typed request and response schemas (Pydantic).</td></tr>
+        <tr><td>Database</td><td>PostgreSQL on Supabase with RLS</td><td>One store for claims and evidence.</td></tr>
+        <tr><td>Auth</td><td>Seeded demo personas; Supabase Auth</td><td>Judges switch reader roles in one click.</td></tr>
+        <tr><td>LLM</td><td>Hosted LLM API with JSON-schema output</td><td>Provider interface, cached responses keyed per reader.</td></tr>
+        <tr><td>Quote Verification</td><td>Exact substring + RapidFuzz fallback</td><td>Exact-token guard; sliding windows for long quotes (>64 ch).</td></tr>
+        <tr><td>Support Check</td><td>Second LLM call</td><td>Quote and statement only; yes/partly/no verdict.</td></tr>
+        <tr><td>Conflict Detection</td><td>Slot rules in code</td><td>LLM review only if time allows.</td></tr>
+        <tr><td>Sensitive Data</td><td>Regex secret & PII patterns; Presidio</td><td>Scans outputs too; honest reporting of canaries.</td></tr>
+        <tr><td>Connectors</td><td>GitHub REST API; MD, PDF, JSON, CSV parsers</td><td>CSV column-mapping screen.</td></tr>
+        <tr><td>Hosting</td><td>Vercel, Render / Railway, Supabase</td><td>docker-compose fallback.</td></tr>
+      </tbody>
+    </table>
+  </article>
+
+  <!-- 07 DATA & API -->
+  <article class="info-card full" id="dataInfo">
+    <h3>07 · DATABASE SCHEMA (15 TABLES) & FASTAPI REST API</h3>
+    <h4>15 Database Tables (UUID PKs, RLS enabled, PRD Section 12)</h4>
+    <div class="chips">
+      <span class="chip">projects</span>
+      <span class="chip">users</span>
+      <span class="chip">project_members</span>
+      <span class="chip">sources</span>
+      <span class="chip">passages</span>
+      <span class="chip">claims</span>
+      <span class="chip">confirmations</span>
+      <span class="chip">review_decisions</span>
+      <span class="chip">conflicts</span>
+      <span class="chip">handover_versions</span>
+      <span class="chip">receipts</span>
+      <span class="chip">access_requests</span>
+      <span class="chip">audit_log</span>
+      <span class="chip">jobs</span>
+      <span class="chip">llm_cache</span>
+    </div>
+
+    <h4>18 FastAPI Endpoints (PRD Section 13.1)</h4>
+    <table class="table">
+      <thead><tr><th>METHOD</th><th>ENDPOINT</th><th>PURPOSE</th></tr></thead>
+      <tbody>
+        <tr><td>POST</td><td>/projects</td><td>Create project</td></tr>
+        <tr><td>POST</td><td>/projects/{id}/sources/github</td><td>Import repository</td></tr>
+        <tr><td>POST</td><td>/projects/{id}/sources/upload</td><td>Upload notes, chat or CSV</td></tr>
+        <tr><td>POST</td><td>/projects/{id}/sources/csv/mapping</td><td>Save CSV column mapping</td></tr>
+        <tr><td>PATCH</td><td>/sources/{id}/access</td><td>Set access tag per source</td></tr>
+        <tr><td>POST</td><td>/projects/{id}/reconstruct</td><td>Start extraction & verification job</td></tr>
+        <tr><td>GET</td><td>/jobs/{id}</td><td>Job status</td></tr>
+        <tr><td>GET</td><td>/projects/{id}/claims</td><td>List claims (as current reader, RLS-filtered)</td></tr>
+        <tr><td>GET</td><td>/claims/{id}/evidence</td><td>Quote + passage + highlight range</td></tr>
+        <tr><td>PATCH</td><td>/claims/{id}</td><td>Accept | edit | reject</td></tr>
+        <tr><td>GET</td><td>/projects/{id}/conflicts · /gaps</td><td>Per-reader conflicts & missing items</td></tr>
+        <tr><td>POST</td><td>/projects/{id}/interview/answers</td><td>Leaver answers → new claims</td></tr>
+        <tr><td>GET</td><td>/projects/{id}/view-as/{role}</td><td>Reviewer sees reader's real view</td></tr>
+        <tr><td>POST</td><td>/projects/{id}/hazards/check</td><td>Stale-fact hazard list per role</td></tr>
+        <tr><td>POST</td><td>/projects/{id}/handover/approve</td><td>Approve only after checks pass</td></tr>
+        <tr><td>GET</td><td>/projects/{id}/handover</td><td>Reader-specific continuation plan</td></tr>
+        <tr><td>POST</td><td>/handover/{version}/receipts</td><td>Acknowledge an item</td></tr>
+        <tr><td>POST</td><td>/access-requests</td><td>Request access to hidden item</td></tr>
+      </tbody>
+    </table>
+  </article>
+
+  <!-- 08 DEMO & BENCHMARK -->
+  <article class="info-card full" id="demoInfo">
+    <h3>08 · SYNTHETIC DEMO PROJECT & BENCHMARK (MERIDIAN)</h3>
+    <p><b>Project “Meridian” (PRD Section 16):</b> Campus-app backend handover from departing final-year lead <b>Aarav Sharma</b> to incoming lead <b>Meera Nair</b>.</p>
+    <ul>
+      <li>About <b>40 planted facts</b> across claim types, 5 existing only in leaver's answers.</li>
+      <li>Planted <b>conflicts</b> (Task board says Aarav owns deployments; 3 Oct chat says Karan handles deploys).</li>
+      <li>Planted <b>gaps</b> (Nobody named as vendor-API contact).</li>
+      <li>Planted <b>supersessions</b> (A later decision replaces an earlier one).</li>
+      <li>Planted fake secrets: <b>10–20 unique canaries</b> in a 200–500 document staging corpus.</li>
+      <li>Planted <b>injection comments</b> in issues, PR comments and chat.</li>
+      <li>Restricted note tagged <code>treasurer_only</code> about club funds (INR 1,40,000) that Meera must <b>never</b> see.</li>
+    </ul>
+
+    <h4>Worked Acceptance Examples (PRD Section 16.2)</h4>
+    <table class="table">
+      <thead><tr><th>CLAIM</th><th>LABEL</th><th>EVIDENCE / OUTCOME</th></tr></thead>
+      <tbody>
+        <tr><td>Payment webhook retries stay switched off until vendor fixes duplicate events</td><td><span class="claim-label lbl-sourced">Sourced</span></td><td>Meeting notes of 12 Sep; review note on PR #48 by Aarav.</td></tr>
+        <tr><td>Aarav owns deployments vs Karan handles deploys</td><td><span class="claim-label lbl-conflict">Possible conflict</span></td><td>Task board lists Aarav (Aug 28); chat on 3 Oct says Karan.</td></tr>
+        <tr><td>Who holds vendor-API contact?</td><td><span class="claim-label lbl-missing">Missing</span></td><td>No source names anyone; becomes question for Aarav in gap interview.</td></tr>
+        <tr><td>Aarav wrote most of billing module</td><td><span class="claim-label lbl-inferred">Inferred</span></td><td>Commit history (47 of 52 commits, 90.4% in /services/billing).</td></tr>
+      </tbody>
+    </table>
+  </article>
+
+  <!-- 09 TEAM & BUILD PLAN -->
+  <article class="info-card full" id="teamInfo">
+    <h3>09 · TEAM OWNERSHIP & STRICT BUILD SEQUENCE</h3>
+    <table class="table">
+      <thead><tr><th>TEAM MEMBER</th><th>ROLE</th><th>OWNS</th></tr></thead>
+      <tbody>
+        <tr><td><b>Kaustubh Chowdhury</b></td><td>Product, UX, frontend</td><td>Reviewer workspace with view-as, evidence panel, interview cards, day-one view, demo script.</td></tr>
+        <tr><td><b>Divyansh Somani</b></td><td>Backend, ingestion, model layer</td><td>FastAPI service and jobs, schema and version history, importers with column mapping, cached model interface, versions and receipts.</td></tr>
+        <tr><td><b>Anushka Verma</b></td><td>Extraction, benchmark, demo data</td><td>Extraction and support-check prompts, rule extractors and slot definitions, conflict rules, seeded and held-out benchmark, quality report, final demo.</td></tr>
+        <tr><td><b>Saiyam Aggarwal</b></td><td>Verification, permissions, security</td><td>Quote verifier with exact-token guard, label rules, access tags and permission check with RLS, canary/differential/injection tests in CI, reviewer publish gate.</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Build Sequence (Follow strictly, PRD Section 14)</h4>
+    <ol>
+      <li>Repo, DB schema, roles, access tags, single permission check (RLS plus app-level check).</li>
+      <li>Importers: GitHub, notes, chat, CSV with column mapping.</li>
+      <li>Ingest and protect: chunking into passages, secret and PII masking.</li>
+      <li>LLM provider interface plus extraction (JSON schema & cache).</li>
+      <li>Quote verifier with exact-token guard & sliding windows for long quotes.</li>
+      <li>Support check and label assignment.</li>
+      <li>Rule extractors, slot definitions, conflict and missing rules per reader.</li>
+      <li>Evidence panel and reviewer workspace.</li>
+      <li>View-as, hazard check, publish gate, versions, receipts.</li>
+      <li>Day-one successor view with acknowledgement.</li>
+      <li>Canary, differential and injection tests wired into CI.</li>
+      <li>Round 3: Guided gap interview, permission hardening, quality report.</li>
+      <li>Polish: Held-out benchmark, teammate pilot, failure handling.</li>
+    </ol>
+    <p><b>What to cut first:</b> Timeline polish, Presidio (keep regex), optional model narrative, PDF importer.<br>
+    <b>NEVER cut:</b> Quote verifier with exact-token guard; label assignment; permission check with canary and differential tests; reviewer view-as and publish gate.</p>
+  </article>
+
+  <!-- 10 TESTING & DOD -->
+  <article class="info-card full" id="doneInfo">
+    <h3>10 · TESTING REQUIREMENTS, SUCCESS TARGETS & DEFINITION OF DONE</h3>
+    <table class="table">
+      <thead><tr><th>TEST</th><th>PASS CONDITION</th></tr></thead>
+      <tbody>
+        <tr><td>Quote checker mutations (~100)</td><td><b>Zero false accepts</b> on digit, identifier and negation changes.</td></tr>
+        <tr><td>Canary leak test (CI)</td><td><b>0 canaries</b> across all reader roles.</td></tr>
+        <tr><td>Differential test (CI)</td><td>Removing hidden source leaves identical inputs and byte-identical output.</td></tr>
+        <tr><td>Injection test</td><td>No tool calls, no external URLs rendered, provenance visible.</td></tr>
+        <tr><td>Uncited-sentence check</td><td>Composer output containing uncited sentence is rejected.</td></tr>
+        <tr><td>Permission test</td><td>Hidden claim vs missing claim response shape and gap text are identical.</td></tr>
+        <tr><td>Support-check precision</td><td>90% or higher agreement.</td></tr>
+        <tr><td>Recall</td><td>80% or higher of planted facts found.</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Definition of Done (PRD Section 20)</h4>
+    <ul>
+      <li>[✓] A judge opens the hosted link and imports a source.</li>
+      <li>[✓] Sources produce labelled, cited claims; failed claims are not stored.</li>
+      <li>[✓] Reviewer can accept, edit, reject, resolve conflicts, and view as each role.</li>
+      <li>[✓] Publishing is blocked until hazard checks and per-role view confirmations pass.</li>
+      <li>[✓] One approved handover reaches the incoming person; they acknowledge item by item.</li>
+      <li>[✓] Hidden and missing items look identical to the reader.</li>
+      <li>[✓] Canary, differential and injection tests pass in CI.</li>
+      <li>[✓] Quote-checker mutation test shows zero false accepts on digits, identifiers and negations.</li>
+    </ul>
+  </article>
+
+  <!-- 11 SCOPE & HONEST RULES -->
+  <article class="info-card full" id="scopeInfo">
+    <h3>11 · NON-GOALS, HONEST WORDING RULES & FUTURE SCOPE</h3>
+    <h4>Non-goals (PRD Section 3.2)</h4>
+    <p>Live Slack/Teams OAuth, real-time sync, SSO/SCIM, question-answering chatbots, unapproved publishing, real confidential data, scoring/ranking individuals.</p>
+
+    <h4>Honest Claims & Wording Rules (PRD Section 19)</h4>
+    <ul>
+      <li>Say <i>"we found no tool that documents claim-level quote verification, a gap-targeted leaver interview, permission-first generation and per-claim approval together."</i> Never say "first", "only" or "nobody does this".</li>
+      <li>Do NOT promise reduced ramp-up time or fewer incidents. No study measures this.</li>
+      <li>Turnover evidence: use exact numbers from Avelino et al. (1,932 projects, 315 lost truck-factor, 128 survived) and Nourry et al. (36,464 projects, 32,689 affected, 27.07% recovered).</li>
+      <li>Do NOT use the word "Verified" in the UI. Use labels: Sourced, Inferred, Stated by, Confirmed by, Possible conflict, Missing.</li>
+    </ul>
+  </article>
+ </div>
+</section>
+</main>
+
+<footer class="footer">
+ <span>BATON · TEAM CORTEX · Synthetic demo data only</span>
+ <span>Evidence before prose. Permission before sharing.</span>
+</footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/engine.js?v=5"></script>
+<script src="js/sample.js?v=5"></script>
+<script src="js/dock.js?v=5"></script>
+<script src="js/studio.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 Draft text for the Round 2 form. Edit it into your own words before you submit, and fill in the two links once they exist.
 
 - **Working project link:** _(add after deploying; test it in an incognito window)_
-- **Source-code repository link:** _(add after pushing to a public GitHub repo; test it in an incognito window)_
+- **Source-code repository link:** https://github.com/saiyamaggarwal8-star/baton-cortex
 
 ## Completed features
 
@@ -47,13 +47,23 @@ The main workflow (Connect → Reconstruct → Verify → Review → Handover) r
 18. **Review cap.** At most 60 claims reach review, chosen by checklist weight. Any held-back claims are counted and explained.
 19. **Rejections survive a re-run.** A claim the reviewer rejected stays rejected when Reconstruct runs again, as long as it comes from the same source and quote ("returns only with new evidence").
 20. **Guidance for judges.** Every Studio step shows the next action with a button. **Fast-forward the demo review** makes the standard reviewer decisions, logged and changeable, and stops at the publish gate, so a person still makes the final decision. It never overrules a leaver dispute.
+21. **Postgres with row-level security (Supabase).** The ledger (sources, claims, versions, handover items, receipts, access requests, audit log) is saved to Supabase Postgres, with RLS on every table. The browser holds only the publishable key; the service key is never deployed.
+    - Staff personas (owner, reviewer) can write sources and claims; reader personas get 0 rows from them.
+    - Readers read a published handover only through the `reader_handover` view (`security_invoker = true`), which returns just the rows their access tags allow. Restricted rows never leave the server.
+    - Each browser gets its own workspace, so judges don't see each other's data.
+    - The handover shows "Served by Postgres row-level security" and checks that the database rows match the in-app permission check.
+    - **Database probes** in Verify query Postgres directly as each persona with the public key: readers must get nothing from the raw ledger and exactly their own rows from a published version (9 of 9 pass on the sample).
+    - If the database can't be reached, the app keeps working locally and says so; nothing extra is revealed.
 
 ## Technology and implementation
 
-- **Frontend:** plain HTML, CSS and JavaScript as a static single-page app with a hash router. There is no build step and no dependencies other than Google Fonts.
+- **Frontend:** plain HTML, CSS and JavaScript as a static single-page app with a hash router and no build step. Motion uses GSAP (ScrollTrigger, SplitText, CustomEase) and Lenis, vendored locally, and respects reduced-motion settings. The product-spec ring is a plain-JS port of React Bits' CircularCarousel.
+- **Database:** Supabase Postgres (`supabase/migrations/`). Row-level security on every table, helper functions for the demo persona and workspace (sent as request headers), a `security_invoker` view for readers, and grants that give the anonymous role only what the policies allow. Supabase's security advisor reports no issues.
+- **Database client:** `js/db.js`, a small REST client with no library. Writes are debounced and every hook is guarded, so without a database the app runs exactly as before.
+- **Hosting:** Vercel (static), deployed from the GitHub repository.
 - **Engine:** `js/engine.js` holds all trust-critical logic as pure functions (extraction, verifier, labels, permissions, composition, leak tests). The browser and the Node test suite share the same file.
 - **Permissions:** one choke point, `canSee(reader, item)`. Every view, gap list and handover goes through `computeView` / `composeHandover`, which filter by the reader first. The composer sees only claim IDs and statements, never raw sources.
-- **Storage:** browser `localStorage`, so each judge's session is independent. Original secrets captured by masking are kept in memory only, for the output scan.
+- **Storage:** Postgres for the ledger, plus browser `localStorage` for the Studio's working state, so each judge's session is independent. Original secrets captured by masking are kept in memory only, for the output scan; they are never sent to the database.
 - **Tests:** 20 tests using Node's built-in `node:test` (`node --test tests/engine.test.js`).
 - **Demo data:** the synthetic Meridian project. It has a planted conflict (deploy owner), a supersession (session storage moved from Redis to Postgres), stale-fact hazards (vendor payments), gaps (vendor contact, credentials), fake secrets, an injection comment and a treasurer-only note.
 
@@ -61,8 +71,9 @@ The main workflow (Connect → Reconstruct → Verify → Review → Handover) r
 
 | Plan | Round 2 build | Why |
 |---|---|---|
-| Next.js + Tailwind frontend, FastAPI API | One static web app; all logic in `engine.js` | A judge must open one link and use the product with no sign-in and no cold-start servers. The logic is written as portable pure functions, so it can move behind an API later. |
-| Supabase Postgres with row-level security | One app-level permission check plus per-reader composition, on synthetic data only | Our Round 1 plan allowed an app-level check as a last-resort fallback for the synthetic demo. Moving to database row-level security is improvement 1 below. |
+| Next.js + Tailwind frontend, FastAPI API | One static web app talking straight to Supabase's REST API; all trust logic in `engine.js` | A judge must open one link and use the product with no sign-in and no cold-start servers. RLS does the enforcing in the database, so no API server is needed for this. The logic is portable pure functions, so it can move behind FastAPI later. |
+| Supabase Postgres with row-level security | Built as planned: RLS on every table, a `security_invoker` reader view, publishable key only | Kept. The in-app check stays as a second layer, and the app compares the two on every handover. |
+| Supabase Auth | Seeded demo personas sent as a request header | As the plan said: personas are for the synthetic demo only, not production authentication. Real accounts are improvement 1 below. |
 | Hosted LLM proposes claims; a second model call does the support check | Deterministic extraction rules and a lexical support check | It's free and works offline, so judges always get the same results, and there is no API key to leak. The quote verifier is the same code either way. |
 | RapidFuzz for fuzzy matching | Our own Levenshtein distance with sliding windows | No dependencies in the browser. It keeps the sliding-window behaviour the plan required for long quotes. |
 | pytest in CI | `node:test` (CI not wired yet) | Same language as the engine. |
@@ -72,16 +83,10 @@ Kept as planned: the Core Rule, the labels, the exact gap text, the reviewer's v
 
 ## Three major improvements for Round 3 (draft, the team to confirm)
 
-1. **Database-enforced permissions and real accounts.** Move the ledger to Supabase Postgres with row-level security on every table:
-   - views with `security_invoker`;
-   - Supabase Auth instead of demo personas;
-   - per-reader queries under the reader's own token;
-   - an audit log stored in the database.
-
-   The canary, differential and injection tests will run in CI against the deployed database.
+1. **Real accounts and hardened permissions.** Replace the demo persona header with Supabase Auth, so each reader's queries run under their own signed token and RLS reads the role from the token's claims. Move workspace ownership and reviewer sign-off into the database, so publishing needs an approver's identity. Run the canary, differential, injection and database-probe tests in CI against a fresh database on every push.
 2. **Model-assisted extraction and a guided gap interview.** Add an LLM behind a provider interface, with cached responses keyed per reader. The model will propose richer claims from messy sources, and a separate model call will do the support check. The same code verifier still decides what may be stored. The manual gap answers become a guided interview with ranked, targeted questions, and we'll measure support-check precision on the benchmark.
 3. **A handover quality report and a held-out benchmark.** Add a scored coverage view: the share of claims Sourced, open gaps, unresolved conflicts and single-owner risks. Evaluate it against the seeded benchmark (about 40 planted facts) and a held-out set in different export formats, written by a teammate who did not build the importers. Report recall and the fabrication rate, including misses.
 
 ## AI tools used
 
-Disclose these as the rules require: Claude (Anthropic) helped write code and documentation; ChatGPT was used for an early website draft.
+Disclose these as the rules require: Claude (Anthropic) helped write code and documentation; ChatGPT was used for an early website draft. Third-party code: GSAP and Lenis (vendored), and a plain-JS port of React Bits' CircularCarousel. No pre-built product was used.

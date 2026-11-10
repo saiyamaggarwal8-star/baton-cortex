@@ -1,8 +1,8 @@
 # Baton: Round 2 submission notes (draft)
 
-Draft text for the Round 2 form. Edit it into your own words before you submit, and fill in the two links once they exist.
+Draft text for the Round 2 form. Edit it into your own words before you submit.
 
-- **Working project link:** _(add after deploying; test it in an incognito window)_
+- **Working project link:** https://baton-cortex.vercel.app (opens without sign-in; tested in a fresh browser session)
 - **Source-code repository link:** https://github.com/saiyamaggarwal8-star/baton-cortex
 
 ## Completed features

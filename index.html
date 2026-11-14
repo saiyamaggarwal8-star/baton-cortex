@@ -376,21 +376,22 @@
   <!-- 06 ARCHITECTURE -->
   <article class="info-card full" id="architectureInfo">
     <h3>06 · ARCHITECTURE & TECH STACK</h3>
-    <div class="quote">Sources → Ingest & Protect → Extract (LLM) → Verify (Code) → Compare (Code) → PostgreSQL (RLS) → Compose per reader → Web App</div>
+    <div class="quote">Sources → Ingest & Mask → Extract (rules + AI) → Verify (code, then Postgres) → AI evidence check → Review gate (enforced in Postgres) → Compose per reader under RLS → Web App</div>
     <table class="table" style="margin-top:14px">
-      <thead><tr><th>LAYER</th><th>CHOICE</th><th>NOTES</th></tr></thead>
+      <thead><tr><th>LAYER</th><th>AS BUILT (ROUND 3)</th><th>NOTES</th></tr></thead>
       <tbody>
-        <tr><td>Frontend</td><td>Next.js (React, TypeScript), Tailwind CSS</td><td>Split-pane review: claim list left, highlighted source right.</td></tr>
-        <tr><td>API</td><td>Python, FastAPI</td><td>Typed request and response schemas (Pydantic).</td></tr>
-        <tr><td>Database</td><td>PostgreSQL on Supabase with RLS</td><td>One store for claims and evidence.</td></tr>
-        <tr><td>Auth</td><td>Seeded demo personas; Supabase Auth</td><td>Judges switch reader roles in one click.</td></tr>
-        <tr><td>LLM</td><td>Hosted LLM API with JSON-schema output</td><td>Provider interface, cached responses keyed per reader.</td></tr>
-        <tr><td>Quote Verification</td><td>Exact substring + RapidFuzz fallback</td><td>Exact-token guard; sliding windows for long quotes (>64 ch).</td></tr>
-        <tr><td>Support Check</td><td>Second LLM call</td><td>Quote and statement only; yes/partly/no verdict.</td></tr>
-        <tr><td>Conflict Detection</td><td>Slot rules in code</td><td>LLM review only if time allows.</td></tr>
-        <tr><td>Sensitive Data</td><td>Regex secret & PII patterns; Presidio</td><td>Scans outputs too; honest reporting of canaries.</td></tr>
-        <tr><td>Connectors</td><td>GitHub REST API; MD, PDF, JSON, CSV parsers</td><td>CSV column-mapping screen.</td></tr>
-        <tr><td>Hosting</td><td>Vercel, Render / Railway, Supabase</td><td>docker-compose fallback.</td></tr>
+        <tr><td>Frontend</td><td>Static single-page app (HTML, CSS, JavaScript), GSAP + Lenis</td><td>No build step; split-pane review with the source quote highlighted.</td></tr>
+        <tr><td>Server</td><td>Vercel Function (Node) for AI; Postgres triggers for trust checks</td><td>The browser never calls a model; the database re-checks quotes and the publish gate.</td></tr>
+        <tr><td>Database</td><td>PostgreSQL on Supabase with RLS on every table</td><td>Workspaces with owners and per-workspace roles; anonymous key reads nothing.</td></tr>
+        <tr><td>Auth</td><td>Supabase Auth (JWT), six public demo accounts</td><td>RLS reads auth.uid(); one-click demo sign-in for judges.</td></tr>
+        <tr><td>LLM</td><td>Claude via Vercel AI Gateway (or Anthropic API), JSON-schema output</td><td>Provider interface; responses cached in Postgres by model, task and input.</td></tr>
+        <tr><td>Quote Verification</td><td>Exact match + Levenshtein sliding windows, in code</td><td>Exact-token guard; repeated in Postgres (trigram match, numbers guarded).</td></tr>
+        <tr><td>Support Check</td><td>Rules check + separate AI evidence check</td><td>Sees only statement and quote; doubtful claims go to a person.</td></tr>
+        <tr><td>Conflict Detection</td><td>Slot rules in code + AI contradiction / outdated-decision check</td><td>Every AI finding needs a human decision before publishing.</td></tr>
+        <tr><td>Sensitive Data</td><td>Regex secret &amp; PII masking; output canary scan</td><td>Honest reporting: zero canaries across the readers tested.</td></tr>
+        <tr><td>Connectors</td><td>GitHub REST API; Markdown, text, CSV (any headers), chat JSON incl. Slack</td><td>CSV column mapping; PDF import not built.</td></tr>
+        <tr><td>Testing</td><td>Engine tests, benchmark, 36 live security probes</td><td>GitHub Actions on every push against a fresh Supabase database.</td></tr>
+        <tr><td>Hosting</td><td>Vercel (site + function), Supabase (database + auth)</td><td>Same migrations run locally with the Supabase CLI.</td></tr>
       </tbody>
     </table>
   </article>
@@ -580,7 +581,7 @@
 <script src="js/config.js?v=3"></script>
 <script src="js/db.js?v=4"></script>
 <script src="js/ai.js?v=1"></script>
-<script src="js/studio.js?v=23"></script>
+<script src="js/studio.js?v=24"></script>
 <script src="js/account.js?v=2"></script>
 <script src="js/app.js?v=15"></script>
 <script src="js/landing.js?v=10"></script>

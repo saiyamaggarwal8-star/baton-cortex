@@ -1,102 +1,143 @@
 # Baton: verifiable knowledge handover
 
-**Team Cortex · CodersInPune Hackathon, Round 2**
+**Team Cortex · CodersInPune Hackathon, Final Round (Round 3)**
 
-When someone leaves a project, Baton rebuilds what they knew from the project's sources as a ledger of small claims. Each claim carries an exact source quote, a label and an access tag. Code, not a model, checks every quote. The incoming person gets a handover written only from approved claims they are allowed to see. Anything Baton cannot prove is shown as a labelled gap.
+**Live:** https://baton-cortex.vercel.app · **Repo:** https://github.com/saiyamaggarwal8-star/baton-cortex
 
-> **Core rule:** the system may write only what it can cite. Everything else is shown as a labelled gap.
+When someone leaves a project, what they knew is scattered across notes, chats, task boards and pull requests. Baton rebuilds it as a **ledger of small claims**. Every claim carries an exact quote from its source, a label and an access tag. Code (not a model) checks every quote, a reviewer approves before anything is shared, and each reader receives only the rows Postgres row-level security allows. Anything Baton cannot prove is shown as a labelled gap.
 
-## Try it
+> **Core rule:** the system may write only what it can cite. Everything else is a labelled gap.
 
-Open the site and click **Try it with the Meridian sample**. The workflow has five steps:
+---
 
-1. **Connect.** Six synthetic sources load: meeting notes, a chat export, a task-board CSV, GitHub comments, a commit log and a treasurer-only note. Change who may see each one, add your own (paste, or upload `.md` / `.txt` / `.csv` / `.json`), or import a public GitHub repo.
-2. **Reconstruct.** Run it. Sources are split into passages, secrets are masked, claims are proposed, and instruction-like text is quarantined.
-3. **Verify.** See every claim's quote match, token guard and support check. In the **Quote guard lab**, change a number or add a "not" and watch it get rejected. **Run tests** runs the mutation, canary and differential tests.
-4. **Review.** You act as Prof. Rao, the reviewer:
-   - decide the random sample, then bulk-approve only low-risk claims;
-   - resolve the deploy-owner conflict;
-   - answer the gap interview as Aarav;
-   - decide the stale-fact hazards;
-   - view the handover as Meera, Rohan and Kavya and confirm each view;
-   - publish.
-5. **Handover.** Switch between readers. Each gets a different plan from the same approved version. Tick items to acknowledge them, or request access on a gap row.
+## Try it in two minutes (no setup)
 
-Everything runs in the browser on synthetic data. There is no sign-in, and progress is saved in your browser only (**Reset** clears it).
+Open https://baton-cortex.vercel.app → **Sign in**. Every demo account is a real Supabase Auth user; the password for all of them is **`baton-demo-2026`** (also printed on the sign-in screen, with one-click buttons).
 
-## Run locally
+| Account | Email | Role | What to try |
+|---|---|---|---|
+| **Prof. Rao** | rao@baton.example | Reviewer | **Start here.** Load the sample, run the five steps, publish. |
+| Priya | priya@baton.example | Data owner | Add and tag sources. Cannot approve (the database refuses). |
+| **Meera** | meera@baton.example | Incoming lead · core team | Open her handover and press **Try to break in**. |
+| Rohan | rohan@baton.example | Member · all members | Sees only all-members items; the rest are gaps. |
+| Kavya | kavya@baton.example | Treasurer | Sees treasurer-only items Meera and Rohan cannot. |
+| Aarav | aarav@baton.example | Departing lead | Answers the guided exit interview from his own account. |
 
-It's a static site with no build step.
+The demo accounts are public on purpose and protect synthetic data only.
 
-```bash
-python -m http.server 3100
+**Path:** sign in as Prof. Rao → **Load Meridian sample** → **Reconstruct** → **Verify** (try *Plant a wrong claim*, *Run tests*, *Run database probes*, *Run benchmark*) → **Review** (or *Fast-forward the demo review*; it stops at the publish gate) → **Approve and publish**. Then switch to **Meera** from the account menu: her page is served only from Postgres; press **Try to break in**. Try **Load Lumen** for the held-out project in Slack/Jira/transcript/email formats.
+
+---
+
+## What is built
+
+| Area | What works |
+|---|---|
+| Import | Paste or upload `.md` / `.txt` / `.csv` / `.json`; chat exports including Slack JSON; task CSVs with header mapping (Jira, Trello-style); public GitHub repos (README + 20 issues/PRs). Each source has an access tag. Secrets and personal data are masked on import. |
+| Extraction | Deterministic rules **plus AI extraction** (decisions with rationale, tasks with owners and deadlines, dependencies, risks, open questions, contacts) through a server function. Every AI proposal must quote its source. |
+| Verification (code) | Exact match, fuzzy sliding-window fallback, exact-token guard (numbers, versions, paths, identifiers, negations), support check. **Postgres re-checks every extracted quote again on save.** |
+| AI evidence check | A separate model call judges whether each quote supports its claim and finds contradictions and outdated decisions. Doubtful claims are held for a human (no bulk approval, fast-forward never decides them, publish gate stays closed). |
+| Review gate | Random sample (10%, min 5) before bulk approval of low-risk claims only, conflicts side by side, stale-fact hazards, leaver disputes, view-as for every reader, 60-claim cap, immutable versions with retraction. **The database enforces the gate: reviewer only, no undecided claims, no open disputes, every published row must equal an approved claim.** |
+| Guided interview | Ranked, targeted questions for each gap (weight × readers missing it), optional AI tailoring; sent to the departing lead's account; answers come back as "Stated by Aarav" claims. |
+| Accounts & permissions | Supabase Auth (JWT). Postgres reads the user from the token (`auth.uid()`); workspaces have owners and members with per-workspace roles; the anonymous key alone reads nothing. |
+| Handover | Per-reader plan (ownership, first-week actions, risks, decisions, timeline), gap rows identical whether missing or hidden, request access, acknowledgements stored per reader. |
+| Quality & benchmark | Handover quality report (evidence share, gaps per reader, conflicts, AI flags, hazards, single-owner risk). Benchmark against answer keys for Meridian and the held-out Lumen project, plus a labelled evidence-check set. |
+| Tests | 20 engine tests, benchmark, 36 live security probes with real tokens; all run in GitHub Actions on every push against a **fresh** Supabase database. |
+
+---
+
+## Architecture
+
+```
+Browser (static SPA, no build)                      Vercel Function            Supabase
+┌─────────────────────────────────────┐   JWT    ┌──────────────────┐  JWT   ┌──────────────────────────┐
+│ js/engine.js  masking, passages,    │────────▶│ api/ai.js         │──────▶│ Postgres + RLS            │
+│               rules, quote verifier │          │ 1 verify token    │       │  profiles, workspaces,    │
+│ js/studio.js  5-step Studio         │          │ 2 call model      │       │  workspace_members,       │
+│ js/account.js sign-in, reader page, │          │   (no tools, one  │       │  sources, claims,         │
+│               break-in, interview   │          │   chunk per call) │       │  versions, handover_items,│
+│ js/db.js      REST client, session  │──JWT───▶ │ 3 code verifier   │       │  receipts, requests,      │
+│ js/ai.js      calls /api/ai         │          │ 4 evidence check  │       │  audit_log, ai_cache,     │
+└─────────────────────────────────────┘          │ 5 cache in PG     │       │  interview_*              │
+                                                  └──────────────────┘       │ triggers: quote check,    │
+                                                     Claude via Vercel        │  publish gate, immutable  │
+                                                     AI Gateway (or the       │  versions, audit stamps   │
+                                                     Anthropic API)           └──────────────────────────┘
 ```
 
-Then open http://localhost:3100.
+- **Identity:** Supabase Auth issues a JWT; PostgREST verifies it; RLS helpers (`baton_ws()`, `baton_persona()`) read `auth.uid()` and the user's membership. The `x-baton-workspace` header only *selects* a workspace; it is honoured only for members.
+- **Trust checks on the server:** `baton_check_claim` (quote must be in the stored source, numbers guarded), `baton_check_version` (reviewer only, no undecided claims or open disputes, server sets approver and time), `baton_check_item` (published row = approved claim, same words and tag), immutable versions, server-stamped audit and interview rows.
+- **AI:** the browser never talks to a model. `api/ai.js` verifies the caller's token and role, strips URLs/HTML, never sends instruction-like passages, sends one source chunk per call (one access tag), runs the same `engine.js` verifier on every proposal, then a separate evidence-check call. Responses are cached in Postgres by model + task + input.
+
+---
+
+## Run it yourself
+
+### 1. Frontend only (no database, everything local)
+
+```bash
+git clone https://github.com/saiyamaggarwal8-star/baton-cortex.git
+cd baton-cortex
+python -m http.server 3200      # or: npx serve -l 3200
+```
+
+Open http://localhost:3200. With the default `js/config.js` it uses the hosted demo database; to run fully offline, set `supabaseUrl: ''` in `js/config.js` (the Studio then runs in local mode).
+
+### 2. Your own Supabase project
+
+1. Create a project at supabase.com.
+2. In the SQL editor, run `supabase/migrations/001…006` in order, then `supabase/seed/demo_accounts.sql`.
+3. Put your project URL and **publishable** key in `js/config.js` (never the secret/service key).
+
+Or run the whole stack locally with the Supabase CLI (Docker required): `supabase start` applies every migration and the seed, then point `js/config.js` at `http://127.0.0.1:54321`.
+
+### 3. AI extraction
+
+Deploy to Vercel (framework preset **Other**, no build command). `api/ai.js` picks its provider automatically:
+
+- **Vercel AI Gateway** (default): works with the deployment's built-in OIDC token; enable AI Gateway credits on the Vercel team.
+- **Anthropic API:** set `ANTHROPIC_API_KEY` in the project's environment variables.
+
+Optional: `BATON_MODEL`, `BATON_EFFORT`. When the AI is unavailable the Studio keeps the rule-based results and says why. On `localhost`, AI calls go to the deployed `/api/ai` (CORS allowed; your sign-in token is still required).
+
+---
 
 ## Tests
 
 ```bash
-node --test tests/engine.test.js
+node --test tests/engine.test.js     # 20 engine tests: verifier, permissions, leak tests, importers
+node tests/benchmark.mjs             # recall vs answer keys + evidence-check accuracy (add --ai for the live model)
+node tests/rls.probe.mjs             # 36 live security probes with real Supabase tokens
 ```
 
-There are 20 tests on the engine:
+`.github/workflows/ci.yml` runs all three on every push; the probes run against a fresh local Supabase stack built from the migrations and seed.
 
-- **Quote matcher:** exact, fuzzy, and sliding windows for quotes over 64 characters.
-- **Exact-token guard:** digits, ports, versions, identifiers, paths and negations.
-- **Support check and storage:** the support check works, and failed claims are never stored.
-- **Secret masking.**
-- **Injection quarantine.**
-- **Per-reader logic:** conflict and superseded labels are computed per reader, and stale-fact hazards are listed.
-- **Gap rows:** identical whether an item is missing or hidden.
-- **Canary leak test:** 0 canaries across readers.
-- **Differential test:** byte-identical output.
-- **Approval:** nothing is shared before approval.
-- **Mutation test:** 0 false accepts.
-- **Uncited sentences** are detected.
-- **CSV column mapping.**
+In the app: **Verify → Run tests** (44 quote mutations, canary scan, differential test, gap shape, planted injection), **Run database probes**, **Run benchmark**, **Plant a wrong claim**; **Meera → Try to break in**.
 
-## Deploy
+---
 
-Any static host works: Vercel, Netlify, GitHub Pages or Cloudflare Pages. Use the folder root as the output directory, with no build command.
-
-## Design and motion
-
-- **Palette:** butter cream (about 60%), midnight ink (about 20%), honey tangerine (about 15%) and semantic label colours. Tokens are in `css/theme.css`.
-- **Type:** Bricolage Grotesque for display text, DM Sans for body text, DM Mono for labels.
-- **Motion:** GSAP 3.15 (with ScrollTrigger, SplitText and CustomEase) and Lenis smooth scroll, kept locally in `vendor/`. Switching views uses the View Transitions API: the lifted dock file morphs into the dossier header.
-- **Dock:** built once and animated by GSAP using only transform and clip-path. A hover-intent guard stops the stack from jittering when a card slides under a pointer that isn't moving.
-- **Reduced motion:** the page is static by default and motion is opt-in. Lenis, the reveals and the orbit only start under `prefers-reduced-motion: no-preference`, and every element rests in its final state.
-
-- **Spec explorer:** the product spec page opens one section at a time from a 3D ring of the 11 sections, using CircularCarousel by [React Bits](https://reactbits.dev/components/circular-carousel) (JS-CSS variant). The site has no React, so `js/circular-carousel.js` ports the component to plain JavaScript (same presets, physics, input and reduced-motion handling), and `css/circular-carousel.css` is the registry stylesheet unchanged. Section covers are generated SVGs. Use **Show all sections** (or print) to see the full spec.
-
-## Project structure
+## Repository layout
 
 ```
-index.html          Landing page, Handover Studio, product spec page
-css/base.css        Shell, landing, dock and spec styles
-css/studio.css      Studio styles
-js/engine.js        Trust-critical logic (pure functions, also runs in Node)
-js/sample.js        Synthetic "Meridian" project and demo personas
-js/studio.js        Studio UI: Connect → Reconstruct → Verify → Review → Handover
-js/dock.js          3D project dock and PRD dossier on the landing page
-js/app.js           Hash router (#/, #/studio/<step>, #/spec/<project>) with view transitions
-js/motion.js        GSAP + Lenis motion layer (opt-in, reduced-motion safe)
-js/circular-carousel.js  CircularCarousel (React Bits) ported to plain JS
-js/spec-carousel.js Spec explorer: the 11 PRD sections on the carousel
-tests/              node:test suite for the engine
+index.html              single page: landing, Studio, account views, product spec
+js/engine.js            pure functions shared by browser, server and tests
+js/studio.js            the five-step Studio
+js/account.js           sign-in, account menu, reader page, break-in, leaver interview
+js/db.js  js/ai.js      Supabase client and AI client
+js/sample.js            Meridian sample;  js/benchmark.js  Lumen held-out set, answer keys, labelled pairs
+api/ai.js               Vercel Function: AI extraction, evidence check, conflicts, interview
+supabase/migrations     001 schema + RLS … 006 guided interview;  supabase/seed  demo accounts
+tests/                  engine tests, benchmark, live security probes
+docs/                   submission notes, project PDF source, benchmark results
 ```
 
-## What is real and what is simulated
+## Limitations (stated honestly)
 
-| Real (working code) | Simulated / not yet built |
-|---|---|
-| Rule-based claim extraction with exact quotes | A hosted LLM for extraction (planned behind a provider interface) |
-| Quote verifier: exact match, fuzzy fallback, sliding windows, exact-token guard | The support check is lexical, not a second model call |
-| Secret and personal-data masking on import and in interview answers | Presidio |
-| Per-reader views, conflicts, superseded labels, gaps and stale-fact hazards | Postgres row-level security (the permission check is one app-level function, `canSee`) |
-| Review gate: sample, bulk rules, edit re-verification, view-as, publish gate | Server-side persistence (uses browser storage) |
-| Immutable versions with a SHA-256 hash, retraction, receipts, access requests, audit log | Real sign-in (seeded demo personas only) |
-| Public GitHub import through the REST API | Slack, Teams or Drive connectors |
+- Demo data is synthetic; demo accounts are public. Real teams would be invited by email (roadmap).
+- Masking is heuristic; we report "zero canaries across the readers tested", never "no secrets leak".
+- The benchmark sets are small and written by the same person who built the importers (Lumen was written after the rules and never used to tune them). Numbers show direction, not significance.
+- PDF import and an LLM-written narrative summary are not built.
 
-We report "zero canaries across the readers and sample tested", never "no secrets leak". Masking is heuristic.
+## Credits and disclosures
+
+Built by Team Cortex (Bennett University) during the event window. AI tools: Claude (Anthropic) assisted with code and documentation. Third-party code: GSAP and Lenis (vendored), a plain-JS port of React Bits' CircularCarousel, `@anthropic-ai/sdk`. No pre-built product was used.

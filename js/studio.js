@@ -341,11 +341,11 @@
     if (!d || !d.configured) return '';
     const p = state.probes;
     let body;
-    if (!p) body = '<div class="empty" style="padding:18px">Not run yet. Probes query Postgres directly as each persona.</div>';
+    if (!p) body = '<div class="empty" style="padding:18px">Not run yet. Probes sign in to each demo account and query Postgres with its token.</div>';
     else if (p.running) body = '<div class="empty" style="padding:18px">Querying Postgres as each persona…</div>';
     else if (p.error) body = '<div class="notice warn">Probes could not run: ' + h(p.error) + '</div>';
     else body = '<div class="gate">' + p.results.map(x => '<div class="gate-item ' + (x.pass ? 'pass' : 'fail') + '"><span class="ic">' + (x.pass ? '✓' : '!') + '</span><div>' + h(x.name) + '<small>' + h(x.detail) + '</small></div></div>').join('') + '</div>';
-    return '<div class="card" style="margin-top:14px"><div class="card-head"><div><h3>Database probes (Postgres RLS)</h3><p class="sub" style="margin:4px 0 0">Live queries against Supabase as each persona, with only the public key: readers must get nothing from the raw ledger, and exactly their own rows from a published handover.</p></div>' +
+    return '<div class="card" style="margin-top:14px"><div class="card-head"><div><h3>Database probes (Postgres RLS)</h3><p class="sub" style="margin:4px 0 0">Live queries against Supabase, each with that account’s own sign-in token: readers must get nothing from the raw ledger, forged headers and foreign workspaces must return nothing, and each reader must get exactly their own rows from a published handover.</p></div>' +
       '<button class="btn btn-primary btn-sm" data-action="runProbes"' + (p && p.running ? ' disabled' : '') + '>Run database probes</button></div>' + body + '</div>';
   }
 

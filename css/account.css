@@ -54,3 +54,12 @@
 .plant-result{margin-top:12px}
 .plant-result .claim-quote{background:var(--panel-2);border-left:3px solid var(--tangerine);padding:8px 12px;border-radius:8px}
 @media (max-width:720px){.plant{flex-direction:column;align-items:flex-start}}
+
+/* Handover quality report */
+.q-score{display:flex;align-items:baseline;gap:4px;font-family:var(--display)}
+.q-score b{font-size:40px;letter-spacing:-.03em;line-height:1}
+.q-score span{color:var(--muted);font-size:13px}
+.q-grade{display:inline-block;font-weight:700;font-size:13px;padding:3px 10px;border-radius:999px;margin:2px 0 10px}
+.q-good{color:var(--sage)} .q-grade.q-good{background:var(--sage-soft)}
+.q-meh{color:var(--ochre)} .q-grade.q-meh{background:var(--ochre-soft)}
+.q-bad{color:var(--crimson)} .q-grade.q-bad{background:var(--crimson-soft)}

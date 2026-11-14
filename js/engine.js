@@ -208,9 +208,11 @@
     const arr = Array.isArray(data) ? data : (data.messages || data.data || []);
     if (!Array.isArray(arr)) return null;
     return arr.map(m => {
-      const who = m.author || m.from || m.user || m.sender || m.name || 'Unknown';
+      // Slack exports: user_profile.real_name / user_name, and ts as epoch seconds.
+      const who = (m.user_profile && (m.user_profile.real_name || m.user_profile.display_name)) || m.user_name || m.author || m.from || m.user || m.sender || m.name || 'Unknown';
       const msg = m.text || m.message || m.content || m.body || '';
-      const when = m.date || m.ts || m.time || m.timestamp || '';
+      let when = m.date || m.time || m.timestamp || m.ts || '';
+      if (/^\d{9,11}(\.\d+)?$/.test(String(when))) when = new Date(parseFloat(when) * 1000).toISOString().slice(0, 16).replace('T', ' ');
       return (when ? '[' + when + '] ' : '') + (typeof who === 'object' ? (who.name || 'Unknown') : who) + ': ' + (typeof msg === 'string' ? msg : JSON.stringify(msg));
     }).join('\n');
   }

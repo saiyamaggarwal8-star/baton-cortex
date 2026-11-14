@@ -47,7 +47,7 @@
       rev: 0, labClaim: null, labText: '', labOut: null, tests: null, editing: null, editNotice: null,
       draft: { title: '', kind: 'notes', access: 'core_team', text: '', date: '', csvHeaders: null, csvMap: null, repo: '' },
       showText: {}, answers: {}, answerAccess: {}, answerAs: 'leaver', disputeNotes: {},
-      aiMode: 'ai', ai: null, plant: null
+      aiMode: 'ai', ai: null, plant: null, project: 'meridian', bench: null
     };
   }
   let state = load() || freshState();
@@ -61,11 +61,12 @@
       const raw = localStorage.getItem(STORE);
       if (!raw) return null;
       const s = Object.assign(freshState(), JSON.parse(raw));
+      if (s.bench && s.bench.running) s.bench = null;
       if (s.ai && s.ai.running) s.ai = { error: 'The AI run was interrupted by a page reload. Run Reconstruct again to repeat it (cached answers make it fast).' };
       if (s.plant && s.plant.running) s.plant = null;
       // Re-derive canaries for sample sources (custom-source secrets are not persisted).
       s.sources.forEach(src => {
-        const sample = S.SAMPLE_SOURCES.find(x => x.id === src.id);
+        const sample = S.SAMPLE_SOURCES.concat((window.BatonBench && window.BatonBench.LUMEN_SOURCES) || []).find(x => x.id === src.id);
         if (sample) vault[src.id] = E.maskSecrets(sample.kind === 'tasks' ? E.csvToText(sample.raw).text : sample.raw).findings.map(f => f.original);
       });
       return s;
@@ -433,15 +434,19 @@
 
   function markStale() { if (state.run) state.run.stale = true; }
 
-  function loadSample() {
+  function loadSample(project) {
+    const lumen = project === 'lumen' && window.BatonBench;
     if ((window.BatonDB && window.BatonDB.configured)) window.BatonDB.newWorkspace();
+    const keepMode = state.aiMode;
     state = freshState();
+    state.aiMode = keepMode || 'ai';
+    state.project = lumen ? 'lumen' : 'meridian';
     Object.keys(vault).forEach(k => delete vault[k]);
-    S.SAMPLE_SOURCES.forEach(s => state.sources.push(makeSource(s)));
-    audit('Priya (data owner)', 'Loaded the synthetic Meridian sample (' + state.sources.length + ' sources)');
+    (lumen ? window.BatonBench.LUMEN_SOURCES : S.SAMPLE_SOURCES).forEach(s => state.sources.push(makeSource(s)));
+    audit('Priya (data owner)', 'Loaded the synthetic ' + (lumen ? 'Lumen (held-out, other export formats)' : 'Meridian') + ' sample (' + state.sources.length + ' sources)');
     state.step = 'connect';
     save(); render();
-    toast('Meridian sample loaded: 6 sources. Next, run Reconstruct.');
+    toast((lumen ? 'Lumen' : 'Meridian') + ' sample loaded: ' + state.sources.length + ' sources. Next, run Reconstruct.');
   }
 
   function runReconstruct(opts) {
@@ -625,6 +630,138 @@
     state.plant.running = false;
     audit('System', 'Planted wrong claim ' + id + ' for the demo; AI evidence check: ' + (state.plant.ai ? state.plant.ai.verdict : 'unavailable'));
     save(); render();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Handover quality report and benchmark (Round 3, improvement 3)
+  // ---------------------------------------------------------------------------
+  function qualityReport(version) {
+    const pool = version ? version.claims : state.claims.filter(c => c.reviewState === 'accepted' || c.reviewState === 'edited');
+    const base = pool.length ? pool : state.claims.filter(c => c.reviewState !== 'rejected');
+    const evidenced = base.filter(c => c.label === 'Sourced' || /^Confirmed by/.test(c.label) || c.confirmedBy).length;
+    const stated = base.filter(c => /^Stated by/.test(c.label)).length;
+    const inferred = base.filter(c => c.label === 'Inferred').length;
+    const asApproved = base.map(c => Object.assign({}, c, { reviewState: 'accepted' }));
+    const perReader = READERS.map(r => ({ r, gaps: E.computeView(asApproved, r).gaps }));
+    const conflicts = conflictPairs().length;
+    const flagged = state.claims.filter(c => c.needsHuman && c.reviewState === 'proposed').length;
+    const hz = hazards().length;
+    const leaver = PERSONA.leaver.name;
+    const owners = {};
+    base.filter(c => c.slot && c.slot.kind === 'owner').forEach(c => { (owners[c.slot.subject] = owners[c.slot.subject] || new Set()).add(c.slot.value); });
+    const singleOwner = Object.keys(owners).filter(k => owners[k].size === 1 && owners[k].has(leaver));
+    const share = base.length ? evidenced / base.length : 0;
+    const avgGaps = perReader.reduce((a, x) => a + x.gaps.length, 0) / READERS.length;
+    const penalties = [
+      ['Claims without direct evidence', Math.round((1 - share) * 25)],
+      ['Open gaps (average per reader)', Math.round(avgGaps * 5)],
+      ['Unresolved conflicts', conflicts * 8],
+      ['AI-flagged claims waiting', flagged * 5],
+      ['Stale-fact hazards', hz * 6],
+      ['Areas only the leaver owns', singleOwner.length * 4]
+    ];
+    const score = Math.max(0, Math.min(100, 100 - penalties.reduce((a, p) => a + p[1], 0)));
+    let acks = null;
+    if (version) acks = READERS.map(r => {
+      const items = Object.values(E.composeHandover(version.claims, r).sections).flat();
+      const got = ((state.receipts[version.id] || {})[r.id]) || {};
+      return { r, done: items.filter(i => got[i.claimId]).length, total: items.length };
+    });
+    return { score, share, evidenced, stated, inferred, total: base.length, perReader, conflicts, flagged, hz, singleOwner, penalties, acks };
+  }
+
+  function qualityCard(compact, version) {
+    if (!state.claims.length) return '';
+    const q = qualityReport(version);
+    const grade = q.score >= 85 ? ['Ready to hand over', 'good'] : q.score >= 65 ? ['Usable, with gaps to close', 'meh'] : ['Not ready yet', 'bad'];
+    const pct = Math.round(q.share * 100);
+    const rows = [
+      ['Evidence', pct + '% of ' + q.total + ' claims are Sourced or Confirmed (' + q.inferred + ' inferred, ' + q.stated + ' stated by a person)'],
+      ['Gaps per reader', q.perReader.map(x => h(x.r.name) + ' ' + x.gaps.length).join(' · ')],
+      ['Conflicts / AI flags / hazards', q.conflicts + ' / ' + q.flagged + ' / ' + q.hz],
+      ['Only the leaver owns', q.singleOwner.length ? q.singleOwner.map(h).join(', ') + ': assign a new owner' : 'nothing (every owned area has a successor)']
+    ];
+    if (q.acks) rows.push(['Acknowledged', q.acks.map(a => h(a.r.name) + ' ' + a.done + '/' + a.total).join(' · ')]);
+    const lost = q.penalties.filter(p => p[1] > 0);
+    return '<div class="card quality-card' + (compact ? '' : ' wide') + '"' + (compact ? '' : ' style="margin-bottom:14px"') + '><div class="card-head"><div><h3>Handover quality report</h3><p class="sub" style="margin:4px 0 0">Scored by code from the ledger: evidence, gaps, conflicts, AI flags, stale facts and single-owner risk.</p></div>' +
+      '<div class="q-score q-' + grade[1] + '"><b>' + q.score + '</b><span>/ 100</span></div></div>' +
+      '<div class="q-grade q-' + grade[1] + '">' + grade[0] + '</div><dl class="meta-list">' + rows.map(r => '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>').join('') + '</dl>' +
+      (lost.length ? '<p class="hint" style="margin-top:8px">Points lost: ' + lost.map(p => h(p[0]) + ' −' + p[1]).join(', ') + '.</p>' : '') + '</div>';
+  }
+
+  function benchSource(o) {
+    let text = o.raw || '';
+    if (o.kind === 'tasks') text = E.csvToText(text).text;
+    else if (o.kind === 'chat' && /^\s*[\[{]/.test(text)) text = E.chatJsonToText(text) || text;
+    const m = E.maskSecrets(text);
+    return { id: o.id, title: o.title, kind: o.kind, access: o.access, author: o.author || null, date: o.date, text: m.text, masked: m.findings.map(f => f.type) };
+  }
+
+  async function runBench() {
+    const B = window.BatonBench;
+    if (!B || (state.bench && state.bench.running)) return;
+    state.bench = { running: true, phase: 'Running the rules on both projects…' };
+    render();
+    const useAI = state.aiMode === 'ai' && window.BatonAI && window.BatonAI.available();
+    const res = { at: new Date().toISOString(), projects: {}, support: {}, aiTried: !!useAI };
+    for (const [name, list] of [['meridian', S.SAMPLE_SOURCES], ['lumen', B.LUMEN_SOURCES]]) {
+      const sources = list.map(benchSource);
+      const run = E.runPipeline(sources);
+      const r = B.score(run.claims, name);
+      const entry = { rules: { all: r.all, explicit: r.explicit, implicit: r.implicit, missed: r.rows.filter(x => !x.hit).map(x => x.fact.id + ' ' + x.fact.what) } };
+      if (useAI) {
+        state.bench.phase = 'Asking the AI to extract ' + (name === 'lumen' ? 'Lumen (held out)' : 'Meridian') + '…'; render();
+        try {
+          const ex = await window.BatonAI.call('extract', { sources: sources.map(x => ({ id: x.id, kind: x.kind, title: x.title, access: x.access })), passages: run.passages.map(p => ({ id: p.id, sourceId: p.sourceId, text: p.text, author: p.author, date: p.date })) });
+          const both = B.score(run.claims.concat(ex.claims), name);
+          entry.ai = { model: ex.model, all: both.all, explicit: both.explicit, implicit: both.implicit, aiOnly: B.score(ex.claims, name).all,
+            proposals: ex.claims.length + ex.dropped.length, refused: ex.dropped.length, fabricated: ex.dropped.filter(d => d.fabricated).length,
+            missed: both.rows.filter(x => !x.hit).map(x => x.fact.id + ' ' + x.fact.what) };
+        } catch (e) { entry.aiError = String(e.message || e); }
+      }
+      res.projects[name] = entry;
+    }
+    const rs = B.supportAccuracy(p => E.supportCheck(p.statement, p.quote, p.author).verdict === 'yes');
+    res.support.rules = { correct: rs.correct, total: rs.total, falseAccepts: rs.falseAccepts, wrong: rs.rows.filter(x => !x.correct).map(x => x.pair.statement) };
+    if (useAI) {
+      state.bench.phase = 'Scoring the AI evidence check on ' + B.SUPPORT_PAIRS.length + ' labelled pairs…'; render();
+      try {
+        const sp = await window.BatonAI.call('support', { items: B.SUPPORT_PAIRS.map(p => ({ id: p.id, statement: p.statement, quote: p.quote, author: p.author })) });
+        const v = Object.fromEntries((sp.results || []).map(x => [x.id, x.verdict]));
+        const as = B.supportAccuracy(p => v[p.id] === 'supported');
+        res.support.ai = { correct: as.correct, total: as.total, falseAccepts: as.falseAccepts, wrong: as.rows.filter(x => !x.correct).map(x => x.pair.statement + ' → ' + (v[x.pair.id] || 'no verdict')) };
+      } catch (e) { res.support.aiError = String(e.message || e); }
+    }
+    state.bench = res;
+    audit('System', 'Ran the benchmark: Meridian rules ' + res.projects.meridian.rules.all.found + '/' + res.projects.meridian.rules.all.total + ', Lumen rules ' + res.projects.lumen.rules.all.found + '/' + res.projects.lumen.rules.all.total);
+    save(); render();
+  }
+
+  function renderBench() {
+    const b = state.bench;
+    const B = window.BatonBench;
+    if (!B) return '';
+    const frac = x => x ? x.found + '/' + x.total + ' (' + Math.round(100 * x.found / Math.max(1, x.total)) + '%)' : '–';
+    let body;
+    if (!b) body = '<div class="empty" style="padding:16px">Scores the extractor against answer keys: ' + B.ANSWER_KEYS.filter(f => f.project === 'meridian').length + ' facts in Meridian and ' + B.ANSWER_KEYS.filter(f => f.project === 'lumen').length + ' in the held-out Lumen project (Slack JSON, Jira CSV, transcript and email formats), plus ' + B.SUPPORT_PAIRS.length + ' labelled pairs for the evidence check.</div>';
+    else if (b.running) body = '<div class="ai-progress" role="status"><span class="spinner" aria-hidden="true"></span>' + h(b.phase || 'Running…') + '</div>';
+    else {
+      const row = (label, name) => {
+        const e = b.projects[name];
+        return '<tr><td><b>' + label + '</b></td><td>' + frac(e.rules.all) + '</td><td>' + frac(e.rules.implicit.total ? e.rules.implicit : null) + '</td><td>' + (e.ai ? frac(e.ai.all) : e.aiError ? '<span class="bad">' + h(e.aiError.slice(0, 60)) + '</span>' : 'not run') + '</td><td>' + (e.ai && e.ai.implicit.total ? frac(e.ai.implicit) : '–') + '</td><td>' + (e.ai ? e.ai.refused + ' of ' + e.ai.proposals + ' (' + e.ai.fabricated + ' bad quotes)' : '–') + '</td></tr>';
+      };
+      body = '<div class="table-wrap"><table class="ctable"><thead><tr><th>Project</th><th>Rules: facts found</th><th>Rules: implicit</th><th>Rules + AI: found</th><th>Rules + AI: implicit</th><th>AI proposals refused by code</th></tr></thead><tbody>' +
+        row('Meridian (development set)', 'meridian') + row('Lumen (held out)', 'lumen') + '</tbody></table></div>' +
+        '<div class="grid2" style="margin-top:12px"><div class="kpi ' + (b.support.rules.falseAccepts ? 'warn' : '') + '"><b>' + b.support.rules.correct + '/' + b.support.rules.total + '</b><span>Rules evidence check correct · ' + b.support.rules.falseAccepts + ' false accepts</span></div>' +
+        '<div class="kpi ' + (b.support.ai ? (b.support.ai.falseAccepts ? 'warn' : 'good') : '') + '"><b>' + (b.support.ai ? b.support.ai.correct + '/' + b.support.ai.total : '–') + '</b><span>' + (b.support.ai ? 'AI evidence check correct · ' + b.support.ai.falseAccepts + ' false accepts' : b.support.aiError ? 'AI: ' + h(b.support.aiError.slice(0, 70)) : 'AI evidence check not run') + '</span></div></div>' +
+        '<details style="margin-top:10px"><summary class="hint">What was missed, and what the rules wrongly accepted</summary><div class="log" style="margin-top:8px">' +
+        ['meridian', 'lumen'].map(n => '<div class="log-item"><b>' + n + ' (rules' + (b.projects[n].ai ? ' + AI' : '') + ') missed:</b> ' + h((b.projects[n].ai ? b.projects[n].ai.missed : b.projects[n].rules.missed).join('; ') || 'nothing') + '</div>').join('') +
+        '<div class="log-item"><b>Rules evidence check accepted these false statements:</b> ' + h(b.support.rules.wrong.join('; ')) + '</div>' +
+        (b.support.ai ? '<div class="log-item"><b>AI evidence check got wrong:</b> ' + h(b.support.ai.wrong.join('; ') || 'nothing') + '</div>' : '') + '</div></details>' +
+        '<p class="hint" style="margin-top:8px">Small synthetic sets: these numbers show direction, not statistical significance. Lumen was written after the rules and is never used to tune them. Stored fabrications are 0 by construction: a claim whose quote is not in its source is refused by the code verifier and again by Postgres.</p>';
+    }
+    return '<div class="card" style="margin-top:14px"><div class="card-head"><div><h3>Benchmark: does it find the facts?</h3><p class="sub" style="margin:4px 0 0">Recall against hand-written answer keys, on the development project and a held-out one, and accuracy of the evidence check.</p></div>' +
+      '<button class="btn btn-primary btn-sm" data-action="runBench"' + (b && b.running ? ' disabled' : '') + '>' + (b && !b.running ? 'Run again' : 'Run benchmark') + '</button></div>' + body + '</div>';
   }
 
   function aiModeCard() {
@@ -1030,7 +1167,7 @@
       (s.masked.length ? '<span class="mask-badge">' + s.masked.length + ' masked on import: ' + h(Array.from(new Set(s.masked)).join(', ')) + '</span>' : '<span>no secrets found</span>') +
       (s.csv ? '<span>CSV columns mapped: ' + h(Object.entries(s.csv.mapping).map(([f, i]) => s.csv.headers[i] + '→' + f).join(', ')) + '</span>' : '') + '</div>' +
       (state.showText[s.id] ? '<pre>' + h(s.text) + '</pre>' : '') + '</div>'
-    ).join('') : '<div class="empty"><b>No sources yet</b>Load the synthetic Meridian sample to try the whole workflow in two minutes, or add your own notes, chat export, task CSV or a public GitHub repo on the right. No production integrations are connected.<div class="actions" style="justify-content:center"><button class="btn btn-primary" data-action="loadSample">Load Meridian sample</button></div></div>';
+    ).join('') : '<div class="empty"><b>No sources yet</b>Load the synthetic Meridian sample to try the whole workflow in two minutes, or add your own notes, chat export, task CSV or a public GitHub repo on the right. No production integrations are connected.<div class="actions" style="justify-content:center"><button class="btn btn-primary" data-action="loadSample">Load Meridian sample</button><button class="btn btn-ghost" data-action="loadSample" data-p="lumen" title="A held-out project in Slack JSON, Jira CSV, transcript and email formats">Load Lumen (held-out, messy formats)</button></div></div>';
 
     // Add your own source: paste or upload (.md .txt .csv .json), with CSV column mapping.
     const d = state.draft;
@@ -1057,7 +1194,7 @@
 
     return actorBar('owner', 'The data owner chooses which sources Baton may use and who may see each one. Secrets and personal data are masked on import.') +
       '<div class="split"><div class="card"><div class="card-head"><div><h3>Sources (' + state.sources.length + ')</h3><p class="sub" style="margin:4px 0 0">Every claim inherits its source\'s access tag.</p></div>' +
-      (state.sources.length ? '<button class="btn btn-ghost btn-sm" data-action="loadSample">Reload Meridian sample</button>' : '') + '</div><div class="src-list">' + list + '</div></div>' +
+      (state.sources.length ? '<button class="btn btn-ghost btn-sm" data-action="loadSample">Reload Meridian sample</button><button class="btn btn-ghost btn-sm" data-action="loadSample" data-p="lumen">Load Lumen (held-out)</button>' : '') + '</div><div class="src-list">' + list + '</div></div>' +
       '<div style="display:grid;gap:14px;align-content:start">' + addCard + githubCard +
       '<div class="card sample-source-card"><span class="eyebrow">BROWSER-ONLY PROTOTYPE</span><h3>Meridian source set</h3><p class="sub">The sample has six synthetic sources: meeting notes, chat, a task export, GitHub comments, a commit log and a restricted note. The demo does not connect to a production backend.</p>' +
       '<div class="sample-source-route"><span>Source</span><i></i><span>Claim</span><i></i><span>Reader</span></div>' +
@@ -1144,6 +1281,7 @@
       '</div><div class="card"><div class="card-head"><div><h3>Leak and guard tests</h3><p class="sub" style="margin:4px 0 0">Runs in your browser over the current ledger, as if every claim were approved (worst case).</p></div><button class="btn btn-primary btn-sm" data-action="runTests">Run tests</button></div>' +
       (state.tests ? renderTests(state.tests) : '<div class="empty" style="padding:20px">Not run yet.</div>') + '</div></div>';
     html += renderAIVerify();
+    html += renderBench();
     html += renderProbes();
     return html + nextBtn('review', 'Next: Review', true);
   }
@@ -1324,7 +1462,7 @@
     const g = gate();
     const reader = PERSONA[state.viewAs] || READERS[0];
     const ready = g.every(x => x.ok);
-    let html = '<div class="split"><div style="display:grid;gap:14px">';
+    let html = qualityCard(false) + '<div class="split"><div style="display:grid;gap:14px">';
     // Hazards
     html += '<div class="card"><h3>Stale-fact hazards</h3><p class="sub">A reader would see an older fact whose newer version is restricted from them. Publishing is blocked until each is decided.</p>' +
       (hz.length ? hz.map(x => {
@@ -1418,7 +1556,7 @@
       '<span class="claim-label lbl-sourced">' + h(v.id) + ' · approved</span></div>' +
       dbNote + '<div class="notice info" style="margin:0 0 14px">Acknowledged <b>' + acked + ' of ' + total + '</b> items. Every line cites its claim; open the claim ID in Review to see the source quote.</div>' +
       renderHandoverBody(ho, { reader, versionId: v.id, receipts }) + '</div>' +
-      '<div style="display:grid;gap:14px;align-content:start"><div class="card"><h3>Version history</h3><p class="sub">Approved versions are immutable. A retracted version disappears for readers; a leaked credential must still be rotated.</p>' +
+      '<div style="display:grid;gap:14px;align-content:start">' + qualityCard(true, v) + '<div class="card"><h3>Version history</h3><p class="sub">Approved versions are immutable. A retracted version disappears for readers; a leaked credential must still be rotated.</p>' +
       state.versions.slice().reverse().map(x => '<div class="version-row"><div><b>' + h(x.id) + '</b> · ' + h(x.state) + ' by ' + h(x.approvedBy) + '<div class="hint mono">' + new Date(x.at).toLocaleString() + ' · sha256 ' + h(String(x.hash).slice(0, 12)) + '…</div></div>' +
         (x.state === 'approved' ? '<button class="btn btn-ghost btn-sm" data-action="retract" data-id="' + h(x.id) + '">Retract</button>' : '') + '</div>').join('') + '</div>' +
       '<div class="card"><h3>What ' + h(reader.name) + ' can see</h3><p class="sub" style="margin:0">' + reader.tags.map(t => tagPill(t)).join(' ') + '</p><p class="hint" style="margin-top:10px">Switch readers above: Rohan (all members) and Kavya (treasurer) get different plans from the same approved version, and a hidden item looks exactly like a missing one.</p></div></div></div>';
@@ -1440,7 +1578,7 @@
     else if (state.step === 'review') body = renderReview();
     else body = renderHandover();
     root.innerHTML =
-      '<div class="studio-head"><div><div class="eyebrow">HANDOVER STUDIO · MERIDIAN CAMPUS BACKEND</div><h1>Aarav → Meera handover</h1><p>Turn scattered project activity into a handover where every statement cites its evidence, every gap is labelled, and each reader sees only what they may see.</p></div>' +
+      '<div class="studio-head"><div><div class="eyebrow">HANDOVER STUDIO · ' + (state.project === 'lumen' ? 'LUMEN MOBILE APP (HELD-OUT SAMPLE)' : 'MERIDIAN CAMPUS BACKEND') + '</div><h1>' + (state.project === 'lumen' ? 'Lumen app handover' : 'Aarav → Meera handover') + '</h1><p>Turn scattered project activity into a handover where every statement cites its evidence, every gap is labelled, and each reader sees only what they may see.</p></div>' +
       '<div class="studio-tools"><span id="dbPillSlot">' + dbPill() + '</span>' + (latestVersion() ? '<span class="status-pill is-approved" title="Approved versions are immutable">' + h(latestVersion().id) + ' · approved</span>' : '<span class="status-pill is-draft" title="Nothing is shared before the reviewer approves">Draft · not shared</span>') + '<button class="btn btn-ghost btn-sm" data-action="loadSample">Load sample</button><button class="btn btn-ghost btn-sm" data-action="reset">Reset</button></div></div>' +
       '<div class="demo-note"><span>ⓘ</span><div><b>Working prototype on synthetic data.</b> ' + ((window.BatonDB && window.BatonDB.configured)
         ? 'You are signed in with Supabase Auth' + (window.BatonDB.session() ? ' as <b>' + h(window.BatonDB.session().name) + '</b>' : '') + '. The ledger is stored in Postgres, which reads your identity from your sign-in token: row-level security decides what each account may read, and the database re-checks every quote and the publish gate itself. The demo accounts are public and protect synthetic data only.'
@@ -1490,7 +1628,8 @@
       const d = el.dataset;
       switch (d.action) {
         case 'step': goStep(d.step); break;
-        case 'loadSample': loadSample(); break;
+        case 'loadSample': loadSample(d.p); break;
+        case 'runBench': runBench(); break;
         case 'reset':
           askToConfirm('Reset this studio?', 'This clears the sources, review decisions and versions saved for Baton in this browser.', 'Reset studio', () => {
             state = freshState(); Object.keys(vault).forEach(k => delete vault[k]); if ((window.BatonDB && window.BatonDB.configured)) window.BatonDB.newWorkspace(); save(); render(); toast('Studio reset.');

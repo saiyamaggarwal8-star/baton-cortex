@@ -165,6 +165,8 @@ async function callGateway(req, system, user, maxTokens) {
   if (!r.ok) {
     let msg = text.slice(0, 300);
     try { const j = JSON.parse(text); msg = (j.error && (j.error.message || j.error)) || msg; } catch (e) { /* keep text */ }
+    if (/credit card|credits|quota|billing|payment/i.test(String(msg))) throw Object.assign(new Error('AI model credit is not active on this deployment yet. The rule-based results are shown; every other feature works.'), { status: 503 });
+    if (r.status === 429) throw Object.assign(new Error('The AI service is busy (rate limit). Try again in a minute; rule-based results are shown.'), { status: 429 });
     throw Object.assign(new Error('AI Gateway: ' + msg), { status: r.status === 401 || r.status === 403 ? 503 : 502 });
   }
   const j = JSON.parse(text);

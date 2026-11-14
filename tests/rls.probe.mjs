@@ -19,6 +19,7 @@ function check(name, ok, detail) {
   results.push({ name, ok, detail });
   if (!ok) failures++;
   console.log((ok ? 'PASS ' : 'FAIL ') + name + (detail ? '  - ' + detail : ''));
+  if (!ok && process.env.GITHUB_ACTIONS) console.log('::error title=Security probe failed::' + name + (detail ? ' - ' + detail : ''));
 }
 
 async function signIn(persona) {
@@ -44,7 +45,13 @@ async function rest(method, path, { token, ws, body, prefer, headers } = {}) {
 const rows = r => (Array.isArray(r.data) ? r.data.length : 0);
 
 const T = {};
-for (const p of Object.keys(EMAIL)) T[p] = await signIn(p);
+try {
+  for (const p of Object.keys(EMAIL)) T[p] = await signIn(p);
+} catch (e) {
+  console.log('FAIL demo sign-in: ' + e.message);
+  if (process.env.GITHUB_ACTIONS) console.log('::error title=Demo sign-in failed::' + String(e.message).slice(0, 400) + ' (url ' + URL_ + ')');
+  process.exit(1);
+}
 check('All six demo accounts sign in through Supabase Auth', Object.values(T).every(Boolean));
 
 // --- reviewer builds a tiny workspace ---------------------------------------------------------

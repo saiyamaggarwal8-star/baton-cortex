@@ -1116,8 +1116,15 @@
     save(); render();
   }
 
+  let publishing = false;
   async function publish() {
+    if (publishing) return;
     if (!gate().every(g => g.ok)) return;
+    publishing = true; render();
+    try { await doPublish(); } finally { publishing = false; render(); }
+  }
+
+  async function doPublish() {
     const snapshot = state.claims.filter(c => (c.reviewState === 'accepted' || c.reviewState === 'edited') && !isHeldOut(c)).map(c => JSON.parse(JSON.stringify(c)));
     const hash = await E.sha256(JSON.stringify(snapshot));
     const D = window.BatonDB;
@@ -1221,8 +1228,14 @@
   function addDraftSource() {
     const d = state.draft;
     if (!d.text.trim()) { toast('Paste some text or choose a file first.'); return; }
+    if (d.text.length > 150000) { toast('That source is too large (' + Math.round(d.text.length / 1000) + ' k characters). Split it into parts under 150 k characters.'); return; }
+    if (state.sources.length >= 25) { toast('At most 25 sources per handover in this prototype. Remove one first.'); return; }
+    if (state.sources.some(x => x.text && E.maskSecrets(d.text).text === x.text)) { toast('This exact source is already connected.'); return; }
+    if (d.kind === 'chat' && /^\s*[\[{]/.test(d.text) && !E.chatJsonToText(d.text)) { toast('That looks like JSON but could not be read as a chat export. Check the file, or paste it as plain text lines like "Name: message".'); return; }
+    if (d.kind === 'tasks' && E.parseCsv(d.text).length < 2) { toast('A task CSV needs a header row and at least one task row.'); return; }
     const mapping = d.kind === 'tasks' && d.csvMap ? d.csvMap : undefined;
     const src = makeSource({ title: d.title.trim() || (KIND_LABEL[d.kind] + ' ' + (state.sources.length + 1)), kind: d.kind, access: d.access, raw: d.text, date: d.date || null, mapping });
+    if (!src.text.trim()) { toast('Nothing readable was found in that source.'); return; }
     state.sources.push(src);
     markStale();
     audit('Priya (data owner)', 'Added source "' + src.title + '" (' + E.ACCESS_TAGS[src.access] + ')');
@@ -1583,7 +1596,7 @@
     // Gate
     html += '<div class="card"><h3>Publish gate</h3><p class="sub">Checked by code. The button stays disabled until every item passes.</p><div class="gate">' +
       g.map(x => '<div class="gate-item ' + (x.ok ? 'pass' : 'fail') + '"><span class="ic">' + (x.ok ? '✓' : '✗') + '</span><div>' + h(x.text) + '<small>' + h(x.detail) + '</small></div></div>').join('') + '</div>' +
-      '<div class="actions"><button class="btn btn-primary" data-action="publish"' + (ready ? '' : ' disabled aria-disabled="true"') + '>Approve and publish handover</button></div>' +
+      '<div class="actions"><button class="btn btn-primary" data-action="publish"' + (ready && !publishing ? '' : ' disabled aria-disabled="true"') + '>' + (publishing ? 'Publishing…' : 'Approve and publish handover') + '</button></div>' +
       (!ready ? '<p class="hint" style="margin-top:8px">Nothing is shared before an approver signs off.</p>' : '') + '</div>';
     // Requests + audit
     html += '<div class="card"><h3>Access requests</h3><p class="sub">Readers see the same gap row whether an item is missing or hidden. Only you see the real reason.</p>' +

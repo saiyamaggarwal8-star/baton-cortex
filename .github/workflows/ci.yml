@@ -32,7 +32,10 @@ jobs:
       - name: Start a fresh Supabase stack (applies every migration and the demo seed)
         run: supabase start -x studio,imgproxy,realtime,storage-api,edge-runtime,logflare,vector
       - name: Read local connection details
-        run: supabase status -o env > "$RUNNER_TEMP/supa.env"
+        run: |
+          supabase status -o env > "$RUNNER_TEMP/supa.env"
+          echo "::notice title=Local stack::variables: $(cut -d= -f1 "$RUNNER_TEMP/supa.env" | tr '
+' ' ')"
       - name: Live RLS, auth and publish-gate probes with real tokens
         run: |
           set -a; . "$RUNNER_TEMP/supa.env"; set +a

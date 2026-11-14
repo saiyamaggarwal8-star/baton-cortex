@@ -26,9 +26,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
+      - name: Install the Supabase CLI (npm, no GitHub API calls)
+        run: npm install --global supabase@2
       - name: Start a fresh Supabase stack (applies every migration and the demo seed)
         run: supabase start -x studio,imgproxy,realtime,storage-api,edge-runtime,logflare,vector
       - name: Read local connection details

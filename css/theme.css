@@ -58,12 +58,12 @@ header .brandname span{color:var(--tangerine)}
 header .tagline{color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.6px}
 header .workspace{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:999px}
 header .workspace-dot{background:var(--tangerine);box-shadow:0 0 0 3px #F28C3833}
-.topnav{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;position:relative}
-.topnav a{color:#4D4839;border-radius:999px;position:relative;z-index:1;transition:color .25s}
-.topnav a:hover{color:var(--ink);background:transparent}
-.topnav a.active{background:var(--ink);color:var(--on-ink)}
-.topnav.has-indicator a.active{background:transparent}
-.nav-indicator{position:absolute;z-index:0;top:4px;bottom:4px;left:0;width:0;border-radius:999px;background:var(--ink);pointer-events:none}
+.topnav{background:var(--panel-2);border:1.5px solid var(--line-2);border-radius:999px;position:relative;padding:4px 6px;gap:6px;display:flex;align-items:center}
+.topnav a{color:var(--ink);font-size:13px;font-weight:700;border-radius:999px;position:relative;z-index:1;padding:8px 18px;transition:color .2s,background .2s;white-space:nowrap;text-decoration:none}
+.topnav a:hover{color:#000;background:rgba(0,0,0,0.06)}
+.topnav a.active{background:var(--ink)!important;color:#FFFFFF!important}
+.topnav.has-indicator a.active{background:var(--ink)!important;color:#FFFFFF!important}
+.nav-indicator{display:none!important}
 .footer{background:var(--ink);color:var(--on-ink-muted);border-top:0;font-family:'DM Mono',monospace}
 main{padding:36px 36px 48px}
 
@@ -152,10 +152,13 @@ main{padding:36px 36px 48px}
 
 /* ---------- Spec / dossier page ---------- */
 .detail-head{background:var(--ink);border:1px solid var(--ink-deep);color:var(--on-ink);border-radius:28px}
-.detail-head .eyebrow,.detail-head .detail-lede{color:var(--on-ink-muted)}
-.detail-head .detail-lede b{color:var(--on-ink)}
+.detail-head .eyebrow{color:#F8F4EA!important;font-size:12px;font-weight:700;letter-spacing:1px}
+.detail-head .detail-lede{color:#EDE7D5!important;font-size:14px;line-height:1.6}
+.detail-head .detail-lede b{color:#FFFFFF!important;font-weight:700}
 .detail-head .detail-title span{color:var(--tangerine)!important}
 .detail-head .back-btn,.detail-head .action-btn,.detail-head .project-switcher{background:var(--ink-deep);border:1px solid var(--ink-line);color:var(--on-ink);border-radius:999px}
+.detail-head .project-switcher{background:#171923!important;border:1.5px solid #5C6280!important;color:#FCF4DD!important;font-size:12px!important;font-weight:600!important;padding:9px 16px!important;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+.project-switcher option{background:#171923;color:#FCF4DD;font-size:13px}
 .detail-head .back-btn:hover,.detail-head .action-btn:hover{background:var(--ink-2);color:#fff}
 .back-btn,.action-btn,.project-switcher{background:var(--panel);border:1px solid var(--line-2);color:var(--ink);border-radius:999px}
 .detail-head .btn-primary{background:var(--tangerine);color:var(--ink)}
@@ -171,9 +174,9 @@ main{padding:36px 36px 48px}
 .claim-stmt{color:var(--ink)}
 .claim-quote{color:#5E5844;border-top-color:var(--line)}
 .claim-quote mark,.passage mark{background:var(--honey);color:var(--ink)}
-.detail-nav button{background:var(--panel);border-color:var(--line);color:var(--muted);border-radius:999px}
-.detail-nav button:hover:not(.active){background:var(--panel-2);color:var(--ink)}
-.detail-nav button.active{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.detail-nav button{background:var(--panel);border-color:var(--line-2);color:var(--ink);font-weight:600;font-size:11px;border-radius:999px;padding:8px 14px}
+.detail-nav button:hover:not(.active){background:var(--panel-2);color:#000;border-color:#C8B584}
+.detail-nav button.active{background:var(--ink);color:#FFFFFF;border-color:var(--ink);font-weight:700}
 .chip{background:var(--tangerine-soft);color:var(--tangerine-ink);border-color:#F0C796}
 .table th{color:var(--muted);border-bottom-color:var(--line)}
 .table td{color:#3A3B47;border-bottom-color:var(--line)}

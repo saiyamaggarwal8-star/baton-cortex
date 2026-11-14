@@ -1,10 +1,10 @@
 /* =========================================================================
    NAV, HERO CTA, STUDIO
    ========================================================================= */
-.topnav{display:flex;gap:4px;background:#FFFAEE;border:1px solid #EBDDB5;border-radius:24px;padding:4px}
-.topnav a{font-size:12px;font-weight:600;color:#3A3C52;text-decoration:none;padding:8px 14px;border-radius:20px;transition:background .2s,color .2s;white-space:nowrap}
-.topnav a:hover{color:#fff;background:#EFE4C4}
-.topnav a.active{background:var(--mint);color:#FCF3DA}
+.topnav{display:flex;gap:6px;background:#FFFAEE;border:1.5px solid #D8C79D;border-radius:999px;padding:4px 6px;align-items:center}
+.topnav a{font-size:13px;font-weight:700;color:#22242F;text-decoration:none;padding:8px 18px;border-radius:999px;transition:background .2s,color .2s;white-space:nowrap}
+.topnav a:hover{color:#000;background:rgba(0,0,0,0.06)}
+.topnav a.active{background:var(--ink)!important;color:#FFFFFF!important}
 
 .hero-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:600 12px 'DM Sans',sans-serif;border-radius:12px;padding:10px 16px;cursor:pointer;border:1px solid transparent;text-decoration:none;transition:transform .15s,background .2s,border-color .2s,opacity .2s;white-space:nowrap}

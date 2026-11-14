@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Baton — Final Product Document (Round 3) · Team Cortex</title>
+<style>
+  @page { size: A4; margin: 15mm 14mm 15mm 14mm; }
+  :root { --ink:#22242F; --muted:#5F5947; --cream:#FCF4DD; --line:#E2D2A2; --tan:#F28C38; --tan-soft:#FDE2C2; --tan-ink:#8F4609; --sage:#2C6A50; --sage-soft:#E1EEE5; --crimson:#A8233F; --lilac:#4B4299; --lilac-soft:#E7E4F6; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #fff; color: var(--ink); font: 10.2pt/1.5 "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+  h1, h2, h3 { font-family: "Segoe UI Semibold", "Segoe UI", Arial, sans-serif; letter-spacing: -.01em; margin: 0; }
+  h1 { font-size: 25pt; line-height: 1.05; font-weight: 800; }
+  h2 { font-size: 14pt; margin: 16px 0 7px; padding-bottom: 4px; border-bottom: 2px solid var(--tan); break-after: avoid; }
+  h3 { font-size: 10.8pt; margin: 11px 0 4px; break-after: avoid; }
+  p { margin: 0 0 6px; }
+  ul, ol { margin: 0 0 7px; padding-left: 18px; }
+  li { margin: 2px 0; }
+  .mono { font-family: Consolas, "Courier New", monospace; font-size: 8.8pt; }
+  .eyebrow { font: 600 8pt Consolas, monospace; letter-spacing: 1.2px; color: var(--tan-ink); text-transform: uppercase; }
+  .cover { background: var(--cream); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; margin-bottom: 12px; }
+  .cover .hl { background: linear-gradient(transparent 62%, #F7B877 62%); }
+  .cover p.lede { font-size: 11pt; margin: 9px 0 10px; color: #3B3A33; }
+  .links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .link { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; }
+  .link b { display: block; font-size: 7.8pt; color: var(--muted); letter-spacing: .6px; text-transform: uppercase; }
+  .link span { font: 9.3pt Consolas, monospace; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; margin: 5px 0 9px; font-size: 9pt; break-inside: auto; }
+  th { text-align: left; background: var(--cream); border-bottom: 1.5px solid var(--line); padding: 4px 6px; font-weight: 700; }
+  td { border-bottom: 1px solid #EFE5C8; padding: 4px 6px; vertical-align: top; }
+  tr { break-inside: avoid; }
+  .tag { display: inline-block; font: 600 7.4pt Consolas, monospace; border-radius: 8px; padding: 1px 6px; white-space: nowrap; }
+  .done { background: var(--sage-soft); color: var(--sage); }
+  .part { background: var(--tan-soft); color: var(--tan-ink); }
+  .next { background: var(--lilac-soft); color: var(--lilac); }
+  .callout { background: var(--cream); border-left: 4px solid var(--tan); border-radius: 0 10px 10px 0; padding: 7px 11px; margin: 7px 0 9px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .box { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; break-inside: avoid; }
+  .flow { display: flex; align-items: stretch; gap: 5px; margin: 7px 0 9px; }
+  .flow div { flex: 1; background: var(--cream); border: 1px solid var(--line); border-radius: 9px; padding: 5px 6px; font-size: 8.2pt; text-align: center; }
+  .flow div b { display: block; font-size: 8.6pt; }
+  .flow .db { background: var(--ink); color: #FCF4DD; border-color: var(--ink); }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 6px 0 9px; }
+  .kpis .box { text-align: center; padding: 7px 5px; }
+  .num { font-size: 15pt; font-weight: 800; color: var(--ink); display: block; }
+  .kpis small { display: block; font-size: 7.8pt; color: var(--muted); }
+  .footer-note { font-size: 8.2pt; color: var(--muted); }
+  .page-break { break-before: page; }
+  .todo { background: #FFF3B0; padding: 0 3px; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="eyebrow">CodersInPune Hackathon · Final Round (Round 3) · Team Cortex</div>
+  <h1 style="margin-top:8px">Baton: a handover that <span class="hl">writes only what it can cite</span></h1>
+  <p class="lede">When someone leaves a project, Baton rebuilds what they knew from notes, chats, task boards and pull requests as a ledger of small claims. Every claim carries an exact source quote checked by code and again by the database. AI proposes more claims and audits the evidence, but never decides what is shared: a reviewer does. Each reader signs in and receives only the rows Postgres row-level security allows.</p>
+  <div class="links">
+    <div class="link"><b>Working product (no install)</b><span>https://baton-cortex.vercel.app</span></div>
+    <div class="link"><b>Source code</b><span>https://github.com/saiyamaggarwal8-star/baton-cortex</span></div>
+  </div>
+  <p class="footer-note" style="margin:8px 0 0">Final product document · 16 Nov 2026 · builds on the Round 1 proposal and the Round 2 project document. Synthetic demo data only.</p>
+</div>
+
+<h2>1. Try it in two minutes</h2>
+<p>Open the link → <b>Sign in</b>. Every demo account is a real Supabase Auth user; the password for all of them is <b class="mono">baton-demo-2026</b>, also shown on the sign-in screen with one-click buttons.</p>
+<table>
+  <tr><th>Account</th><th>Email</th><th>Role</th><th>Try this</th></tr>
+  <tr><td><b>Prof. Rao</b></td><td class="mono">rao@baton.example</td><td>Reviewer</td><td><b>Start here.</b> Load the sample, run the five steps, publish.</td></tr>
+  <tr><td>Priya</td><td class="mono">priya@baton.example</td><td>Data owner</td><td>Add and tag sources. Approving is refused by the database.</td></tr>
+  <tr><td><b>Meera</b></td><td class="mono">meera@baton.example</td><td>Incoming lead (core team)</td><td>Her handover, served only from Postgres; press <b>Try to break in</b>.</td></tr>
+  <tr><td>Rohan / Kavya</td><td class="mono">rohan@ / kavya@baton.example</td><td>Member / Treasurer</td><td>A different plan from the same approved version.</td></tr>
+  <tr><td>Aarav</td><td class="mono">aarav@baton.example</td><td>Departing lead</td><td>Answers the guided exit interview from his own account.</td></tr>
+</table>
+<ol>
+  <li>As <b>Prof. Rao</b>: <b>Load Meridian sample</b> → <b>Reconstruct</b> (rules, then AI) → <b>Verify</b>: <i>Plant a wrong claim</i>, <i>Run tests</i>, <i>Run database probes</i>, <i>Run benchmark</i>.</li>
+  <li><b>Review</b>: decide claims (or <i>Fast-forward the demo review</i>, which stops at the gate and never decides AI-flagged claims), send the interview to Aarav, <b>Approve and publish</b>.</li>
+  <li>Account menu → <b>Meera</b>: her plan and gap rows come straight from Postgres; <b>Try to break in</b> runs ten real attacks with her token. Switch to Rohan and Kavya to compare.</li>
+  <li><b>Load Lumen</b> to see the held-out project (Slack JSON, Jira CSV, call transcript, email thread).</li>
+</ol>
+
+<h2>2. The three improvements promised in Round 2: delivered</h2>
+<table>
+  <tr><th style="width:24%">Promised in Round 2</th><th>What was delivered</th><th style="width:9%">Status</th></tr>
+  <tr><td><b>1. Real accounts and hardened permissions</b>, with the leak tests running on every push against a fresh database</td>
+    <td>Supabase Auth with JWTs replaces the persona header everywhere; Postgres reads the user from the token (<span class="mono">auth.uid()</span>). Workspaces have owners and members with per-workspace roles; the anonymous key alone reads nothing. Trust checks moved to the server: Postgres refuses an extracted claim whose quote is not in its stored source (or whose numbers changed), refuses to publish unless the caller is the reviewer, every claim is decided and no dispute is open, refuses any published row that differs from an approved claim, makes versions immutable, and stamps the real account on audit and interview rows. A <b>Try to break in</b> panel lets any reader attack the database live. GitHub Actions runs 36 security probes with real tokens on every push against a fresh Supabase stack built from the migrations.</td><td><span class="tag done">Done</span></td></tr>
+  <tr><td><b>2. AI-assisted extraction and a guided gap interview</b>, behind a provider interface with cached responses; the code verifier still decides</td>
+    <td>A server function (<span class="mono">api/ai.js</span>) checks the caller's token and role, then asks Claude (Vercel AI Gateway or the Anthropic API) for decisions with rationale, tasks with owners and deadlines, dependencies, risks, open questions and contacts. The model has no tools, sees one source chunk per call with links and HTML stripped, and never sees instruction-like passages. Every proposal goes through the same code verifier as the rules; a <b>separate AI evidence check</b> judges whether each quote supports its claim and an AI audit flags contradictions and outdated decisions. Doubtful claims are held for a person. Responses are cached in Postgres. The <b>guided interview</b> ranks gaps by impact, writes targeted questions (optionally tailored by AI), sends them to the departing lead's own account, and imports answers as "Stated by Aarav" claims. <span class="todo">{{AI_STATUS}}</span></td><td><span class="tag done">Done</span></td></tr>
+  <tr><td><b>3. A handover quality report and a held-out benchmark</b>, with recall and fabrication rate reported honestly</td>
+    <td>A quality report scores each handover (evidence share, gaps per reader, conflicts, AI flags, stale facts, areas only the leaver owns) in Review and Handover. The benchmark scores extraction against hand-written answer keys for Meridian (24 facts) and a held-out project, <b>Lumen</b> (25 facts, 13 of them implicit), in export formats the importers were not built for (Slack JSON, Jira CSV, call transcript, email thread), and scores the evidence check on 20 labelled pairs. It runs in the app and in CI; results are in <span class="mono">docs/benchmark-results.json</span>.</td><td><span class="tag done">Done</span></td></tr>
+</table>
+<div class="callout"><b>One change of detail, stated plainly:</b> the plan said the held-out set would be written by a teammate who did not build the importers. In the event Saiyam wrote it, after the rules were finished, and it was never used to tune them. A teammate-written set is on the roadmap.</div>
+
+<h2>3. Other improvements after Round 2</h2>
+<ul>
+  <li><b>Reader experience:</b> each reader has their own page served only from Postgres with their token; acknowledgements and access requests are stored per account.</li>
+  <li><b>Reliability:</b> source validation (empty, oversized over 150 k characters, duplicate, unreadable JSON or CSV, nothing readable after parsing); publishing can't run twice at once; AI and benchmark runs survive a page reload; a fast account switch can no longer show the previous account's page or results (a routing bug found in testing and fixed); every database or AI failure falls back to the rule-based results with a visible reason.</li>
+  <li><b>Security:</b> the security advisor is clean (helper functions run with the caller's rights); secret masking now also catches "password was …", PIN and passcode forms.</li>
+  <li><b>Importers:</b> Slack exports (<span class="mono">user_profile.real_name</span>, epoch timestamps) and Jira-style CSV headers.</li>
+  <li><b>Documentation:</b> a README someone else can clone and run from, with the Supabase setup, AI configuration and tests.</li>
+</ul>
+
+<div class="page-break"></div>
+<h2>4. Complete feature list</h2>
+<table>
+  <tr><th style="width:20%">Area</th><th>Features</th></tr>
+  <tr><td>Accounts</td><td>Supabase Auth sign-in; six public demo accounts with one-click buttons; account menu with switch and sign out; session refresh; local mode when the database is unreachable.</td></tr>
+  <tr><td>Connect</td><td>Paste or upload Markdown, text, CSV and JSON; chat exports including Slack; CSV column mapping for unfamiliar headers; public GitHub import (README plus 20 issues and PRs); access tag per source; masking of keys, tokens, passwords, emails and phone numbers on import; Meridian and Lumen samples.</td></tr>
+  <tr><td>Reconstruct</td><td>Passages that keep source, position, author and date; rule-based extraction of 10 claim types; AI extraction with rationale, owners and deadlines; injection quarantine; ownership inferred from commit counts (numbers shown); rules-vs-AI comparison; review cap of 60; rejections survive a re-run; timeline.</td></tr>
+  <tr><td>Verify</td><td>Quote match (exact, fuzzy sliding windows), exact-token guard, rules support check, AI evidence check; Quote guard lab; <b>Plant a wrong claim</b>; leak tests (44 quote mutations, canary scan, differential test, gap shape, planted injection); database probes with each account's token; benchmark.</td></tr>
+  <tr><td>Review</td><td>Random sample before bulk approval; bulk approval only for low-risk Sourced claims; AI-flagged claims held for a person; conflicts side by side; stale-fact hazards; leaver disputes; guided interview sent to the leaver's account; sudden-exit answers by the reviewer; view-as every reader; publish gate (9 checks); quality report; fast-forward that stops at the gate.</td></tr>
+  <tr><td>Handover</td><td>Per-reader plan (ownership, first-week actions, risks, decisions, timeline); gap rows identical whether missing or hidden; request access (only the reviewer sees the real reason); acknowledgements; immutable versions with SHA-256 hash and retraction; audit log.</td></tr>
+  <tr><td>Reader and leaver pages</td><td>Reader page served only from Postgres; ten-attack <b>Try to break in</b> panel; the leaver's exit-interview page.</td></tr>
+  <tr><td>Server and database</td><td>RLS on every table; per-workspace roles; quote, publish-gate, immutability and audit triggers; AI function with token check, code verification and Postgres cache.</td></tr>
+</table>
+
+<h2>5. Technical architecture and implementation</h2>
+<div class="flow">
+  <div><b>Sources</b>notes, chat, Slack, CSV, GitHub</div>
+  <div><b>Import &amp; mask</b>passages with offsets</div>
+  <div><b>Extract</b>rules, then AI (server)</div>
+  <div><b>Verify</b>code verifier, AI evidence check</div>
+  <div><b>Review gate</b>human decides</div>
+  <div class="db"><b>Postgres + RLS</b>re-checks, gate, rows per reader</div>
+  <div><b>Handover</b>per signed-in reader</div>
+</div>
+<div class="grid2">
+  <div class="box"><h3 style="margin-top:0">Identity and permissions</h3><p>Supabase Auth issues a JWT; PostgREST verifies it; RLS helper functions read <span class="mono">auth.uid()</span> and the user's workspace membership. The <span class="mono">x-baton-workspace</span> header only <i>selects</i> a workspace and is honoured only for members. Readers can never read sources, the claim ledger, the audit log or interview answers; they read published rows through a <span class="mono">security_invoker</span> view filtered by their access tags.</p></div>
+  <div class="box"><h3 style="margin-top:0">Trust checks on the server</h3><p><span class="mono">baton_check_claim</span>: an extracted or Sourced claim must quote its stored source (exact or trigram match ≥ 0.8 with numbers guarded). <span class="mono">baton_check_version</span>: reviewer only, no undecided claims or open disputes; the server sets approver and time. <span class="mono">baton_check_item</span>: a published row must equal an approved claim. Versions are immutable except retraction.</p></div>
+  <div class="box"><h3 style="margin-top:0">AI pipeline</h3><p>Browser → <span class="mono">/api/ai</span> with the user's token → token and staff role verified with Supabase → passages cleaned (no links, HTML or instruction-like text) → one chunk per call, JSON-schema output → every proposal through <span class="mono">engine.js</span> verifyClaim → separate evidence-check call → contradiction audit. Model: Claude via Vercel AI Gateway or the Anthropic API (provider interface). Cache: <span class="mono">ai_cache</span> keyed by model, task and input.</p></div>
+  <div class="box"><h3 style="margin-top:0">Stack</h3><p>Static single-page app (HTML, CSS, JavaScript, GSAP, Lenis), Vercel (site and function), Supabase (Postgres, RLS, Auth), Node test runner, GitHub Actions with the Supabase CLI. Six migrations: schema and RLS, advisor fix, auth and server checks, helper rights, AI cache, guided interview. The same <span class="mono">engine.js</span> runs in the browser, the server function and the tests.</p></div>
+</div>
+
+<h2>6. Testing</h2>
+<div class="kpis">
+  <div class="box"><span class="num">20 / 20</span><small>engine tests pass</small></div>
+  <div class="box"><span class="num">36 / 36</span><small>live security probes (real tokens)</small></div>
+  <div class="box"><span class="num">0</span><small>false accepts in 44 quote mutations</small></div>
+  <div class="box"><span class="num">10 / 10</span><small>break-in attempts blocked (Meera)</small></div>
+</div>
+<table>
+  <tr><th style="width:24%">Suite</th><th>What it checks</th><th style="width:16%">Where it runs</th></tr>
+  <tr><td>Engine tests (20)</td><td>Masking, passages, extraction, quote verifier, token guard, permissions, handover composition, canary, differential and mutation tests, CSV and chat importers.</td><td>Node; CI on every push</td></tr>
+  <tr><td>Security probes (36)</td><td>All six accounts sign in; readers get 0 sources and claims; forged persona headers, foreign workspaces, tampered JWTs and the bare public key get nothing; bad quotes and changed numbers refused by Postgres; reviewer-only publishing; no publish with undecided claims; server-set approver; published rows must match approved claims; immutable versions; exact rows per reader; interview privacy and server-stamped answers.</td><td>Live project; CI against a fresh Supabase stack</td></tr>
+  <tr><td>Benchmark</td><td>Recall against answer keys (Meridian 24 facts, Lumen 25), AI proposals refused by code, evidence-check accuracy on 20 labelled pairs.</td><td>App (Verify); Node; CI</td></tr>
+  <tr><td>In-app checks</td><td>Leak tests, database probes, Plant a wrong claim, Try to break in.</td><td>Browser, by any judge</td></tr>
+  <tr><td>End-to-end journeys</td><td>Reviewer: load → reconstruct → verify → review → publish (baseline: 26 claims, 25 accepted, 1 rejected, v1 with 25 claims; Meera 23 rows, Rohan 16, Kavya 17, all matching the in-app check). Reader: sign in → handover → acknowledge → reload (persisted) → break in. Leaver: receive questions → answer → reviewer imports.</td><td>Browser, local and live</td></tr>
+  <tr><td>Reliability</td><td>Empty, oversized, duplicate and unreadable sources; double publish; reload during AI and benchmark runs; account switching; database and AI outages (fallback with a visible reason).</td><td>Browser</td></tr>
+</table>
+<h3>Benchmark results</h3>
+<table>
+  <tr><th>Project</th><th>Rules: facts found</th><th>Rules: implicit facts</th><th>Rules + AI: facts found</th><th>AI proposals refused by code</th></tr>
+  <tr><td>Meridian (development set)</td><td>21 / 24 (88%)</td><td>–</td><td><span class="todo">{{AI_MERIDIAN}}</span></td><td><span class="todo">{{AI_REFUSED_M}}</span></td></tr>
+  <tr><td>Lumen (held out)</td><td>15 / 25 (60%)</td><td>4 / 13 (31%)</td><td><span class="todo">{{AI_LUMEN}}</span></td><td><span class="todo">{{AI_REFUSED_L}}</span></td></tr>
+</table>
+<p><b>Evidence check on 20 labelled pairs:</b> rules 14 / 20 correct with <b>6 false accepts</b> (for example "Meera owns the billing module" against a quote naming Aarav, and "webhook retries are switched on" against "switched off"); AI evidence check <span class="todo">{{AI_SUPPORT}}</span>. <b>Stored fabrications: 0</b> by construction, because a quote that is not in its source is refused by the code verifier and again by Postgres. These sets are small and synthetic: the numbers show direction, not statistical significance.</p>
+
+<div class="page-break"></div>
+<h2>7. Changes from the original plan, and why</h2>
+<table>
+  <tr><th style="width:26%">Plan</th><th style="width:30%">Final build</th><th>Why</th></tr>
+  <tr><td>Next.js + Tailwind frontend, FastAPI API</td><td>Static single-page app; one Vercel Function for AI; trust checks as Postgres triggers</td><td>Judges open one link with no cold starts. Putting the checks in the database means every client, including a modified browser, is held to them.</td></tr>
+  <tr><td>Supabase Auth "if time allows"</td><td>Built: Supabase Auth with JWT; public demo accounts for judging</td><td>Round 3 improvement 1.</td></tr>
+  <tr><td>Hosted LLM proposes claims; second call checks support</td><td>Built: Claude through a provider interface; separate evidence-check call; rules kept as a fallback</td><td>As planned. Rules stay first so the product still works, and stays fast, when the model is unavailable.</td></tr>
+  <tr><td>RapidFuzz fuzzy matching</td><td>Own Levenshtein sliding windows (browser and server); trigram match in Postgres</td><td>No dependencies; the same check runs in three places.</td></tr>
+  <tr><td>pytest in CI</td><td>Node tests, benchmark and live probes in GitHub Actions</td><td>Same language as the engine; the probes need a real database.</td></tr>
+  <tr><td>Held-out set written by a teammate</td><td>Written by Saiyam after the rules, never used to tune them</td><td>Time and team availability; disclosed above.</td></tr>
+  <tr><td>PDF importer; Presidio for PII</td><td>Not built; regex masking with output scan</td><td>On the plan's cut list; masking is reported as heuristic.</td></tr>
+</table>
+
+<h2>8. Product roadmap and future development</h2>
+<div class="grid3">
+  <div class="box"><span class="tag next">NEXT 4 WEEKS</span><h3>Real teams</h3><ul><li>Invite by email; roles per workspace chosen by the owner</li><li>Slack and GitHub OAuth connectors that sync, not upload</li><li>PDF and Google Docs import</li><li>Teammate-written held-out benchmark</li></ul></div>
+  <div class="box"><span class="tag next">NEXT 3 MONTHS</span><h3>Better knowledge</h3><ul><li>Continuous handovers: update the ledger weekly, so leaving is a non-event</li><li>Owner approval flow that grants one tag for one item</li><li>Per-claim history and diffs between versions</li><li>Evaluation dashboard tracking recall and fabrication over time</li></ul></div>
+  <div class="box"><span class="tag next">LATER</span><h3>Scale and trust</h3><ul><li>Server-side extraction jobs with queues</li><li>Organisation-wide policies (retention, sensitive tags)</li><li>SSO for universities and companies</li><li>On-premise model option for confidential projects</li></ul></div>
+</div>
+<p style="margin-top:8px"><b>Who it is for:</b> student project teams and clubs (the Meridian scenario), research labs where students rotate every semester, and small engineering teams where one departure takes undocumented knowledge with it. The design principle stays the same at every stage: AI may propose, code must verify, a person decides, and the database enforces who sees what.</p>
+
+<h2>9. Team and contributions</h2>
+<p><b>Team Cortex</b> (Bennett University): Saiyam Aggarwal, Divyansh Somani, Kaustabh Chowdhury, Anushka Verma.</p>
+<table>
+  <tr><th style="width:24%">Member</th><th>Contribution</th></tr>
+  <tr><td>Saiyam Aggarwal</td><td>Security and permissions lead (role D). Built the Round 2 and Round 3 product: verifier, permission model, RLS policies and server checks, Supabase Auth, AI pipeline, benchmark, tests and CI, deployment and documentation.</td></tr>
+  <tr><td>Divyansh Somani</td><td><span class="todo">{{CONTRIBUTION_DIVYANSH}}</span></td></tr>
+  <tr><td>Kaustabh Chowdhury</td><td><span class="todo">{{CONTRIBUTION_KAUSTABH}}</span></td></tr>
+  <tr><td>Anushka Verma</td><td><span class="todo">{{CONTRIBUTION_ANUSHKA}}</span></td></tr>
+</table>
+<p class="footer-note"><b>Disclosures.</b> Built within the event window. AI tools: Claude (Anthropic) assisted with code and documentation; ChatGPT was used for an early website draft in Round 2. Third-party code: GSAP and Lenis (vendored), a plain-JS port of React Bits' CircularCarousel, and the <span class="mono">@anthropic-ai/sdk</span> package. No pre-built product was used. All demo data is synthetic; the demo accounts are public and protect synthetic data only.</p>
+
+</body>
+</html>

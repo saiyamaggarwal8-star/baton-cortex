@@ -304,7 +304,8 @@
     const d = window.BatonDB;
     if (!d || !d.configured) return '<span class="status-pill is-local" title="No database configured: everything runs in this browser">Local mode</span>';
     if (d.status === 'online') return '<span class="status-pill is-db" title="Ledger saved to Supabase Postgres; reader views enforced by row-level security">● Database · RLS on</span>';
-    if (d.status === 'error') return '<span class="status-pill is-dberror" title="' + h(d.lastError || '') + '">Database offline · local mode</span>';
+    if (d.status === 'error') return '<span class="status-pill is-dberror" title="' + h(d.lastError || '') + '">Database problem · ' + h(String(d.lastError || 'offline').slice(0, 60)) + '</span>';
+    if (d.status === 'signedout') return '<a class="status-pill is-local" href="#/login/studio" title="Sign in to save the ledger to Postgres">Not signed in · sign in to save</a>';
     return '<span class="status-pill is-local">Connecting to database…</span>';
   }
 
@@ -627,6 +628,11 @@
     if (!gate().every(g => g.ok)) return;
     const snapshot = state.claims.filter(c => (c.reviewState === 'accepted' || c.reviewState === 'edited') && !isHeldOut(c)).map(c => JSON.parse(JSON.stringify(c)));
     const hash = await E.sha256(JSON.stringify(snapshot));
+    const D = window.BatonDB;
+    if (D && D.configured && D.session() && D.session().persona !== 'reviewer') {
+      toast('Only the reviewer can approve and publish (the database enforces this too). Sign in as Prof. Rao from the account menu.');
+      return;
+    }
     const v = { id: 'v' + (state.versions.length + 1), state: 'approved', approvedBy: 'Prof. Rao', at: new Date().toISOString(), hash, claims: snapshot };
     state.versions.push(v);
     audit('Prof. Rao (reviewer)', 'Approved and published ' + v.id + ' (' + snapshot.length + ' claims)');
@@ -635,7 +641,8 @@
     v.inDatabase = !!stored;
     save();
     goStep('handover');
-    toast(v.id + ' approved. ' + (stored ? 'Stored in Postgres; each reader now receives only their rows through row-level security.' : 'Readers can now open their handover.'));
+    toast(v.id + ' approved. ' + (stored ? 'Stored in Postgres; each reader now receives only their rows through row-level security.'
+      : (D && D.configured && D.lastPublishError ? 'Not stored in the database: ' + D.lastPublishError : 'Readers can now open their handover.')));
   }
 
   function retract(id) {
@@ -1116,7 +1123,7 @@
     if (tl.length) html += '<div class="ho-section"><h4>Timeline</h4>' + renderTimeline(tl) + '</div>';
     if (ho.gaps.length) {
       html += '<div class="ho-section"><h4>Not in your view</h4>' + ho.gaps.map(g => {
-        const req = !opts.preview && state.requests.find(r => r.readerId === opts.reader.id && r.gapKey === g.key);
+        const req = !opts.preview && (opts.requests || state.requests).find(r => r.readerId === opts.reader.id && r.gapKey === g.key);
         return '<div class="gap-row"><div><div class="gt">' + h(g.title) + '</div><div class="gx">' + h(g.text) + '</div>' + (req ? '<div class="hint" style="margin-top:4px">' + (req.status === 'open' ? 'Request sent.' : 'Reviewer replied: ' + h(req.status) + '.') + '</div>' : '') + '</div>' +
           (opts.preview ? '<span class="btn btn-ghost btn-sm is-disabled" aria-hidden="true">Request access</span>' : '<button class="btn btn-ghost btn-sm" data-action="request" data-r="' + h(opts.reader.id) + '" data-k="' + h(g.key) + '"' + (req ? ' disabled' : '') + '>Request access</button>') + '</div>';
       }).join('') + '</div>';
@@ -1151,7 +1158,7 @@
         ho = E.composeHandover(rows, reader);
         const idsOf = x => Object.values(x.sections).flat().map(i => i.claimId).sort().join();
         const same = idsOf(ho) === idsOf(local) && ho.gaps.map(g => g.key).join() === local.gaps.map(g => g.key).join();
-        dbNote = '<div class="db-note is-ok"><b>Served by Postgres row-level security:</b> the database returned ' + got.rows.length + ' rows for ' + h(reader.name) + ' (restricted rows never left the server). ' + (same ? 'Matches the in-app permission check ✓' : 'Differs from the in-app permission check: review it') + '</div>';
+        dbNote = '<div class="db-note is-ok"><b>Served by Postgres row-level security:</b> queried with ' + h(reader.name) + '\'s own sign-in token, the database returned ' + got.rows.length + ' rows (restricted rows never left the server). ' + (same ? 'Matches the in-app permission check ✓' : 'Differs from the in-app permission check: review it') + '</div>';
       }
     }
     const receipts = ((state.receipts[v.id] || {})[reader.id]) || {};
@@ -1186,7 +1193,7 @@
       '<div class="studio-head"><div><div class="eyebrow">HANDOVER STUDIO · MERIDIAN CAMPUS BACKEND</div><h1>Aarav → Meera handover</h1><p>Turn scattered project activity into a handover where every statement cites its evidence, every gap is labelled, and each reader sees only what they may see.</p></div>' +
       '<div class="studio-tools"><span id="dbPillSlot">' + dbPill() + '</span>' + (latestVersion() ? '<span class="status-pill is-approved" title="Approved versions are immutable">' + h(latestVersion().id) + ' · approved</span>' : '<span class="status-pill is-draft" title="Nothing is shared before the reviewer approves">Draft · not shared</span>') + '<button class="btn btn-ghost btn-sm" data-action="loadSample">Load sample</button><button class="btn btn-ghost btn-sm" data-action="reset">Reset</button></div></div>' +
       '<div class="demo-note"><span>ⓘ</span><div><b>Working prototype on synthetic data.</b> ' + ((window.BatonDB && window.BatonDB.configured)
-        ? 'Extraction rules, the quote checker and leak tests run in your browser. The ledger and published handovers are stored in Supabase Postgres, where row-level security decides which rows each reader receives. Readers are seeded demo personas, not real sign-in, and each browser gets its own private workspace.'
+        ? 'You are signed in with Supabase Auth' + (window.BatonDB.session() ? ' as <b>' + h(window.BatonDB.session().name) + '</b>' : '') + '. The ledger is stored in Postgres, which reads your identity from your sign-in token: row-level security decides what each account may read, and the database re-checks every quote and the publish gate itself. The demo accounts are public and protect synthetic data only.'
         : 'Everything runs in your browser: extraction rules, the quote checker, permissions and leak tests are real code, but there is no server, sign-in or live integration except the optional public GitHub import. Your changes are saved only in this browser. In production the permission check runs in Postgres row-level security.') + '</div></div>' +
       stepper() + guideBar() + '<div id="stepBody">' + body + '</div>';
     root.querySelectorAll('[data-keep-scroll]').forEach(el => { if (keep[el.dataset.keepScroll] != null) el.scrollTop = keep[el.dataset.keepScroll]; });
@@ -1349,9 +1356,12 @@
     });
   }
 
+  let seenAuth = window.BatonDB ? window.BatonDB.authVersion : 0;
   if (window.BatonDB) window.BatonDB.onChange(() => {
     const slot = document.getElementById('dbPillSlot');
     if (slot) slot.innerHTML = dbPill();
+    // After sign-in, sign-out or an account switch, re-send the working ledger under the new session.
+    if (window.BatonDB.authVersion !== seenAuth) { seenAuth = window.BatonDB.authVersion; if (window.BatonDB.isStaff()) save(); }
   });
 
   window.BatonStudio = {
@@ -1359,6 +1369,8 @@
     render,
     goStep,
     startSample() { if (!state.sources.length) loadSample(); },
+    handoverBody: (ho, opts) => renderHandoverBody(ho, opts),
+    toast: msg => toast(msg),
     hasData: () => state.sources.length > 0,
     // Read-only snapshot for the landing page cards.
     summary() {

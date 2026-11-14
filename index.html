@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/base.css?v=12">
 <link rel="stylesheet" href="css/studio.css?v=10">
 <link rel="stylesheet" href="css/theme.css?v=19">
+<link rel="stylesheet" href="css/account.css?v=1">
 <link rel="stylesheet" href="css/circular-carousel.css?v=1">
 <link rel="stylesheet" href="vendor/lenis.css">
 <link rel="stylesheet" href="css/motion.css?v=10">
@@ -32,7 +33,7 @@
    <a href="#/spec/meridian" data-nav="spec">Product spec</a>
  </nav>
  <div class="header-right">
-   <div class="workspace"><span class="workspace-dot"></span>CORTEX WORKSPACE</div>
+   <div id="accountChip"><div class="workspace"><span class="workspace-dot"></span>CORTEX WORKSPACE</div></div>
  </div>
 </header>
 
@@ -107,6 +108,11 @@
      </div>
    </div>
  </section>
+</section>
+
+<!-- SIGN-IN AND THE READER'S OWN HANDOVER (js/account.js) -->
+<section class="account-view" id="accountView" aria-label="Account">
+  <div id="accountRoot"></div>
 </section>
 
 <!-- HANDOVER STUDIO (working workflow) -->
@@ -570,10 +576,11 @@
 <script src="js/engine.js?v=10"></script>
 <script src="js/sample.js?v=10"></script>
 <script src="js/dock.js?v=15"></script>
-<script src="js/config.js?v=2"></script>
-<script src="js/db.js?v=2"></script>
-<script src="js/studio.js?v=17"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/config.js?v=3"></script>
+<script src="js/db.js?v=3"></script>
+<script src="js/studio.js?v=18"></script>
+<script src="js/account.js?v=1"></script>
+<script src="js/app.js?v=13"></script>
 <script src="js/landing.js?v=10"></script>
 <script src="js/circular-carousel.js?v=2"></script>
 <script src="js/spec-carousel.js?v=1"></script>

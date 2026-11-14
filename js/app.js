@@ -7,13 +7,14 @@
   const landingEl = document.getElementById('landing');
   const studioEl = document.getElementById('studio');
   const detailEl = document.getElementById('detail');
+  const accountEl = document.getElementById('accountView');
   const STEPS = ['connect', 'reconstruct', 'verify', 'review', 'handover'];
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   let currentView = null;
 
   function parse() {
     const parts = (location.hash || '#/').replace(/^#\/?/, '').split('/');
-    const v = parts[0] === 'studio' ? 'studio' : parts[0] === 'spec' ? 'spec' : 'home';
+    const v = parts[0] === 'studio' ? 'studio' : parts[0] === 'spec' ? 'spec' : parts[0] === 'login' ? 'login' : parts[0] === 'me' ? 'me' : 'home';
     return { view: v, arg: parts[1] };
   }
 
@@ -21,8 +22,9 @@
     landingEl.classList.toggle('hide', view !== 'home');
     studioEl.classList.toggle('show', view === 'studio');
     detailEl.classList.toggle('show', view === 'spec');
+    accountEl.classList.toggle('show', view === 'login' || view === 'me');
     document.querySelectorAll('[data-nav]').forEach(a => {
-      const on = a.dataset.nav === view;
+      const on = a.dataset.nav === view || (a.dataset.nav === 'studio' && view === 'me');
       a.classList.toggle('active', on);
       if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
@@ -32,8 +34,27 @@
     if (window.BatonScroll) window.BatonScroll.top(); else window.scrollTo(0, 0);
   }
 
+  // With a database configured, the Studio needs a signed-in staff account (data owner or reviewer);
+  // readers are sent to their own handover page. Without a database (or in local mode) it runs locally.
+  function guard(r) {
+    const D = window.BatonDB;
+    if (!D || !D.configured) return r.view === 'me' ? { view: 'login', arg: '' } : r;
+    const s = D.session();
+    if (r.view === 'studio' && !s) return { view: 'login', arg: 'studio', redirect: '#/login/studio' };
+    if (r.view === 'studio' && !D.isStaff()) return { view: 'me', redirect: '#/me' };
+    if (r.view === 'me' && !s) return { view: 'login', arg: 'me', redirect: '#/login/me' };
+    return r;
+  }
+
   function apply(r, changed) {
-    if (r.view === 'studio') {
+    const g = guard(r);
+    if (g.redirect && location.hash !== g.redirect) history.replaceState(null, '', g.redirect);
+    r = g;
+    if (r.view === 'login' || r.view === 'me') {
+      show(r.view);
+      window.BatonAccount.show(r.view, r.arg);
+      if (changed) toTop();
+    } else if (r.view === 'studio') {
       show('studio');
       window.BatonStudio.goStep(STEPS.includes(r.arg) ? r.arg : 'connect');
       if (changed) toTop();

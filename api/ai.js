@@ -20,8 +20,21 @@ const E = require('../js/engine.js');
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || 'https://acwvvhnmjteendsyoawn.supabase.co').replace(/\/+$/, '');
 const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OYDwQEBHajnvAO7J8aQnXw_s1I_XlLb';
-const MODEL = process.env.BATON_MODEL || 'anthropic/claude-sonnet-5.5';
 const GATEWAY = 'https://ai-gateway.vercel.sh/v1/chat/completions';
+// Provider interface: the Anthropic API (official SDK) when ANTHROPIC_API_KEY is set, otherwise the
+// Vercel AI Gateway with the deployment's OIDC token. Both get the same prompts and JSON schemas.
+const PROVIDER = process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'gateway';
+const MODEL = process.env.BATON_MODEL || (PROVIDER === 'anthropic' ? 'claude-opus-5-5' : 'anthropic/claude-opus-5.5');
+const EFFORT = process.env.BATON_EFFORT || 'low';
+let anthropicClient = null;
+function anthropic() {
+  if (!anthropicClient) {
+    const A = require('@anthropic-ai/sdk');
+    const Anthropic = A.default || A.Anthropic || A;
+    anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 50000, maxRetries: 1 });
+  }
+  return anthropicClient;
+}
 const TYPES = ['decision', 'owner', 'next_action', 'risk', 'blocker', 'dependency', 'open_question', 'contact', 'process', 'recurring_problem'];
 const MAX_PASSAGES = 160;
 const CHUNK = 8;
@@ -103,6 +116,37 @@ async function model(req, who, task, system, user, input, maxTokens) {
   const key = keyOf(task, input);
   const hit = await cacheGet(who, key);
   if (hit) return { data: hit, cached: true };
+  const data = PROVIDER === 'anthropic'
+    ? await callAnthropic(system, user, SCHEMAS[task], maxTokens)
+    : await callGateway(req, system, user, maxTokens);
+  await cachePut(who, key, task, data);
+  return { data, cached: false };
+}
+
+async function callAnthropic(system, user, schema, maxTokens) {
+  let r;
+  try {
+    r = await anthropic().beta.messages.create({
+      model: MODEL,
+      max_tokens: maxTokens || 8000,
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+      system,
+      messages: [{ role: 'user', content: user }],
+      output_config: { effort: EFFORT, format: { type: 'json_schema', schema } }
+    });
+  } catch (e) {
+    const status = e && e.status;
+    throw Object.assign(new Error('Anthropic API: ' + String((e && e.message) || e).slice(0, 240)),
+      { status: status === 401 || status === 403 ? 503 : status === 429 ? 429 : status && status < 500 ? 502 : 504 });
+  }
+  if (r.stop_reason === 'refusal') throw Object.assign(new Error('The model declined this request.'), { status: 422 });
+  const block = (r.content || []).find(b => b.type === 'text');
+  if (!block) throw Object.assign(new Error('The model returned no text.'), { status: 502 });
+  return parseJson(block.text);
+}
+
+async function callGateway(req, system, user, maxTokens) {
   const apiKey = gatewayKey(req);
   if (!apiKey) throw Object.assign(new Error('AI Gateway is not available for this deployment.'), { status: 503 });
   const ctrl = new AbortController();
@@ -124,10 +168,21 @@ async function model(req, who, task, system, user, input, maxTokens) {
     throw Object.assign(new Error('AI Gateway: ' + msg), { status: r.status === 401 || r.status === 403 ? 503 : 502 });
   }
   const j = JSON.parse(text);
-  const data = parseJson(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
-  await cachePut(who, key, task, data);
-  return { data, cached: false };
+  return parseJson(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
 }
+
+// JSON schemas for structured outputs (one per task).
+const S = t => ({ type: 'string', ...(t || {}) });
+const obj = (properties, required) => ({ type: 'object', properties, required, additionalProperties: false });
+const SCHEMAS = {
+  extract: obj({ claims: { type: 'array', items: obj({
+    passageId: S(), type: S({ enum: TYPES }), statement: S(), quote: S(), rationale: S(), owner: S(), deadline: S(),
+    slot: obj({ kind: S({ enum: ['owner', 'decision'] }), subject: S(), value: S() }, ['kind', 'subject', 'value'])
+  }, ['passageId', 'type', 'statement', 'quote']) } }, ['claims']),
+  support: obj({ results: { type: 'array', items: obj({ id: S(), verdict: S({ enum: ['supported', 'partly', 'unsupported', 'contradicted'] }), reason: S() }, ['id', 'verdict', 'reason']) } }, ['results']),
+  conflicts: obj({ findings: { type: 'array', items: obj({ a: S(), b: S(), kind: S({ enum: ['contradiction', 'outdated'] }), reason: S() }, ['a', 'b', 'kind', 'reason']) } }, ['findings']),
+  interview: obj({ questions: { type: 'array', items: obj({ gapKey: S(), rank: { type: 'integer' }, question: S(), why: S() }, ['gapKey', 'rank', 'question', 'why']) } }, ['questions'])
+};
 
 // Text sent to the model: no URLs, no HTML, no images, bounded length.
 function clean(text) {
@@ -289,7 +344,7 @@ async function taskInterview(req, who, body) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method === 'GET') return send(res, 200, { ok: true, model: MODEL, gateway: !!gatewayKey(req) });
+  if (req.method === 'GET') return send(res, 200, { ok: true, provider: PROVIDER, model: MODEL, ready: PROVIDER === 'anthropic' || !!gatewayKey(req) });
   if (req.method !== 'POST') return send(res, 405, { error: 'Use POST.' });
   try {
     const who = await caller(req);

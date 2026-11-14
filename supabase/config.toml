@@ -23,7 +23,8 @@ site_url = "http://localhost:3200"
 enable_signup = false
 
 [auth.email]
-enable_signup = false
+# The email provider must be on for password sign-in; [auth] enable_signup = false still blocks new accounts.
+enable_signup = true
 enable_confirmations = false
 
 [studio]

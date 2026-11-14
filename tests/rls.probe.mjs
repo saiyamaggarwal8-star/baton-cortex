@@ -129,5 +129,21 @@ check('Meera asking for treasurer rows with a forged Kavya header gets nothing',
 r = await rest('GET', 'audit_log?select=id', { token: T.meera, ws });
 check('Readers cannot read the audit log', rows(r) === 0, rows(r) + ' rows');
 
+// --- guided interview: reviewer asks, leaver answers, readers see nothing ----------------------
+r = await rest('POST', 'interview_questions', { token: T.reviewer, ws, body: { workspace_id: ws, gap_key: 'credentials', rank: 1, question: 'Where are the credentials kept?' }, prefer: 'return=minimal' });
+check('Reviewer can send an interview question', r.ok, 'HTTP ' + r.status);
+r = await rest('GET', 'interview_questions?select=gap_key', { token: T.meera, ws });
+check('A reader cannot read the interview questions', rows(r) === 0, rows(r) + ' rows');
+r = await rest('POST', 'interview_answers', { token: T.meera, ws, body: { workspace_id: ws, gap_key: 'credentials', answer: 'forged', access: 'all_members' }, prefer: 'return=minimal' });
+check('A reader cannot answer in the leaver\'s name', !r.ok, 'HTTP ' + r.status);
+r = await rest('GET', 'interview_questions?select=gap_key', { token: T.leaver, ws });
+check('The departing lead sees the question', rows(r) === 1, rows(r) + ' rows');
+r = await rest('POST', 'interview_answers', { token: T.leaver, ws, body: { workspace_id: ws, gap_key: 'credentials', answer: 'In the team vault; ask Prof. Rao.', access: 'core_team', answered_by: 'reviewer' }, prefer: 'return=minimal' });
+check('The departing lead can answer', r.ok, 'HTTP ' + r.status);
+r = await rest('GET', 'interview_answers?select=answered_by', { token: T.reviewer, ws });
+check('The server records who answered (ignores the browser)', rows(r) === 1 && r.data[0].answered_by === 'leaver', rows(r) ? r.data[0].answered_by : '(none)');
+r = await rest('GET', 'interview_answers?select=answer', { token: T.kavya, ws });
+check('Another reader cannot read the leaver\'s answers', rows(r) === 0, rows(r) + ' rows');
+
 console.log('\n' + (results.length - failures) + ' of ' + results.length + ' checks passed');
 process.exit(failures ? 1 : 0);

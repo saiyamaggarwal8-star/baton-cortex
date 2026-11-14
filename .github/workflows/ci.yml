@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  engine:
+    name: Engine tests and benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Engine tests (verifier, permissions, leak tests)
+        run: node --test tests/engine.test.js
+      - name: Benchmark (rules, answer keys, evidence-check pairs)
+        run: node tests/benchmark.mjs
+
+  database:
+    name: Security probes on a fresh database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start a fresh Supabase stack (applies every migration and the demo seed)
+        run: supabase start -x studio,imgproxy,realtime,storage-api,edge-runtime,logflare,vector
+      - name: Read local connection details
+        run: supabase status -o env > "$RUNNER_TEMP/supa.env"
+      - name: Live RLS, auth and publish-gate probes with real tokens
+        run: |
+          set -a; . "$RUNNER_TEMP/supa.env"; set +a
+          export BATON_SUPABASE_URL="$API_URL"
+          export BATON_SUPABASE_KEY="${PUBLISHABLE_KEY:-$ANON_KEY}"
+          node tests/rls.probe.mjs

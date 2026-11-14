@@ -95,9 +95,43 @@
     me.loading = false; rerender();
   }
 
+  // ---------------------------------------------------------------------------
+  // The departing lead's page: answer the guided interview from your own account
+  // ---------------------------------------------------------------------------
+  let iv = { loading: false, data: null, error: null, saving: null };
+  async function loadIv() {
+    iv.loading = true; iv.error = null; rerender();
+    try { iv.data = await D.myInterview(); } catch (e) { iv.error = String(e.message || e); }
+    iv.loading = false; rerender();
+  }
+  function renderLeaver(s) {
+    let body;
+    if (iv.loading && !iv.data) body = '<div class="empty">Loading your interview…</div>';
+    else if (iv.error) body = '<div class="notice warn">Could not load the interview: ' + h(iv.error) + ' <button class="btn btn-ghost btn-sm" data-acct="ivreload">Try again</button></div>';
+    else if (!iv.data || !iv.data.questions.length) body = '<div class="empty"><b>No interview has been sent to you yet</b>The reviewer sends it from the Studio (Review → Gap interview → Send to Aarav’s account). Sign in as Prof. Rao in this browser to do that, then come back.<div class="actions" style="justify-content:center"><a class="btn btn-primary" href="#/login">Switch account</a><button class="btn btn-ghost" data-acct="ivreload">Refresh</button></div></div>';
+    else {
+      const ans = Object.fromEntries(iv.data.answers.map(a => [a.gap_key, a]));
+      const done = iv.data.questions.filter(q => ans[q.gap_key]).length;
+      body = '<div class="notice info" style="margin:0 0 14px">' + done + ' of ' + iv.data.questions.length + ' answered. Only the sources could not answer these. Your answers are stored as <b>Stated by Aarav</b>, never as Sourced, and the reviewer decides on each one. Never type a password or key: say where it is kept.</div>' +
+        iv.data.questions.map(q => {
+          const a = ans[q.gap_key];
+          return '<form class="iv-card' + (a ? ' done' : '') + '" data-acct="ivform" data-k="' + h(q.gap_key) + '"><div class="iv-q"><span class="iv-rank">Q' + q.rank + '</span><div><b>' + h(q.question) + '</b><div class="hint">' + h(q.why || '') + (q.readers && q.readers.length ? ' Missing for: ' + h(q.readers.join(', ')) + '.' : '') + '</div></div></div>' +
+            '<label class="lbl" for="iv-' + h(q.gap_key) + '">Your answer</label><textarea class="textarea" id="iv-' + h(q.gap_key) + '" name="answer" maxlength="2000" required style="min-height:70px">' + h(a ? a.answer : '') + '</textarea>' +
+            '<div class="row" style="align-items:flex-end;margin-top:8px"><div class="field" style="flex:1 1 160px;margin:0"><label for="iva-' + h(q.gap_key) + '">Who may see it</label><select class="select" id="iva-' + h(q.gap_key) + '" name="access">' +
+            ['core_team', 'all_members', 'treasurer_only'].map(t => '<option value="' + t + '"' + ((a ? a.access : 'core_team') === t ? ' selected' : '') + '>' + h(E.ACCESS_TAGS[t] || t) + '</option>').join('') + '</select></div>' +
+            '<button class="btn btn-primary" type="submit"' + (iv.saving === q.gap_key ? ' disabled' : '') + '>' + (iv.saving === q.gap_key ? 'Saving…' : a ? 'Update answer' : 'Save answer') + '</button></div>' +
+            (a ? '<p class="hint" style="margin:6px 0 0">Saved ' + new Date(a.answered_at).toLocaleString() + '.</p>' : '') + '</form>';
+        }).join('');
+    }
+    root().innerHTML = '<div class="acct-wrap"><div class="acct-head"><span class="eyebrow">EXIT INTERVIEW · DEPARTING LEAD</span><h1>Hi ' + h(s.name) + ', a few questions before you go</h1>' +
+      '<p>Baton already rebuilt most of the handover from the project’s sources. These are the gaps it could not fill, ranked by what would hurt the newcomer most in week one.</p></div>' +
+      '<div class="split split-wide"><div class="card">' + body + '</div><div style="display:grid;gap:14px;align-content:start">' + renderAttacks(PERSONA[s.persona]) + '</div></div></div>';
+  }
+
   function renderMe() {
     const s = session();
     if (!s) { location.hash = '#/login/me'; return; }
+    if (s.persona === 'leaver') { renderLeaver(s); return; }
     const p = PERSONA[s.persona];
     let body;
     if (me.loading && !me.data) body = '<div class="empty">Asking Postgres for your handover…</div>';
@@ -144,7 +178,7 @@
   // ---------------------------------------------------------------------------
   // View plumbing
   // ---------------------------------------------------------------------------
-  let view = null, arg = null;
+  let view = null, arg = null, lastUser = null;
   function rerender() {
     renderChip();
     if (view === 'login') renderLogin(arg);
@@ -154,7 +188,11 @@
   window.BatonAccount = {
     show(v, a) {
       view = v; arg = a;
-      if (v === 'me' && session() && !me.loading) loadMe();
+      // A different account must never see the previous account's results.
+      const uid = session() ? session().user.id : null;
+      if (uid !== lastUser) { lastUser = uid; me = { loading: false, data: null, error: null, attacks: null, attacking: false }; iv = { loading: false, data: null, error: null, saving: null }; }
+      if (v === 'me' && session() && session().persona === 'leaver') { if (!iv.loading) loadIv(); }
+      else if (v === 'me' && session() && !me.loading) loadMe();
       rerender();
     },
     renderChip
@@ -168,9 +206,25 @@
     else if (k === 'signout') { D.signOut(); me = { loading: false, data: null, error: null, attacks: null, attacking: false }; el.closest('details') && el.closest('details').removeAttribute('open'); toast('Signed out.'); location.hash = '#/login'; }
     else if (k === 'local') { D.setLocalMode(true); toast('Local mode: everything runs in this browser; nothing is saved to the database.'); location.hash = '#/studio/connect'; }
     else if (k === 'reload') loadMe();
+    else if (k === 'ivreload') loadIv();
     else if (k === 'attack') runAttacks();
   });
-  document.addEventListener('submit', e => {
+  document.addEventListener('submit', async e => {
+    const fi = e.target.closest('form[data-acct="ivform"]');
+    if (fi) {
+      e.preventDefault();
+      const fd = new FormData(fi);
+      const text = String(fd.get('answer') || '').trim();
+      if (!text) { toast('Type an answer first.'); return; }
+      const m = E.maskSecrets(text);
+      iv.saving = fi.dataset.k; rerender();
+      try {
+        await D.saveAnswer(fi.dataset.k, m.text.slice(0, 2000), fd.get('access'));
+        toast(m.findings.length ? 'Saved. Something that looked like a secret was masked before it was stored.' : 'Saved. The reviewer imports it as "Stated by Aarav".');
+        iv.saving = null; await loadIv();
+      } catch (err) { iv.saving = null; rerender(); toast('Could not save: ' + (err.message || err)); }
+      return;
+    }
     const f = e.target.closest('form[data-acct="form"]');
     if (!f) return;
     e.preventDefault();

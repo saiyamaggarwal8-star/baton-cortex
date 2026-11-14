@@ -63,3 +63,8 @@
 .q-good{color:var(--sage)} .q-grade.q-good{background:var(--sage-soft)}
 .q-meh{color:var(--ochre)} .q-grade.q-meh{background:var(--ochre-soft)}
 .q-bad{color:var(--crimson)} .q-grade.q-bad{background:var(--crimson-soft)}
+
+/* Guided interview */
+.iv-q{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.iv-rank{flex:none;font:700 12px 'DM Mono',monospace;background:var(--ink);color:var(--on-ink);border-radius:8px;padding:3px 7px}
+form.iv-card{display:block}

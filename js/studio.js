@@ -47,7 +47,7 @@
       rev: 0, labClaim: null, labText: '', labOut: null, tests: null, editing: null, editNotice: null,
       draft: { title: '', kind: 'notes', access: 'core_team', text: '', date: '', csvHeaders: null, csvMap: null, repo: '' },
       showText: {}, answers: {}, answerAccess: {}, answerAs: 'leaver', disputeNotes: {},
-      aiMode: 'ai', ai: null, plant: null, project: 'meridian', bench: null
+      aiMode: 'ai', ai: null, plant: null, project: 'meridian', bench: null, ivAI: null, ivSent: null, ivImported: null, ivBusy: null
     };
   }
   let state = load() || freshState();
@@ -62,6 +62,7 @@
       if (!raw) return null;
       const s = Object.assign(freshState(), JSON.parse(raw));
       if (s.bench && s.bench.running) s.bench = null;
+      s.ivBusy = null;
       if (s.ai && s.ai.running) s.ai = { error: 'The AI run was interrupted by a page reload. Run Reconstruct again to repeat it (cached answers make it fast).' };
       if (s.plant && s.plant.running) s.plant = null;
       // Re-derive canaries for sample sources (custom-source secrets are not persisted).
@@ -764,6 +765,114 @@
       '<button class="btn btn-primary btn-sm" data-action="runBench"' + (b && b.running ? ' disabled' : '') + '>' + (b && !b.running ? 'Run again' : 'Run benchmark') + '</button></div>' + body + '</div>';
   }
 
+  // ---------------------------------------------------------------------------
+  // Guided gap interview (Round 3, improvement 2): ranked, targeted questions; sent to the departing
+  // lead's own account; answers come back as "Stated by" claims the reviewer still decides on.
+  // ---------------------------------------------------------------------------
+  const IV_WEIGHT = { credentials: 5, run_deploy: 4, owner: 3, work_in_flight: 3, scheduled_jobs: 2, who_to_ask: 2 };
+  const IV_WHY = {
+    credentials: 'Without this, nobody can deploy, pay a vendor or rotate a leaked key in week one.',
+    run_deploy: 'The newcomer must be able to ship a fix without guessing.',
+    owner: 'Areas with no named owner silently stop moving.',
+    work_in_flight: 'Half-finished work is where handovers lose the most.',
+    scheduled_jobs: 'A silent job failure is noticed only when something breaks.',
+    who_to_ask: 'Outside contacts usually live only in the leaver\'s inbox.'
+  };
+  function interviewPlan() {
+    const leaver = PERSONA.leaver.name;
+    const q = qualityReport();
+    const tmpl = {
+      credentials: 'Where are the staging and production credentials kept, and who can grant access to them? Say where they live, never the secret itself.',
+      run_deploy: 'How does a release go out today: from which branch, with which command, and who runs it now?',
+      owner: q.singleOwner.length ? 'You are the only recorded owner of ' + q.singleOwner.join(', ') + '. Who takes each of these over, and from when?' : 'Who owns each area you worked on after you leave?',
+      work_in_flight: 'What is unfinished right now, and what is the next concrete step on each item?',
+      scheduled_jobs: 'Which jobs run on a schedule, when do they run, and what breaks if one fails?',
+      who_to_ask: 'Who outside the team (vendors, support, finance) should the newcomer contact, and for what?'
+    };
+    return unionGaps()
+      .map(g => ({ key: g.key, title: g.title, readers: g.readers, weight: (IV_WEIGHT[g.key] || 1) + g.readers.length * 2 }))
+      .sort((a, b) => b.weight - a.weight)
+      .map((g, i) => {
+        const ai = state.ivAI && state.ivAI[g.key];
+        return Object.assign(g, { rank: i + 1, question: ai ? ai.question : (tmpl[g.key] || 'What should the newcomer know about "' + g.title + '"?'), why: ai ? ai.why : (IV_WHY[g.key] || ''), byAI: !!ai, leaver });
+      });
+  }
+
+  async function tailorInterview() {
+    if (!window.BatonAI || !window.BatonAI.available()) { toast('Sign in as the reviewer to tailor questions with AI.'); return; }
+    const plan = interviewPlan();
+    if (!plan.length) { toast('No open gaps to ask about.'); return; }
+    state.ivBusy = 'tailor'; render();
+    try {
+      const known = state.claims.filter(c => c.reviewState !== 'rejected').slice(0, 40).map(c => c.statement);
+      const r = await window.BatonAI.call('interview', { gaps: plan.map(g => ({ key: g.key, title: g.title })), known, leaver: PERSONA.leaver.name, project: state.project === 'lumen' ? 'Lumen mobile app' : 'Meridian campus backend' });
+      state.ivAI = {};
+      (r.questions || []).forEach(x => { state.ivAI[x.gapKey] = { question: x.question, why: x.why, rank: x.rank }; });
+      audit('System', 'AI tailored ' + (r.questions || []).length + ' interview questions');
+      toast('Questions tailored by the AI. Ranking still follows the checklist weight and reader impact.');
+    } catch (e) { toast('AI unavailable, keeping the standard questions: ' + e.message); }
+    state.ivBusy = null; save(); render();
+  }
+
+  async function sendInterview() {
+    const D = window.BatonDB;
+    if (!D || !D.configured || !D.isStaff()) { toast('Sign in as the reviewer to send the interview.'); return; }
+    const plan = interviewPlan();
+    if (!plan.length) { toast('No open gaps to ask about.'); return; }
+    state.ivBusy = 'send'; render();
+    try {
+      const n = await D.sendInterview(plan);
+      state.ivSent = { at: new Date().toISOString(), n };
+      audit('Prof. Rao (reviewer)', 'Sent ' + n + ' interview questions to ' + PERSONA.leaver.name + '\'s account');
+      toast('Sent ' + n + ' questions. Sign in as Aarav (account menu) to answer them, then come back and import.');
+    } catch (e) { toast('Could not send: ' + e.message); }
+    state.ivBusy = null; save(); render();
+  }
+
+  async function importInterview() {
+    const D = window.BatonDB;
+    if (!D || !D.configured || !D.isStaff()) { toast('Sign in as the reviewer to import answers.'); return; }
+    state.ivBusy = 'import'; render();
+    try {
+      const rows = await D.interviewAnswers();
+      let n = 0;
+      rows.forEach(a => {
+        const m = E.maskSecrets(a.answer);
+        const statement = E.toStatement(m.text, null);
+        if (state.claims.some(c => c.gapKey === a.gap_key && c.origin === 'leaver' && c.statement === statement)) return;
+        const title = (E.CHECKLIST.find(x => x.key === a.gap_key) || {}).title || a.gap_key;
+        const day = a.answered_at ? new Date(Date.parse(a.answered_at) - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) : TODAY;
+        state.claims.push({
+          id: 'CLM-I' + String(state.claims.filter(c => /^CLM-I/.test(c.id)).length + 1).padStart(2, '0'), type: GAP_TYPE[a.gap_key] || 'process', statement, quote: null,
+          sourceId: null, passageId: null, matchMethod: null, checks: {}, label: 'Stated by Aarav, ' + shortDate(day),
+          reason: 'Answered by the departing lead from their own account in the guided interview. Never labelled Sourced.', access: a.access,
+          origin: 'leaver', gapKey: a.gap_key, question: title, author: 'Aarav', date: day, slot: null, flags: m.findings.length ? ['secret-masked'] : [],
+          reviewState: 'proposed', version: 1
+        });
+        n++;
+      });
+      state.ivImported = { at: new Date().toISOString(), n, total: rows.length };
+      if (n) { bump(); audit('Prof. Rao (reviewer)', 'Imported ' + n + ' interview answer(s) from Aarav'); }
+      toast(n ? 'Imported ' + n + ' answer(s) as "Stated by Aarav". Decide on each one in Claims.' : rows.length ? 'No new answers since the last import.' : 'No answers yet. Sign in as Aarav to answer.');
+    } catch (e) { toast('Could not import: ' + e.message); }
+    state.ivBusy = null; save(); render();
+  }
+
+  function guidedInterviewCard() {
+    const plan = interviewPlan();
+    const D = window.BatonDB;
+    const online = D && D.configured && D.isStaff();
+    const answered = plan.filter(g => state.claims.some(c => c.gapKey === g.key && c.reviewState !== 'rejected')).length;
+    const busy = state.ivBusy;
+    return '<div class="card iv-guide" style="margin-bottom:14px"><div class="card-head"><div><h3>Guided interview</h3><p class="sub" style="margin:4px 0 0">' + plan.length + ' question(s), ranked by what would hurt the newcomer most in week one (checklist weight × readers missing it). About ' + Math.max(5, plan.length * 3) + ' minutes. ' + answered + ' answered.' +
+      (state.ivSent ? ' Sent to Aarav ' + new Date(state.ivSent.at).toLocaleTimeString() + '.' : '') + (state.ivImported ? ' Last import: ' + state.ivImported.n + ' new of ' + state.ivImported.total + '.' : '') + '</p></div></div>' +
+      '<div class="actions" style="margin-top:0">' +
+      '<button class="btn btn-ghost btn-sm" data-action="ivTailor"' + (busy || !plan.length ? ' disabled' : '') + '>' + (busy === 'tailor' ? 'Tailoring…' : 'Tailor questions with AI') + '</button>' +
+      '<button class="btn btn-primary btn-sm" data-action="ivSend"' + (busy || !online || !plan.length ? ' disabled' : '') + ' title="Aarav answers from his own account">' + (busy === 'send' ? 'Sending…' : 'Send to Aarav\'s account') + '</button>' +
+      '<button class="btn btn-ghost btn-sm" data-action="ivImport"' + (busy || !online ? ' disabled' : '') + '>' + (busy === 'import' ? 'Importing…' : 'Import Aarav\'s answers') + '</button></div>' +
+      (online ? '' : '<p class="hint">Sending to Aarav needs a signed-in reviewer and the database; you can still answer below on his behalf.</p>') + '</div>';
+  }
+
   function aiModeCard() {
     const avail = window.BatonAI && window.BatonAI.available();
     const on = state.aiMode === 'ai';
@@ -1419,7 +1528,7 @@
   }
 
   function renderInterview() {
-    const gaps = unionGaps();
+    const gaps = interviewPlan();
     const pairs = conflictPairs();
     const asReviewer = state.answerAs === 'reviewer';
     const who = asReviewer ? 'Prof. Rao' : 'Aarav';
@@ -1427,10 +1536,11 @@
       '<button class="chip-btn ' + (!asReviewer ? 'on' : '') + '" data-action="answerAs" data-v="leaver" aria-pressed="' + !asReviewer + '">Aarav · departing lead</button>' +
       '<button class="chip-btn ' + (asReviewer ? 'on' : '') + '" data-action="answerAs" data-v="reviewer" aria-pressed="' + asReviewer + '">Prof. Rao · reviewer (sudden exit)</button></div>' +
       '<p class="sub">' + (asReviewer ? 'Sudden exit: the leaver cannot be reached, so the reviewer answers what they know. Unanswered gaps stay visible to readers.' : 'Only questions the sources could not answer. Typical time: 5 to 15 minutes.') + '</p>';
+    if (gaps.length) html = guidedInterviewCard() + html;
     if (!gaps.length && !pairs.length) html += '<div class="empty"><b>Nothing to ask</b>Every checklist item is covered for every reader.</div>';
     gaps.forEach(g => {
       const answered = state.claims.filter(c => c.gapKey === g.key && c.reviewState !== 'rejected');
-      html += '<div class="iv-card ' + (answered.length ? 'done' : '') + '"><h4>' + h(g.title) + '</h4><p>Missing in the view of: ' + h(g.readers.join(', ')) + '. Your answer is stored as "Stated by ' + who + '" with the access tag you choose; it is never wider than you set.</p>' +
+      html += '<div class="iv-card ' + (answered.length ? 'done' : '') + '"><div class="iv-q"><span class="iv-rank">Q' + g.rank + '</span><div><b>' + h(g.question) + '</b>' + (g.byAI ? ' <span class="flag flag-aisrc">AI-TAILORED</span>' : '') + '<div class="hint">' + h(g.why) + '</div></div></div><h4>' + h(g.title) + '</h4><p>Missing in the view of: ' + h(g.readers.join(', ')) + '. Your answer is stored as "Stated by ' + who + '" with the access tag you choose; it is never wider than you set.</p>' +
         answered.map(c => '<div class="notice good" style="margin:0 0 8px">' + labelPill(c.label) + ' ' + h(c.statement) + ' ' + tagPill(c.access) + ' <span class="state state-' + c.reviewState + '">' + c.reviewState + '</span></div>').join('') +
         '<div class="row"><div class="field" style="flex:3 1 260px"><label for="ans-' + g.key + '">Your answer</label><input class="input" id="ans-' + g.key + '" data-answer="' + g.key + '" value="' + h(state.answers[g.key] || '') + '" placeholder="' + h(g.key === 'who_to_ask' ? 'e.g. Ask Nisha at PayLane support about the vendor API.' : g.key === 'credentials' ? 'e.g. Credentials live in the team password manager, folder Meridian.' : 'Type what only you know') + '"></div>' +
         '<div class="field" style="flex:1 1 130px"><label for="ansacc-' + g.key + '">Who may see it</label>' + accessSelect('class="select" id="ansacc-' + g.key + '" data-change="answerAccess" data-key="' + g.key + '"', state.answerAccess[g.key] || 'core_team').replace('class="access-select" ', '') + '</div>' +
@@ -1630,6 +1740,9 @@
         case 'step': goStep(d.step); break;
         case 'loadSample': loadSample(d.p); break;
         case 'runBench': runBench(); break;
+        case 'ivTailor': tailorInterview(); break;
+        case 'ivSend': sendInterview(); break;
+        case 'ivImport': importInterview(); break;
         case 'reset':
           askToConfirm('Reset this studio?', 'This clears the sources, review decisions and versions saved for Baton in this browser.', 'Reset studio', () => {
             state = freshState(); Object.keys(vault).forEach(k => delete vault[k]); if ((window.BatonDB && window.BatonDB.configured)) window.BatonDB.newWorkspace(); save(); render(); toast('Studio reset.');

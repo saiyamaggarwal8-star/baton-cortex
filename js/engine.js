@@ -77,8 +77,8 @@
     { type: 'AWS_KEY', re: /\bAKIA[0-9A-Z]{16}\b/g },
     { type: 'CANARY', re: /\bCANARY-[A-Z0-9-]{4,}\b/g },
     { type: 'PRIVATE_KEY', re: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g },
-    // "password is X", "token: X", "secret = X"
-    { type: 'PASSWORD', re: /\b(password|passwd|pwd|secret|token|api key|apikey)(\s*(?:is|=|:)\s*)([^\s,;]+)/gi, group: 3 },
+    // "password is X", "password was X", "token: X", "secret = X", "pin is set to X"
+    { type: 'PASSWORD', re: /\b(password|passwd|pwd|passcode|pin|secret|token|api key|apikey)(\s*(?:is|was|=|:|is set to|was set to)\s*)([^\s,;]+?)(?=[.,;]?(?:\s|$))/gi, group: 3 },
     { type: 'EMAIL', re: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g },
     { type: 'PHONE', re: /(?:\+91[\s-]?)?\b[6-9]\d{4}[\s-]?\d{5}\b/g }
   ];

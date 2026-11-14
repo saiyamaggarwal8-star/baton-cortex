@@ -367,6 +367,34 @@
     return rest('POST', 'access_requests', { body: { workspace_id: ws, req_id: 'REQ-' + session.persona + '-' + gapKey, reader: session.persona, gap_key: gapKey, status: 'open' }, prefer: 'resolution=ignore-duplicates,return=minimal' });
   }
 
+  // ---------------------------------------------------------------------------
+  // Guided interview: reviewer sends questions, the departing lead answers from their own account
+  // ---------------------------------------------------------------------------
+  async function sendInterview(questions) {
+    if (!db.configured || !session) throw new Error('Sign in to send the interview.');
+    await flush();
+    await ensureWorkspace();
+    const rows = questions.map(q => ({ workspace_id: ws, gap_key: q.key, rank: q.rank, question: String(q.question).slice(0, 400), why: String(q.why || '').slice(0, 300), readers: q.readers || [], sent_at: new Date().toISOString() }));
+    if (rows.length) await rest('POST', 'interview_questions?on_conflict=workspace_id,gap_key', { body: rows, prefer: 'resolution=merge-duplicates,return=minimal' });
+    return rows.length;
+  }
+  async function interviewAnswers() {
+    await ensureWorkspace();
+    return rest('GET', 'interview_answers?select=gap_key,answer,access,answered_by,answered_at&workspace_id=eq.' + ws);
+  }
+  async function myInterview() {
+    const mem = await rest('GET', 'workspace_members?select=persona_id&workspace_id=eq.' + ws);
+    if (!mem.length) return { questions: [], answers: [] };
+    const [questions, answers] = await Promise.all([
+      rest('GET', 'interview_questions?select=*&order=rank'),
+      rest('GET', 'interview_answers?select=gap_key,answer,access,answered_at')
+    ]);
+    return { questions, answers };
+  }
+  async function saveAnswer(gapKey, answer, access) {
+    return rest('POST', 'interview_answers?on_conflict=workspace_id,gap_key', { body: { workspace_id: ws, gap_key: gapKey, answer, access }, prefer: 'resolution=merge-duplicates,return=minimal' });
+  }
+
   // "Try to break in": run real attacks as the signed-in user and report what Postgres returned.
   async function breakIn(personaTags) {
     const out = [];
@@ -381,6 +409,7 @@
     for (const t of hidden) add('Read handover rows tagged "' + t.replace('_', ' ') + '"', 'GET /reader_handover?access=eq.' + t, await call('GET', 'reader_handover?select=claim_ext_id,statement&access=eq.' + t), true);
     add('Forge the old persona header to look like the reviewer', 'x-baton-persona: reviewer', await call('GET', 'claims?select=ext_id', { headers: { 'x-baton-persona': 'reviewer' } }), true);
     add('Read the audit log', 'GET /audit_log', await call('GET', 'audit_log?select=actor,action'), true);
+    if (session && session.persona !== 'leaver') add('Read the departing lead\'s private interview answers', 'GET /interview_answers', await call('GET', 'interview_answers?select=gap_key,answer'), true);
     add('Approve a version as if you were the reviewer', 'POST /versions', await call('POST', 'versions', { body: { workspace_id: ws, ver: 'v-forged', state: 'approved', approved_by: 'Prof. Rao', content_hash: 'forged' }, prefer: 'return=minimal' }), false);
     add('Point at a workspace you are not a member of', 'x-baton-workspace: <random id>', await call('GET', 'reader_handover?select=claim_ext_id', { workspace: uuid() }), true);
     const t = await freshToken();
@@ -445,7 +474,7 @@
     workspace: () => ws, schedule, flush, newWorkspace, audit, publish, retract, loadReader, readerRows,
     receipt, request, reply, probes, ping, onChange: fn => listeners.add(fn),
     session: () => session, isStaff, signIn, signInDemo, signOut, setLocalMode, demoAccounts: DEMO, demoPassword: DEMO_PW,
-    myHandover, myAck, myRequest, breakIn
+    myHandover, myAck, myRequest, breakIn, sendInterview, interviewAnswers, myInterview, saveAnswer
   });
   ping();
 })();

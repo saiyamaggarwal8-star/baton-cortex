@@ -77,8 +77,13 @@
       if (window.BatonMotion) window.BatonMotion.afterRoute(r.view, changed || currentView === null);
     };
     currentView = r.view;
-    if (changed && typeof document.startViewTransition === 'function' && !reduce.matches) {
-      const vt = document.startViewTransition(() => apply(r, true));
+    if (changed && typeof document.startViewTransition === 'function' && !reduce.matches && document.visibilityState === 'visible') {
+      // The browser may postpone a transition's callback (background tab, busy frame). Navigation must not
+      // depend on it: apply the CURRENT address once, from the callback or from a short fallback timer.
+      let ran = false;
+      const update = () => { if (ran) return; ran = true; apply(parse(), true); };
+      const vt = document.startViewTransition(update);
+      setTimeout(update, 400);
       // A skipped transition (hidden tab, rapid navigation) rejects `ready`; the DOM update still runs.
       vt.ready.catch(() => {});
       vt.finished.then(done, done);

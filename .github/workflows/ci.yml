@@ -34,8 +34,7 @@ jobs:
       - name: Read local connection details
         run: |
           supabase status -o env > "$RUNNER_TEMP/supa.env"
-          echo "::notice title=Local stack::variables: $(cut -d= -f1 "$RUNNER_TEMP/supa.env" | tr '
-' ' ')"
+          echo "::notice title=Local stack::variables: $(cut -d= -f1 "$RUNNER_TEMP/supa.env" | paste -sd, -)"
       - name: Live RLS, auth and publish-gate probes with real tokens
         run: |
           set -a; . "$RUNNER_TEMP/supa.env"; set +a

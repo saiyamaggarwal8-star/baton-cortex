@@ -344,6 +344,11 @@ async function taskInterview(req, who, body) {
 }
 
 module.exports = async function handler(req, res) {
+  // Bearer-token API (no cookies), so any origin may call it; the token decides what it may do.
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
   if (req.method === 'GET') return send(res, 200, { ok: true, provider: PROVIDER, model: MODEL, ready: PROVIDER === 'anthropic' || !!gatewayKey(req) });
   if (req.method !== 'POST') return send(res, 405, { error: 'Use POST.' });
   try {

@@ -25,6 +25,12 @@ const GATEWAY = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 // Vercel AI Gateway with the deployment's OIDC token. Both get the same prompts and JSON schemas.
 const PROVIDER = process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'gateway';
 const MODEL = process.env.BATON_MODEL || (PROVIDER === 'anthropic' ? 'claude-opus-5-5' : 'anthropic/claude-opus-5.5');
+// The AI Gateway's free credit covers only some models. Try Claude models in this order and keep the
+// first one the account may use, so the free credit is never exceeded by a model choice.
+const GATEWAY_MODELS = process.env.BATON_MODEL ? [process.env.BATON_MODEL]
+  : ['anthropic/claude-opus-5.5', 'anthropic/claude-sonnet-5.5', 'anthropic/claude-sonnet-5', 'anthropic/claude-haiku-5.5', 'anthropic/claude-sonnet-4.6', 'anthropic/claude-haiku-4.5'];
+let activeModel = PROVIDER === 'anthropic' ? MODEL : GATEWAY_MODELS[0];
+const modelName = () => activeModel;
 const EFFORT = process.env.BATON_EFFORT || 'low';
 let anthropicClient = null;
 function anthropic() {
@@ -77,7 +83,7 @@ async function caller(req) {
 // ---------------------------------------------------------------------------
 // Cache in Postgres (RLS: staff accounts only)
 // ---------------------------------------------------------------------------
-const keyOf = (task, input) => crypto.createHash('sha256').update(MODEL + '\n' + task + '\n' + JSON.stringify(input)).digest('hex');
+const keyOf = (task, input) => crypto.createHash('sha256').update(modelName() + '\n' + task + '\n' + JSON.stringify(input)).digest('hex');
 
 async function cacheGet(who, key) {
   try {
@@ -92,7 +98,7 @@ async function cachePut(who, key, task, response) {
     await fetch(SUPABASE_URL + '/rest/v1/ai_cache?on_conflict=key', {
       method: 'POST',
       headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + who.token, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' },
-      body: JSON.stringify({ key, task, model: MODEL, response })
+      body: JSON.stringify({ key, task, model: modelName(), response })
     });
   } catch (e) { /* cache is best effort */ }
 }
@@ -147,6 +153,17 @@ async function callAnthropic(system, user, schema, maxTokens) {
 }
 
 async function callGateway(req, system, user, maxTokens) {
+  const start = GATEWAY_MODELS.indexOf(activeModel);
+  let last;
+  for (let i = Math.max(0, start); i < GATEWAY_MODELS.length; i++) {
+    activeModel = GATEWAY_MODELS[i];
+    try { return await callGatewayOnce(req, system, user, maxTokens); }
+    catch (e) { last = e; if (!e.modelDenied) throw e; }
+  }
+  throw last;
+}
+
+async function callGatewayOnce(req, system, user, maxTokens) {
   const apiKey = gatewayKey(req);
   if (!apiKey) throw Object.assign(new Error('AI Gateway is not available for this deployment.'), { status: 503 });
   const ctrl = new AbortController();
@@ -156,7 +173,7 @@ async function callGateway(req, system, user, maxTokens) {
     r = await fetch(GATEWAY, {
       method: 'POST', signal: ctrl.signal,
       headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, temperature: 0, max_tokens: maxTokens || 4000, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] })
+      body: JSON.stringify({ model: activeModel, temperature: 0, max_tokens: maxTokens || 4000, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] })
     });
   } catch (e) {
     throw Object.assign(new Error(e.name === 'AbortError' ? 'The model took too long to answer.' : 'Could not reach the AI Gateway.'), { status: 504 });
@@ -165,6 +182,7 @@ async function callGateway(req, system, user, maxTokens) {
   if (!r.ok) {
     let msg = text.slice(0, 300);
     try { const j = JSON.parse(text); msg = (j.error && (j.error.message || j.error)) || msg; } catch (e) { /* keep text */ }
+    if (/do not have access to this model|not available on the free|model.*not (?:available|supported|found)/i.test(String(msg))) throw Object.assign(new Error('Model ' + activeModel + ' is not available on this account.'), { status: 503, modelDenied: true, detail: String(msg).slice(0, 200) });
     if (/credit card|credits|quota|billing|payment/i.test(String(msg))) throw Object.assign(new Error('AI model credit is not active on this deployment yet. The rule-based results are shown; every other feature works.'), { status: 503, detail: String(msg).slice(0, 300) });
     if (r.status === 429) throw Object.assign(new Error('The AI service is busy (rate limit). Try again in a minute; rule-based results are shown.'), { status: 429 });
     throw Object.assign(new Error('AI Gateway: ' + msg), { status: r.status === 401 || r.status === 403 ? 503 : 502 });
@@ -319,7 +337,7 @@ async function taskExtract(req, who, body) {
     if (s.verdict === 'unsupported' || s.verdict === 'contradicted') { dropped.push({ statement: p.statement, sourceId: p.sourceId, reason: 'AI evidence check: ' + s.verdict + ' (' + s.reason + ')' }); return; }
     claims.push(Object.assign(p, { aiSupport: s }));
   });
-  return { claims, dropped, quarantined, chunks: chunks.length, failedChunks: failed.length, cached: cachedAll && sup.cached, model: MODEL };
+  return { claims, dropped, quarantined, chunks: chunks.length, failedChunks: failed.length, cached: cachedAll && sup.cached, model: modelName() };
 }
 
 async function taskConflicts(req, who, body) {
@@ -329,7 +347,7 @@ async function taskConflicts(req, who, body) {
   const ids = new Set(claims.map(c => c.id));
   const findings = (r.data.findings || []).filter(f => ids.has(String(f.a)) && ids.has(String(f.b)) && f.a !== f.b && ['contradiction', 'outdated'].includes(f.kind))
     .map(f => ({ a: String(f.a), b: String(f.b), kind: f.kind, reason: String(f.reason || '').slice(0, 220) }));
-  return { findings, cached: r.cached, model: MODEL };
+  return { findings, cached: r.cached, model: modelName() };
 }
 
 async function taskInterview(req, who, body) {
@@ -342,7 +360,7 @@ async function taskInterview(req, who, body) {
   const questions = (r.data.questions || []).filter(q => keys.has(String(q.gapKey)) && q.question)
     .map(q => ({ gapKey: String(q.gapKey), rank: Number(q.rank) || 99, question: String(q.question).slice(0, 300), why: String(q.why || '').slice(0, 200) }))
     .sort((a, b) => a.rank - b.rank);
-  return { questions, cached: r.cached, model: MODEL };
+  return { questions, cached: r.cached, model: modelName() };
 }
 
 module.exports = async function handler(req, res) {
@@ -351,7 +369,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
-  if (req.method === 'GET') return send(res, 200, { ok: true, provider: PROVIDER, model: MODEL, ready: PROVIDER === 'anthropic' || !!gatewayKey(req) });
+  if (req.method === 'GET') return send(res, 200, { ok: true, provider: PROVIDER, model: modelName(), ready: PROVIDER === 'anthropic' || !!gatewayKey(req) });
   if (req.method !== 'POST') return send(res, 405, { error: 'Use POST.' });
   try {
     const who = await caller(req);

@@ -407,7 +407,7 @@
         <tr><td>Server</td><td>Vercel Function (Node) for AI; Postgres triggers for trust checks</td><td>The browser never calls a model; the database re-checks quotes and the publish gate.</td></tr>
         <tr><td>Database</td><td>PostgreSQL on Supabase with RLS on every table</td><td>Workspaces with owners and per-workspace roles; anonymous key reads nothing.</td></tr>
         <tr><td>Auth</td><td>Supabase Auth (JWT), six public demo accounts</td><td>RLS reads auth.uid(); one-click demo sign-in for judges.</td></tr>
-        <tr><td>LLM</td><td>Claude via Vercel AI Gateway (or Anthropic API), JSON-schema output</td><td>Provider interface; responses cached in Postgres by model, task and input.</td></tr>
+        <tr><td>LLM</td><td>OpenAI GPT-OSS-120B (open weights) via Vercel AI Gateway free credit; Claude when an Anthropic key is set</td><td>Provider interface; responses cached in Postgres by model, task and input.</td></tr>
         <tr><td>Quote Verification</td><td>Exact match + Levenshtein sliding windows, in code</td><td>Exact-token guard; repeated in Postgres (trigram match, numbers guarded).</td></tr>
         <tr><td>Support Check</td><td>Rules check + separate AI evidence check</td><td>Sees only statement and quote; doubtful claims go to a person.</td></tr>
         <tr><td>Conflict Detection</td><td>Slot rules in code + AI contradiction / outdated-decision check</td><td>Every AI finding needs a human decision before publishing.</td></tr>
@@ -604,7 +604,7 @@
 <script src="js/config.js?v=3"></script>
 <script src="js/db.js?v=4"></script>
 <script src="js/ai.js?v=1"></script>
-<script src="js/studio.js?v=24"></script>
+<script src="js/studio.js?v=25"></script>
 <script src="js/account.js?v=2"></script>
 <script src="js/app.js?v=50"></script>
 <script src="js/landing.js?v=10"></script>

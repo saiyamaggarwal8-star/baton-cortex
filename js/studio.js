@@ -268,7 +268,7 @@
     }
     if (step === 'reconstruct') {
       if (!state.sources.length) return { text: 'Add a source first.', action: 'step', data: { step: 'connect' }, label: 'Go to Connect' };
-      if (state.ai && state.ai.running) return { text: state.ai.phase || 'Claude is reading the sources…' };
+      if (state.ai && state.ai.running) return { text: state.ai.phase || 'The AI model is reading the sources…' };
       if (!state.run || state.run.stale) return { text: (state.run ? 'Sources changed since the last run. ' : '') + 'Run Reconstruct: it splits the sources, masks secrets and extracts claims, each with an exact quote.', action: 'runReconstruct', label: state.run ? 'Run again' : 'Run reconstruct' };
       return { text: 'Ledger built. Next, see how code checked every claim against its source.', action: 'step', data: { step: 'verify' }, label: 'Go to Verify' };
     }
@@ -487,7 +487,7 @@
 
   // ---------------------------------------------------------------------------
   // AI extraction and AI evidence checks (Round 3, improvement 2).
-  // Claude proposes; code verifies every proposal; a person decides anything the AI doubts.
+  // The AI model proposes; code verifies every proposal; a person decides anything the AI doubts.
   // ---------------------------------------------------------------------------
   async function runAI() {
     if (!window.BatonAI || !window.BatonAI.available()) { toast('Sign in as the reviewer or data owner to use AI extraction.'); return; }
@@ -495,7 +495,7 @@
     const runAt = state.run.at;
     const started = Date.now();
     const setPhase = p => { state.ai = Object.assign(state.ai || {}, { running: true, phase: p }); render(); };
-    state.ai = { running: true, phase: 'Claude is reading ' + state.sources.length + ' source(s), one chunk at a time…', started };
+    state.ai = { running: true, phase: 'The AI model is reading ' + state.sources.length + ' source(s), one chunk at a time…', started };
     render();
     const AI = window.BatonAI;
     const out = { model: null, extra: 0, both: 0, dropped: [], findings: [], support: { checked: 0, flagged: 0 }, cached: true, errors: [] };
@@ -547,7 +547,7 @@
       state.tests = null; state.viewConfirmed = {}; bump();
       audit('System', 'AI extraction (' + (out.model || 'model') + '): ' + out.extra + ' new claims, ' + out.both + ' also found by rules, ' + out.dropped.length + ' proposals refused by the code verifier or the evidence check; ' + out.support.flagged + ' rule claims and ' + newConflicts + ' conflicts flagged for a human');
       save(); render();
-      toast('Claude added ' + out.extra + ' claims (each re-checked by code). ' + (out.support.flagged + newConflicts) + ' item(s) flagged for your judgment.');
+      toast('The AI added ' + out.extra + ' claims (each re-checked by code). ' + (out.support.flagged + newConflicts) + ' item(s) flagged for your judgment.');
     } catch (e) {
       state.ai = { error: String(e.message || e), at: new Date().toISOString() };
       save(); render();
@@ -580,7 +580,7 @@
         quoteStart: m.start != null && p.start != null ? p.start + m.start : null, quoteEnd: m.end != null && p.start != null ? p.start + m.end : null,
         sourceId: a.sourceId, passageId: a.passageId, matchMethod: m.method,
         checks: { match: m, guard: a.guard }, label: partly ? 'Inferred' : 'Sourced',
-        reason: partly ? 'Proposed by Claude; quote found and guarded by code; the AI evidence check says the quote only partly supports it, so a person must decide.' : 'Proposed by Claude; quote found and tokens guarded by code; a separate AI evidence check agrees.',
+        reason: partly ? 'Proposed by the AI model; quote found and guarded by code; the AI evidence check says the quote only partly supports it, so a person must decide.' : 'Proposed by the AI model; quote found and tokens guarded by code; a separate AI evidence check agrees.',
         access: src.access, origin: 'extracted', method: 'ai', author: a.author || p.author, date: a.date || p.date || src.date, slot: a.slot || null,
         flags: partly ? ['AI evidence check: partly supported'] : [], aiSupport: a.aiSupport || null,
         rationale: a.rationale || null, deadline: a.deadline || null, owner: a.owner || null,
@@ -877,17 +877,17 @@
     const avail = window.BatonAI && window.BatonAI.available();
     const on = state.aiMode === 'ai';
     return '<div class="card ai-mode" style="margin-bottom:14px"><div class="card-head"><div><h3>Extraction method</h3><p class="sub" style="margin:4px 0 0">' +
-      (on ? 'Rules run first (instant, deterministic). Then Claude reads each source chunk and proposes more claims: decisions with their rationale, tasks with owners and deadlines, dependencies, risks and open questions. Every AI proposal is re-checked by the same code verifier, and a separate AI call checks the evidence. Claude never decides what is stored or shared.'
+      (on ? 'Rules run first (instant, deterministic). Then an AI model (open-weights GPT-OSS-120B through the Vercel AI Gateway) reads each source chunk and proposes more claims: decisions with their rationale, tasks with owners and deadlines, dependencies, risks and open questions. Every AI proposal is re-checked by the same code verifier, and a separate AI call checks the evidence. The AI never decides what is stored or shared.'
         : 'Rules only: deterministic patterns, no model calls.') +
-      (on && !avail ? ' <b>Sign in as the reviewer or data owner to use Claude.</b>' : '') + '</p></div>' +
-      '<div class="seg" role="group" aria-label="Extraction method"><button class="chip-btn ' + (on ? 'on' : '') + '" data-action="aiMode" data-v="ai" aria-pressed="' + on + '">Rules + Claude</button><button class="chip-btn ' + (!on ? 'on' : '') + '" data-action="aiMode" data-v="rules" aria-pressed="' + !on + '">Rules only</button></div></div></div>';
+      (on && !avail ? ' <b>Sign in as the reviewer or data owner to use AI extraction.</b>' : '') + '</p></div>' +
+      '<div class="seg" role="group" aria-label="Extraction method"><button class="chip-btn ' + (on ? 'on' : '') + '" data-action="aiMode" data-v="ai" aria-pressed="' + on + '">Rules + AI</button><button class="chip-btn ' + (!on ? 'on' : '') + '" data-action="aiMode" data-v="rules" aria-pressed="' + !on + '">Rules only</button></div></div></div>';
   }
 
   function renderAIRun() {
     const a = state.ai;
     const avail = window.BatonAI && window.BatonAI.available();
     if (!a) return state.aiMode === 'ai' ? '<div class="card ai-run" style="margin-top:14px"><div class="card-head"><div><h3>AI extraction</h3><p class="sub" style="margin:4px 0 0">Not run for this ledger yet.</p></div><button class="btn btn-primary btn-sm" data-action="runAI"' + (avail ? '' : ' disabled') + '>Run AI extraction</button></div></div>' : '';
-    if (a.running) return '<div class="card ai-run is-running" style="margin-top:14px"><h3>AI extraction</h3><div class="ai-progress" role="status"><span class="spinner" aria-hidden="true"></span>' + h(a.phase || 'Working…') + '</div><p class="hint">The rule-based claims are already in the ledger; Claude\'s are added when this finishes (usually under a minute, instant when cached).</p></div>';
+    if (a.running) return '<div class="card ai-run is-running" style="margin-top:14px"><h3>AI extraction</h3><div class="ai-progress" role="status"><span class="spinner" aria-hidden="true"></span>' + h(a.phase || 'Working…') + '</div><p class="hint">The rule-based claims are already in the ledger; the AI\'s are added when this finishes (usually under a minute, instant when cached).</p></div>';
     if (a.error) return '<div class="card ai-run" style="margin-top:14px"><div class="card-head"><div><h3>AI extraction</h3></div><button class="btn btn-ghost btn-sm" data-action="runAI"' + (avail ? '' : ' disabled') + '>Try again</button></div><div class="notice warn">' + h(a.error) + '</div></div>';
     const ai = state.claims.filter(c => c.method === 'ai');
     const rulesOnly = state.claims.filter(c => c.origin === 'extracted' && (!c.method || c.method === 'rules')).length;
@@ -895,13 +895,13 @@
     const dropped = a.dropped || [];
     const fabricated = dropped.filter(d => d.fabricated).length;
     const flaggedN = (a.support ? a.support.flagged : 0) + (a.findings || []).filter(f => !f.alsoByRules).length;
-    let html = '<div class="card ai-run" style="margin-top:14px"><div class="card-head"><div><h3>Rules vs Claude</h3><p class="sub" style="margin:4px 0 0">' + h(a.model || '') + (a.cached ? ' · answered from the Postgres cache' : '') + (a.ms ? ' · ' + (a.ms / 1000).toFixed(1) + ' s' : '') + '</p></div><button class="btn btn-ghost btn-sm" data-action="runAI">Run AI again</button></div>' +
-      '<div class="pipeline"><div class="pipe"><b>' + rulesOnly + '</b><span>Found by rules only</span></div><div class="pipe"><b>' + both + '</b><span>Found by both</span></div><div class="pipe"><b class="ok">' + ai.length + '</b><span>Found only by Claude</span></div>' +
+    let html = '<div class="card ai-run" style="margin-top:14px"><div class="card-head"><div><h3>Rules vs AI</h3><p class="sub" style="margin:4px 0 0">' + h(a.model || '') + (a.cached ? ' · answered from the Postgres cache' : '') + (a.ms ? ' · ' + (a.ms / 1000).toFixed(1) + ' s' : '') + '</p></div><button class="btn btn-ghost btn-sm" data-action="runAI">Run AI again</button></div>' +
+      '<div class="pipeline"><div class="pipe"><b>' + rulesOnly + '</b><span>Found by rules only</span></div><div class="pipe"><b>' + both + '</b><span>Found by both</span></div><div class="pipe"><b class="ok">' + ai.length + '</b><span>Found only by the AI</span></div>' +
       '<div class="pipe"><b class="' + (dropped.length ? 'bad' : '') + '">' + dropped.length + '</b><span>AI proposals refused</span></div><div class="pipe"><b class="' + (flaggedN ? 'bad' : '') + '">' + flaggedN + '</b><span>Flagged for a human</span></div></div>';
-    if (ai.length) html += '<div class="lbl" style="margin:10px 0 8px">What Claude found that the rules missed</div><div class="log">' + ai.slice(0, 10).map(c => '<div class="log-item"><b>' + h(TYPE_LABEL[c.type] || c.type) + ':</b> ' + h(c.statement) +
+    if (ai.length) html += '<div class="lbl" style="margin:10px 0 8px">What the AI found that the rules missed</div><div class="log">' + ai.slice(0, 10).map(c => '<div class="log-item"><b>' + h(TYPE_LABEL[c.type] || c.type) + ':</b> ' + h(c.statement) +
       (c.rationale ? '<span class="why">Why: ' + h(c.rationale) + '</span>' : '') + (c.deadline ? '<span class="why">Deadline: ' + h(c.deadline) + '</span>' : '') +
       '<span class="why">Quote: “' + h(c.quote) + '” · ' + h((sourceById(c.sourceId) || {}).title || '') + '</span></div>').join('') + (ai.length > 10 ? '<div class="log-item">…and ' + (ai.length - 10) + ' more in Review.</div>' : '') + '</div>';
-    else html += '<p class="hint">Claude found nothing the rules had not already found in these sources.</p>';
+    else html += '<p class="hint">The AI found nothing the rules had not already found in these sources.</p>';
     if (dropped.length) html += '<div class="lbl" style="margin:12px 0 8px">AI proposals refused (' + fabricated + ' failed the code quote check or token guard)</div><div class="log">' + dropped.slice(0, 8).map(d => '<div class="log-item">' + h(d.statement || '(empty)') + '<span class="why">' + h(d.reason) + '</span></div>').join('') + '</div>';
     if (a.heldBack) html += '<div class="notice info">' + a.heldBack + ' further AI claim(s) held back by the review cap of ' + REVIEW_CAP + '.</div>';
     if (a.errors && a.errors.length) html += '<div class="notice warn">' + a.errors.map(h).join('<br>') + '</div>';
@@ -915,8 +915,8 @@
     const waiting = state.claims.filter(c => c.needsHuman && c.reviewState === 'proposed');
     const p = state.plant;
     const row = (caught, title, detail) => '<div class="gate-item ' + (caught ? 'pass' : 'fail') + '"><span class="ic">' + (caught ? '✓' : '–') + '</span><div>' + h(title) + ' <b>' + (caught ? 'caught it' : 'did not catch it') + '</b><small>' + h(detail || '') + '</small></div></div>';
-    let html = '<div class="card ai-verify" style="margin-top:14px"><div class="card-head"><div><h3>AI evidence check</h3><p class="sub" style="margin:4px 0 0">A separate Claude call sees only each statement and its quote, and says whether the quote supports it. Code still decides what is stored; anything the AI doubts goes to a person, never straight into the handover.</p></div></div>';
-    if (!checked.length) html += '<div class="empty" style="padding:16px">' + (a && a.running ? 'Running…' : a && a.error ? h(a.error) : 'Run Reconstruct with “Rules + Claude” to check the evidence.') + '</div>';
+    let html = '<div class="card ai-verify" style="margin-top:14px"><div class="card-head"><div><h3>AI evidence check</h3><p class="sub" style="margin:4px 0 0">A separate AI call sees only each statement and its quote, and says whether the quote supports it. Code still decides what is stored; anything the AI doubts goes to a person, never straight into the handover.</p></div></div>';
+    if (!checked.length) html += '<div class="empty" style="padding:16px">' + (a && a.running ? 'Running…' : a && a.error ? h(a.error) : 'Run Reconstruct with “Rules + AI” to check the evidence.') + '</div>';
     else html += '<div class="grid4"><div class="kpi good"><b>' + v('supported') + '</b><span>Supported</span></div><div class="kpi"><b>' + v('partly') + '</b><span>Partly supported</span></div><div class="kpi ' + (v('unsupported') ? 'warn' : '') + '"><b>' + v('unsupported') + '</b><span>Unsupported</span></div><div class="kpi ' + (v('contradicted') ? 'warn' : '') + '"><b>' + v('contradicted') + '</b><span>Contradicted</span></div></div>';
     if (a && a.findings && a.findings.length) html += '<div class="lbl" style="margin:12px 0 8px">Contradictions and outdated decisions</div><div class="log">' + a.findings.map(f => {
       const x = claimById(f.a), y = claimById(f.b);
@@ -931,7 +931,7 @@
         row(!p.code.quoteFound, 'Code: is the quote in the source?', p.code.quoteFound ? 'Yes: the quote is real, so this check passes' : 'Quote not found') +
         row(!p.code.guardPass, 'Code: exact-token guard', p.code.guardPass ? 'No number, version or negation changed, so it passes' : 'A guarded token changed') +
         row(p.code.lexical !== 'yes', 'Rules: word-overlap support check', p.code.lexical === 'yes' ? 'Says “yes”: rules alone would have stored this as Sourced' : 'Says “' + p.code.lexical + '”') +
-        (p.ai ? row(aiCaught, 'AI evidence check (Claude)', p.ai.verdict + ': ' + p.ai.reason) : '<div class="gate-item fail"><span class="ic">!</span><div>AI evidence check <b>unavailable</b><small>' + h(p.aiError || '') + '</small></div></div>') +
+        (p.ai ? row(aiCaught, 'AI evidence check (' + ((state.ai && state.ai.model) || 'AI model').split('/').pop() + ')', p.ai.verdict + ': ' + p.ai.reason) : '<div class="gate-item fail"><span class="ic">!</span><div>AI evidence check <b>unavailable</b><small>' + h(p.aiError || '') + '</small></div></div>') +
         '</div><div class="notice ' + (c && c.needsHuman ? 'good' : 'warn') + '">' + (c && c.needsHuman
           ? '<b>Flagged, not included.</b> ' + h(c.id) + ' is held for a human: it cannot be bulk-approved, fast-forward will not decide it, and the publish gate stays closed until the reviewer rejects it.'
           : 'Not flagged by the AI. It is still marked as planted, so it is never bulk-approved; only the reviewer can let it through.') +
@@ -943,8 +943,8 @@
   function aiEvidence(c) {
     let html = '';
     const extra = (c.rationale ? ' <b>Rationale:</b> ' + h(c.rationale) : '') + (c.deadline ? ' <b>Deadline:</b> ' + h(c.deadline) : '') + (c.owner ? ' <b>Owner:</b> ' + h(c.owner) : '');
-    if (c.method === 'ai') html += '<div class="notice info"><b>Proposed by Claude</b>, then re-checked by code (quote ' + h((c.checks && c.checks.match && c.checks.match.method) || 'match') + ', token guard pass).' + extra + '</div>';
-    else if (c.method === 'both' && extra) html += '<div class="notice info">Found by the rules and by Claude.' + extra + '</div>';
+    if (c.method === 'ai') html += '<div class="notice info"><b>Proposed by the AI model</b>, then re-checked by code (quote ' + h((c.checks && c.checks.match && c.checks.match.method) || 'match') + ', token guard pass).' + extra + '</div>';
+    else if (c.method === 'both' && extra) html += '<div class="notice info">Found by the rules and by the AI.' + extra + '</div>';
     if (c.aiSupport && c.aiSupport.verdict !== 'supported') html += '<div class="notice ' + (c.aiSupport.verdict === 'partly' ? 'info' : 'warn') + '"><b>AI evidence check: ' + h(c.aiSupport.verdict) + '.</b> ' + h(c.aiSupport.reason || '') + (c.needsHuman && c.reviewState === 'proposed' ? ' Held for your decision.' : '') + '</div>';
     (c.aiFlags || []).forEach(f => {
       const o = claimById(f.with);

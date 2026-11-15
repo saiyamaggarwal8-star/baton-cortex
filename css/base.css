@@ -66,7 +66,7 @@ main{padding:32px 34px 44px}
 /* =========================================================================
    3D CASCADING FILE DOCK (BENEATH THE 2 MENUS ON FRONT PAGE)
    ========================================================================= */
-.dock-section{margin-top:24px;border:1px solid #EBDDB5;border-radius:28px;background:var(--stage-bg);padding:24px 28px 20px;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06),0 16px 40px rgba(0,0,0,0.4)}
+.dock-section{margin-top:24px;border:1px solid #EBDDB5;border-radius:28px;background:var(--stage-bg);padding:24px 28px 24px;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06),0 16px 40px rgba(0,0,0,0.4)}
 .dock-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;z-index:20;position:relative}
 .dock-badge{font:10px 'DM Mono',monospace;letter-spacing:1.8px;color:#23263F;background:#EBDDB5;border:1px solid #EBDDB5;padding:6px 12px;border-radius:20px;display:flex;align-items:center;gap:7px}
 .dock-badge-pulse{width:6px;height:6px;border-radius:50%;background:#343858;animation:pulse 2s infinite}
@@ -199,7 +199,7 @@ main{padding:32px 34px 44px}
 .dock-sentinel{background:#d92626;color:#fff}
 
 /* Dock Bottom Controls */
-.dock-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid #EBDDB5}
+.dock-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:54px;padding-top:16px;border-top:1px solid #EBDDB5}
 .dock-pill-selector{display:flex;gap:6px;flex-wrap:wrap}
 .dock-pill-btn{
   background:#FFF7E3;

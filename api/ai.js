@@ -28,9 +28,11 @@ const MODEL = process.env.BATON_MODEL || (PROVIDER === 'anthropic' ? 'claude-opu
 // The AI Gateway's free credit covers only some models. Try Claude models in this order and keep the
 // first one the account may use, so the free credit is never exceeded by a model choice.
 const GATEWAY_MODELS = process.env.BATON_MODEL ? [process.env.BATON_MODEL]
-  : ['anthropic/claude-opus-5.5', 'anthropic/claude-sonnet-5.5', 'anthropic/claude-sonnet-5', 'anthropic/claude-haiku-5.5', 'anthropic/claude-sonnet-4.6', 'anthropic/claude-haiku-4.5'];
+  : ['anthropic/claude-opus-5.5', 'anthropic/claude-sonnet-5.5', 'anthropic/claude-haiku-5.5',
+     // Covered by the AI Gateway free credit (checked with the probeModels task):
+     'google/gemini-2.5-flash', 'openai/gpt-5-mini', 'openai/gpt-oss-120b', 'mistral/mistral-small'];
 let activeModel = PROVIDER === 'anthropic' ? MODEL : GATEWAY_MODELS[0];
-const modelName = () => activeModel;
+const modelName = req => (req && req.batonModel) || activeModel;
 const EFFORT = process.env.BATON_EFFORT || 'low';
 let anthropicClient = null;
 function anthropic() {
@@ -83,7 +85,7 @@ async function caller(req) {
 // ---------------------------------------------------------------------------
 // Cache in Postgres (RLS: staff accounts only)
 // ---------------------------------------------------------------------------
-const keyOf = (task, input) => crypto.createHash('sha256').update(modelName() + '\n' + task + '\n' + JSON.stringify(input)).digest('hex');
+const keyOf = (task, input, req) => crypto.createHash('sha256').update(modelName(req) + '\n' + task + '\n' + JSON.stringify(input)).digest('hex');
 
 async function cacheGet(who, key) {
   try {
@@ -93,12 +95,12 @@ async function cacheGet(who, key) {
     return rows.length ? rows[0].response : null;
   } catch (e) { return null; }
 }
-async function cachePut(who, key, task, response) {
+async function cachePut(who, key, task, response, model) {
   try {
     await fetch(SUPABASE_URL + '/rest/v1/ai_cache?on_conflict=key', {
       method: 'POST',
       headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + who.token, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' },
-      body: JSON.stringify({ key, task, model: modelName(), response })
+      body: JSON.stringify({ key, task, model: model || activeModel, response })
     });
   } catch (e) { /* cache is best effort */ }
 }
@@ -119,13 +121,13 @@ function parseJson(text) {
 }
 
 async function model(req, who, task, system, user, input, maxTokens) {
-  const key = keyOf(task, input);
+  const key = keyOf(task, input, req);
   const hit = await cacheGet(who, key);
   if (hit) return { data: hit, cached: true };
   const data = PROVIDER === 'anthropic'
     ? await callAnthropic(system, user, SCHEMAS[task], maxTokens)
     : await callGateway(req, system, user, maxTokens);
-  await cachePut(who, key, task, data);
+  await cachePut(who, key, task, data, modelName(req));
   return { data, cached: false };
 }
 
@@ -153,6 +155,7 @@ async function callAnthropic(system, user, schema, maxTokens) {
 }
 
 async function callGateway(req, system, user, maxTokens) {
+  if (req.batonModel) return callGatewayOnce(req, system, user, maxTokens);
   const start = GATEWAY_MODELS.indexOf(activeModel);
   let last;
   for (let i = Math.max(0, start); i < GATEWAY_MODELS.length; i++) {
@@ -173,7 +176,7 @@ async function callGatewayOnce(req, system, user, maxTokens) {
     r = await fetch(GATEWAY, {
       method: 'POST', signal: ctrl.signal,
       headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: activeModel, temperature: 0, max_tokens: maxTokens || 4000, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] })
+      body: JSON.stringify({ model: modelName(req), temperature: 0, response_format: { type: 'json_object' }, max_tokens: maxTokens || 4000, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] })
     });
   } catch (e) {
     throw Object.assign(new Error(e.name === 'AbortError' ? 'The model took too long to answer.' : 'Could not reach the AI Gateway.'), { status: 504 });
@@ -337,7 +340,7 @@ async function taskExtract(req, who, body) {
     if (s.verdict === 'unsupported' || s.verdict === 'contradicted') { dropped.push({ statement: p.statement, sourceId: p.sourceId, reason: 'AI evidence check: ' + s.verdict + ' (' + s.reason + ')' }); return; }
     claims.push(Object.assign(p, { aiSupport: s }));
   });
-  return { claims, dropped, quarantined, chunks: chunks.length, failedChunks: failed.length, cached: cachedAll && sup.cached, model: modelName() };
+  return { claims, dropped, quarantined, chunks: chunks.length, failedChunks: failed.length, cached: cachedAll && sup.cached, model: modelName(req) };
 }
 
 async function taskConflicts(req, who, body) {
@@ -347,7 +350,7 @@ async function taskConflicts(req, who, body) {
   const ids = new Set(claims.map(c => c.id));
   const findings = (r.data.findings || []).filter(f => ids.has(String(f.a)) && ids.has(String(f.b)) && f.a !== f.b && ['contradiction', 'outdated'].includes(f.kind))
     .map(f => ({ a: String(f.a), b: String(f.b), kind: f.kind, reason: String(f.reason || '').slice(0, 220) }));
-  return { findings, cached: r.cached, model: modelName() };
+  return { findings, cached: r.cached, model: modelName(req) };
 }
 
 async function taskInterview(req, who, body) {
@@ -360,7 +363,7 @@ async function taskInterview(req, who, body) {
   const questions = (r.data.questions || []).filter(q => keys.has(String(q.gapKey)) && q.question)
     .map(q => ({ gapKey: String(q.gapKey), rank: Number(q.rank) || 99, question: String(q.question).slice(0, 300), why: String(q.why || '').slice(0, 200) }))
     .sort((a, b) => a.rank - b.rank);
-  return { questions, cached: r.cached, model: modelName() };
+  return { questions, cached: r.cached, model: modelName(req) };
 }
 
 // Staff-only diagnostic: which gateway models can this account call? Tiny request, nothing cached.
@@ -386,11 +389,13 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
-  if (req.method === 'GET') return send(res, 200, { ok: true, provider: PROVIDER, model: modelName(), ready: PROVIDER === 'anthropic' || !!gatewayKey(req) });
+  if (req.method === 'GET') return send(res, 200, { ok: true, provider: PROVIDER, model: modelName(), models: GATEWAY_MODELS, ready: PROVIDER === 'anthropic' || !!gatewayKey(req) });
   if (req.method !== 'POST') return send(res, 405, { error: 'Use POST.' });
   try {
     const who = await caller(req);
     const body = await readBody(req);
+    // Staff may pin one of the configured gateway models for a request (used by the benchmark).
+    if (body.model && PROVIDER === 'gateway' && GATEWAY_MODELS.includes(String(body.model))) req.batonModel = String(body.model);
     let out;
     if (body.task === 'extract') out = await taskExtract(req, who, body);
     else if (body.task === 'support') out = await taskSupport(req, who, body.items);

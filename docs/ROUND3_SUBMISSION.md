@@ -99,7 +99,7 @@ Draft text for the Round 3 form. Put it in your own words before submitting.
 
 ## Team-member contributions
 
-- **Saiyam Aggarwal (team leader):** role D in the Round 1 plan (verification, permissions and security). In Rounds 2 and 3 also carried out the build planned for roles A to C: verifier, RLS and server checks, Supabase Auth, the AI pipeline, the benchmark, tests and CI, deployment, documentation.
+- **Saiyam Aggarwal (team leader):** role D in the Round 1 plan: verification, permissions and security. Built the product in Rounds 2 and 3.
 - **Divyansh Somani:** role B in the Round 1 plan: backend, ingestion and the model layer.
 - **Kaustabh Chowdhury:** role A in the Round 1 plan: product, UX and frontend.
 - **Anushka Verma:** role C in the Round 1 plan: extraction, benchmark and demo data.

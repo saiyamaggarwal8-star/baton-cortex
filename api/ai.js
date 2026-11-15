@@ -363,6 +363,23 @@ async function taskInterview(req, who, body) {
   return { questions, cached: r.cached, model: modelName() };
 }
 
+// Staff-only diagnostic: which gateway models can this account call? Tiny request, nothing cached.
+async function taskProbeModels(req, body) {
+  const apiKey = gatewayKey(req);
+  const list = (body.models || []).slice(0, 20).map(String);
+  const out = [];
+  for (const m of list) {
+    try {
+      const r = await fetch(GATEWAY, { method: 'POST', headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: m, max_tokens: 20, messages: [{ role: 'user', content: 'Reply with the single word ok.' }] }) });
+      const t = await r.text();
+      let msg = ''; try { const j = JSON.parse(t); msg = j.error ? (j.error.message || JSON.stringify(j.error)) : ((j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || ''); } catch (e) { msg = t.slice(0, 120); }
+      out.push({ model: m, ok: r.ok, status: r.status, msg: String(msg).slice(0, 120) });
+    } catch (e) { out.push({ model: m, ok: false, msg: String(e.message || e).slice(0, 120) }); }
+  }
+  return { results: out };
+}
+
 module.exports = async function handler(req, res) {
   // Bearer-token API (no cookies), so any origin may call it; the token decides what it may do.
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -379,6 +396,7 @@ module.exports = async function handler(req, res) {
     else if (body.task === 'support') out = await taskSupport(req, who, body.items);
     else if (body.task === 'conflicts') out = await taskConflicts(req, who, body);
     else if (body.task === 'interview') out = await taskInterview(req, who, body);
+    else if (body.task === 'probeModels') out = await taskProbeModels(req, body);
     else return send(res, 400, { error: 'Unknown task.' });
     return send(res, 200, out);
   } catch (e) {

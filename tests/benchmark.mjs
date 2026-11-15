@@ -54,10 +54,17 @@ for (const [name, raw] of Object.entries(projects)) {
       const both = B.score(merged, name);
       const aiOnly = B.score(ex.claims, name);
       const proposals = ex.claims.length + ex.dropped.length;
+      // Independent re-check: every claim the server returned for storage must still verify
+      // against its own passage. Anything failing here would be a stored fabrication.
+      const byId = Object.fromEntries(run.passages.map(p => [p.id, p]));
+      const storedFabrications = ex.claims.filter(c => {
+        const p = byId[c.passageId];
+        return !p || !E.verifyClaim({ type: c.type, statement: c.statement, quote: c.quote, author: p.author }, p, { supportUnavailable: true }).stored;
+      }).length;
       entry.ai = { model: ex.model, stored: ex.claims.length, proposals, refused: ex.dropped.length,
-        fabricatedQuotes: ex.dropped.filter(d => d.fabricated).length, refusedByEvidenceCheck: ex.dropped.filter(d => /AI evidence check/.test(d.reason)).length,
+        badQuotesRefusedBeforeStorage: ex.dropped.filter(d => d.fabricated).length, refusedByEvidenceCheck: ex.dropped.filter(d => /AI evidence check/.test(d.reason)).length,
         aiOnly: aiOnly.all, rulesPlusAI: { found: both.all, explicit: both.explicit, implicit: both.implicit },
-        missed: both.rows.filter(r => !r.hit).map(r => r.fact.id + ' ' + r.fact.what), storedFabrications: 0 };
+        missed: both.rows.filter(r => !r.hit).map(r => r.fact.id + ' ' + r.fact.what), storedFabrications };
     } catch (e) { entry.ai = { error: e.message }; }
   }
   out.projects[name] = entry;
@@ -79,7 +86,7 @@ if (process.env.BATON_AI_MODEL) out.pinnedModel = process.env.BATON_AI_MODEL;
 writeFileSync(new URL(process.env.BATON_BENCH_OUT ? '../docs/' + process.env.BATON_BENCH_OUT : '../docs/benchmark-results.json', import.meta.url), JSON.stringify(out, null, 2));
 for (const [name, e] of Object.entries(out.projects)) {
   console.log(`${name}: rules ${e.rules.found.found}/${e.rules.found.total} facts (explicit ${e.rules.explicit.found}/${e.rules.explicit.total}, implicit ${e.rules.implicit.found}/${e.rules.implicit.total})` +
-    (e.ai && !e.ai.error ? ` | rules+AI ${e.ai.rulesPlusAI.found.found}/${e.ai.rulesPlusAI.found.total}, AI proposals refused ${e.ai.refused}/${e.ai.proposals}` : e.ai ? ' | AI error: ' + e.ai.error : ''));
+    (e.ai && !e.ai.error ? ` | rules+AI ${e.ai.rulesPlusAI.found.found}/${e.ai.rulesPlusAI.found.total}, AI proposals refused before storage ${e.ai.refused}/${e.ai.proposals} (${e.ai.badQuotesRefusedBeforeStorage} bad quotes), fabricated claims stored ${e.ai.storedFabrications}` : e.ai ? ' | AI error: ' + e.ai.error : ''));
 }
 console.log(`evidence check, rules: ${out.support.rules.correct}/${out.support.rules.total} correct, ${out.support.rules.falseAccepts} false accepts` +
   (out.support.ai && !out.support.ai.error ? ` | AI: ${out.support.ai.correct}/${out.support.ai.total}, ${out.support.ai.falseAccepts} false accepts` : ''));

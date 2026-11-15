@@ -31,7 +31,7 @@
         "stored": 10,
         "proposals": 10,
         "refused": 0,
-        "fabricatedQuotes": 0,
+        "badQuotesRefusedBeforeStorage": 0,
         "refusedByEvidenceCheck": 0,
         "aiOnly": {
           "found": 8,
@@ -92,7 +92,7 @@
         "stored": 17,
         "proposals": 18,
         "refused": 1,
-        "fabricatedQuotes": 1,
+        "badQuotesRefusedBeforeStorage": 1,
         "refusedByEvidenceCheck": 0,
         "aiOnly": {
           "found": 13,

@@ -202,9 +202,9 @@
   <button data-target="architectureInfo">06 Architecture</button>
   <button data-target="dataInfo">07 Data & API</button>
   <button data-target="demoInfo">08 Demo & Benchmark</button>
-  <button data-target="teamInfo">09 Team & Build Plan</button>
-  <button data-target="doneInfo">10 DoD & Testing</button>
-  <button data-target="scopeInfo">11 Scope & Honest Rules</button>
+  <button data-target="teamInfo">09 Team & Plan Changes</button>
+  <button data-target="doneInfo">10 Tests & Results</button>
+  <button data-target="scopeInfo">11 Limits & Roadmap</button>
  </div>
 
  <!-- SPEC EXPLORER: CircularCarousel (React Bits port) instead of one long scroll -->
@@ -221,36 +221,34 @@
   <div class="spec-current"><span class="lbl">OPEN SECTION</span><b id="specCurrent" aria-live="polite"></b></div>
  </section>
 
- <!-- ALL 11 PRD SECTIONS ACCORDING TO ATTACHED PRD -->
+ <!-- 11 SPEC SECTIONS: WHAT IS BUILT (ROUND 3). Anything not built is marked "Planned". -->
  <div class="content-grid">
   <!-- 01 PRODUCT OVERVIEW -->
   <article class="info-card full" id="overviewInfo">
     <h3>01 · PRODUCT OVERVIEW & CORE RULE</h3>
     <p><b>Product:</b> Baton, a verifiable knowledge-handover tool<br>
     <b>Team:</b> Cortex (Bennett University)<br>
-    <b>Stage:</b> Build window (Rounds 2 and 3); Round 1 was planning only.<br>
-    <b>Audience of this file:</b> an AI coding agent (Antigravity) and the four team members building the product.</p>
+    <b>Stage:</b> Final round (Round 3). This page describes the product <b>as built and live</b>. Anything not built is marked <b>Planned</b>.</p>
 
-    <h4>The problem (PRD Section 1.1)</h4>
+    <h4>The problem</h4>
     <p>When someone leaves a project (graduating club lead, intern at term end, volunteer stepping down), the reasoning behind decisions, unfinished work, dependencies and contacts leaves with them. That knowledge is scattered across chats, pull requests, meeting notes and task boards. The new person reads months of threads or guesses.</p>
 
-    <h4>The solution (PRD Section 1.2)</h4>
-    <p>Baton rebuilds a project's current state from authorised sources as a <b>ledger of small, checkable claims</b>. Each claim has a source quote, a confidence label and a permission tag. The handover is written <b>only from claims</b>. Anything the system cannot prove is shown as a <b>labelled gap</b>, never as a guess. Each reader sees only the claims they are allowed to see.</p>
+    <h4>The solution</h4>
+    <p>Baton rebuilds a project's current state from authorised sources as a <b>ledger of small, checkable claims</b>. Each claim has a source quote, a label and an access tag. The handover is built <b>only from approved claims</b>. Anything the system cannot prove is shown as a <b>labelled gap</b>, never as a guess. Each reader sees only the claims they are allowed to see.</p>
 
-    <h4>Three differentiators (PRD Section 1.3)</h4>
+    <h4>Three differentiators</h4>
     <ul>
-      <li><b>Evidence before prose:</b> A claim is labelled <code>Sourced</code> only if its quote is found in the source by code and a separate check agrees the quote supports the statement.</li>
-      <li><b>Gap interview:</b> Ask the departing person only what the sources cannot answer (target 15 to 20 minutes).</li>
-      <li><b>Permission-first generation:</b> Each reader's handover is built only from claims that reader may see.</li>
+      <li><b>Evidence before prose:</b> a claim is labelled <code>Sourced</code> only if code finds its quote in the source, the exact-token guard passes and the support check agrees.</li>
+      <li><b>Gap interview:</b> ranked questions about only what the sources cannot answer, sent to the departing lead's own account.</li>
+      <li><b>Permission-first generation:</b> each reader's handover is built only from claims that reader may see, enforced by Postgres row-level security.</li>
     </ul>
 
-    <h4>The Core Rule (must always hold, PRD Section 2)</h4>
+    <h4>The core rule</h4>
     <div class="quote"><b>“The system may write only what it can cite. Everything else is shown as a labelled gap.”</b></div>
     <ul style="margin-top:10px">
-      <li>A claim whose quote cannot be found, or whose support check says no, is <b>never stored</b>.</li>
-      <li>The handover composer sees <b>claim IDs and statements only</b>, never raw sources.</li>
-      <li>A sentence in a handover with no claim citation is <b>rejected by a code check</b>.</li>
-      <li>Nothing reaches the incoming person before an approver signs off.</li>
+      <li>A claim whose quote cannot be found is <b>never stored</b>: refused by the code verifier, and again by Postgres on save.</li>
+      <li>The handover text is <b>rendered by code</b> from approved claim statements. No model writes reader-facing text.</li>
+      <li>Nothing reaches a reader before the reviewer publishes; the <b>database</b> enforces this.</li>
     </ul>
   </article>
 
@@ -264,80 +262,88 @@
       <span class="chip">4. REVIEW (HUMAN GATE)</span>
       <span class="chip">5. HANDOVER</span>
     </div>
-    
-    <h4>Step 1 — Connect · Data owner</h4>
+
+    <h4>Step 1: Connect · Data owner (Priya)</h4>
     <ul>
-      <li>Link a GitHub repo (issues, PRs, comments, commits, README) via the GitHub REST API.</li>
-      <li>Upload meeting notes (Markdown, text, PDF), a chat export (JSON or text) and a task board (CSV).</li>
-      <li>CSV column-mapping screen so unfamiliar headers can be mapped before import.</li>
-      <li>For each source choose an <b>access tag</b> (for example <code>all_members</code>, <code>core_team</code>, <code>treasurer_only</code>).</li>
-      <li><b>Secrets and personal data are masked on import</b>, before text is stored for display or sent to any model.</li>
+      <li>Paste or upload Markdown, text, CSV and JSON. Chat exports, including Slack JSON. Task-board CSVs with any headers (column mapping, e.g. Jira).</li>
+      <li>Import a public GitHub repository (README plus 20 issues and pull requests) through the GitHub REST API.</li>
+      <li>Choose an <b>access tag</b> for each source (<code>all_members</code>, <code>core_team</code>, <code>treasurer_only</code>).</li>
+      <li><b>Secrets and personal data are masked on import</b>, before text is stored or sent to the model.</li>
+      <li>Empty, oversized, duplicate and unreadable sources are refused with a reason.</li>
     </ul>
 
-    <h4>Step 2 — Reconstruct · System</h4>
+    <h4>Step 2: Reconstruct · System</h4>
     <ul>
-      <li>Split sources into <b>passages</b> that keep source, position and author.</li>
-      <li>Ask the LLM to propose <b>typed claims</b>, each with an <b>exact source quote and location</b>.</li>
-      <li>Build a timeline of decisions, changes and open discussions.</li>
-      <li>Infer who works on which area from commit and review activity (labelled <code>Inferred</code>, with the numbers shown).</li>
+      <li>Split sources into <b>passages</b> that keep source, author and date.</li>
+      <li>Rule extractors propose <b>typed claims</b>, each with its exact source sentence.</li>
+      <li>Optional AI extraction (server function, GPT-OSS-120B) adds decisions with rationale, tasks with owners and deadlines, dependencies, risks, open questions and contacts. Each proposal must quote its source.</li>
+      <li>Instruction-like text is <b>quarantined</b>: it never becomes a claim and is never sent to the model.</li>
+      <li>Ownership is inferred from commit counts (labelled <code>Inferred</code>, with the numbers shown).</li>
     </ul>
 
-    <h4>Step 3 — Verify · System, plain code</h4>
+    <h4>Step 3: Verify · Plain code, then the database</h4>
     <ul>
-      <li>Match each quote against the source passage (exact first, fuzzy fallback, exact-token guard).</li>
-      <li>Run the support check (does the quote support the statement?).</li>
-      <li>Assign labels. Failed claims are <b>never stored</b>.</li>
-      <li>Run slot-based conflict detection and checklist-based gap detection, <b>computed per reader</b>.</li>
+      <li>Match each quote against its passage: exact first, fuzzy sliding-window fallback, exact-token guard for numbers, versions, paths, identifiers and negations.</li>
+      <li>Rules support check, then a separate AI evidence check. Doubtful claims are held for a person.</li>
+      <li>Failed claims are <b>never stored</b>. Postgres re-checks every extracted quote against the stored source on save.</li>
+      <li>Conflicts, gaps and stale-fact hazards are <b>computed per reader</b>.</li>
     </ul>
 
-    <h4>Step 4 — Review · Human gate (Reviewer + Leaver)</h4>
+    <h4>Step 4: Review · Human gate (Reviewer Prof. Rao, departing lead Aarav)</h4>
     <ul>
-      <li>Reviewer accepts, edits or rejects each claim and resolves conflicts.</li>
-      <li>Reviewer uses <b>View as</b> to see each reader role's real view and must confirm they read it for each role.</li>
-      <li>Leaver answers gap questions (typed answers become <code>Confirmed by</code> or <code>Stated by</code> claims).</li>
-      <li>Every change is versioned. Document stays marked <b>Draft</b> until approval.</li>
-      <li>Rejecting or correcting sends the ledger back to Reconstruct.</li>
+      <li>The reviewer accepts, edits or rejects each claim. A random sample (10%, at least 5) comes before bulk approval, which covers low-risk claims only.</li>
+      <li><b>View as</b> each reader; the reviewer confirms each view, and confirmations reset after any change.</li>
+      <li>Guided interview: ranked questions go to Aarav's account; his answers return as <code>Stated by Aarav</code> claims that the reviewer still decides on.</li>
+      <li>The publish gate lists 8 checks. The database refuses to publish unless the caller is the reviewer, with no undecided claims and no open disputes.</li>
     </ul>
 
-    <h4>Step 5 — Handover · Incoming member</h4>
+    <h4>Step 5: Handover · Each reader</h4>
     <ul>
-      <li>Build a <b>continuation plan</b> only from claims that reader may see: ownership-transfer table, first-week action list (ordered), open risks and blockers, timeline.</li>
-      <li>The incoming person <b>acknowledges each item</b> (receipt).</li>
-      <li>Every approved version is stored and immutable (can be retracted).</li>
+      <li>A <b>continuation plan</b> built only from approved claims that reader may see: ownership, first-week actions, risks, decisions and a timeline.</li>
+      <li>Gap rows look identical whether an item is missing or hidden; <i>Request access</i> sits on each one.</li>
+      <li>The reader <b>acknowledges each item</b>; receipts are stored per account.</li>
+      <li>Every approved version is immutable, has a content hash and can be retracted.</li>
     </ul>
   </article>
 
   <!-- 03 FEATURES -->
   <article class="info-card full" id="featuresInfo">
-    <h3>03 · PRODUCT FEATURES (10 CORE + ROUND 3 IMPROVEMENTS)</h3>
+    <h3>03 · PRODUCT FEATURES: BUILT AND PLANNED</h3>
     <table class="table">
-      <thead><tr><th>#</th><th>FEATURE</th><th>BEHAVIOUR</th></tr></thead>
+      <thead><tr><th>#</th><th>FEATURE</th><th>STATUS</th><th>BEHAVIOUR</th></tr></thead>
       <tbody>
-        <tr><td>01</td><td><b>Source import</b></td><td>GitHub API plus uploads (MD/TXT/PDF notes, JSON/TXT chat, CSV tasks). Access tag set per source on import.</td></tr>
-        <tr><td>02</td><td><b>Claim extraction</b></td><td>Structured typed claims with exact source quote for each.</td></tr>
-        <tr><td>03</td><td><b>Quote verification</b></td><td>Exact-first matching, exact-token guard, separate support check decide if a claim may be Sourced.</td></tr>
-        <tr><td>04</td><td><b>Evidence panel</b></td><td>Click a claim, see the source passage highlighted in place.</td></tr>
-        <tr><td>05</td><td><b>Timeline</b></td><td>Key decisions, changes, unresolved discussions in date order.</td></tr>
-        <tr><td>06</td><td><b>Ownership / risk views</b></td><td>Includes ownership inferred from commit and review activity, labelled Inferred.</td></tr>
-        <tr><td>07</td><td><b>Conflict & gap flags</b></td><td>Contradictions side by side; missing owners or reasons listed as gaps.</td></tr>
-        <tr><td>08</td><td><b>Review & approval</b></td><td>Accept, edit, reject each claim. Nothing shared before approver signs off.</td></tr>
-        <tr><td>09</td><td><b>Role-based handover</b></td><td>Reader-specific view; secrets and personal data masked.</td></tr>
-        <tr><td>10</td><td><b>Version history & receipt</b></td><td>Every approved version stored; incoming person acknowledges each item.</td></tr>
+        <tr><td>01</td><td><b>Real accounts</b></td><td>Built</td><td>Supabase Auth; six public demo accounts with one-click sign-in; session refresh.</td></tr>
+        <tr><td>02</td><td><b>Source import</b></td><td>Built</td><td>Markdown, text, CSV, JSON, Slack JSON, task CSVs with column mapping, public GitHub repos. Access tag per source.</td></tr>
+        <tr><td>03</td><td><b>Masking on import</b></td><td>Built</td><td>Keys, tokens, passwords, PINs, emails and phone numbers masked before storage or any model call.</td></tr>
+        <tr><td>04</td><td><b>Claim extraction</b></td><td>Built</td><td>Rules (10 claim types) plus AI extraction through a server function. Every claim quotes its source.</td></tr>
+        <tr><td>05</td><td><b>Quote verification</b></td><td>Built</td><td>Exact match, fuzzy sliding window, exact-token guard, support check; repeated in Postgres.</td></tr>
+        <tr><td>06</td><td><b>AI evidence check</b></td><td>Built</td><td>A separate model call judges support and finds contradictions and outdated decisions; doubtful claims go to a person.</td></tr>
+        <tr><td>07</td><td><b>Evidence panel and timeline</b></td><td>Built</td><td>Source passage with the quote highlighted; decisions and changes in date order.</td></tr>
+        <tr><td>08</td><td><b>Conflicts, gaps and hazards</b></td><td>Built</td><td>Contradictions side by side; missing items as gaps; stale facts flagged per reader.</td></tr>
+        <tr><td>09</td><td><b>Review and publish gate</b></td><td>Built</td><td>Sample before bulk approval, view-as, 60-claim cap; publishing enforced by the database.</td></tr>
+        <tr><td>10</td><td><b>Guided interview</b></td><td>Built</td><td>Ranked gap questions sent to the departing lead's account; answers return as claims.</td></tr>
+        <tr><td>11</td><td><b>Per-reader handover</b></td><td>Built</td><td>Served from Postgres with the reader's own token; receipts; request access.</td></tr>
+        <tr><td>12</td><td><b>Quality report and benchmark</b></td><td>Built</td><td>Score out of 100; recall against answer keys on Meridian and the held-out Lumen project.</td></tr>
+        <tr><td>13</td><td><b>Try to break in</b></td><td>Built</td><td>Ten live attacks as the signed-in reader; all are refused.</td></tr>
+        <tr><td>14</td><td><b>PDF and Google Docs import</b></td><td>Planned</td><td>Not built.</td></tr>
+        <tr><td>15</td><td><b>Slack and GitHub OAuth connectors that sync</b></td><td>Planned</td><td>Not built; today sources are exported files or a public repo.</td></tr>
+        <tr><td>16</td><td><b>Email invitations with owner-chosen roles</b></td><td>Planned</td><td>Not built; the demo uses seeded accounts.</td></tr>
+        <tr><td>17</td><td><b>Model-written narrative summary</b></td><td>Planned</td><td>Not built; the handover is rendered by code.</td></tr>
       </tbody>
     </table>
 
-    <h4>Round 3 Improvements (PRD Section 6)</h4>
+    <h4>The three improvements promised in Round 2 (all delivered)</h4>
     <ul>
-      <li><b>Guided gap interview:</b> Ranked, targeted questions for the leaver; each answer becomes a <code>Confirmed by</code> claim.</li>
-      <li><b>Permission hardening:</b> Per-item access-request flow with data-owner approval, audit log of who viewed what, automated leak test with planted canary secrets.</li>
-      <li><b>Handover quality report:</b> Scored view of coverage (share of claims Sourced, open gaps, unresolved conflicts, single-owner risks), tested against the seeded benchmark.</li>
+      <li><b>Real accounts and hardened permissions:</b> Supabase Auth with RLS reading the token, team-scoped workspaces, server-side quote and publish-gate checks, security tests in CI.</li>
+      <li><b>AI-assisted extraction and a guided interview:</b> a model behind a provider interface with cached responses, code verification of every proposal, a separate evidence check, and a cross-account exit interview.</li>
+      <li><b>Quality report and held-out benchmark:</b> a scored report plus answer keys for Meridian and Lumen in four new export formats.</li>
     </ul>
   </article>
 
   <!-- 04 CLAIM SYSTEM -->
   <article class="info-card full" id="claimsInfo">
     <h3>04 · CLAIM MODEL & VERIFICATION LABELS</h3>
-    <h4>9 Claim types (PRD Section 7.1)</h4>
+    <h4>10 claim types</h4>
     <div class="chips">
       <span class="chip">decision</span>
       <span class="chip">open_question</span>
@@ -346,21 +352,21 @@
       <span class="chip">risk</span>
       <span class="chip">blocker</span>
       <span class="chip">next_action</span>
+      <span class="chip">process</span>
       <span class="chip">recurring_problem</span>
       <span class="chip">contact</span>
     </div>
-    <p><b>Priority-5 types</b> (retained if time is short): <code>decision</code>, <code>owner</code>, <code>open_question</code>, <code>risk</code>, <code>next_action</code>.</p>
 
-    <h4>Claim fields</h4>
-    <p>Each claim stores: <code>id</code>, <code>project_id</code>, <code>type</code>, <code>subject</code>, <code>slot</code>, <code>statement</code>, <code>label</code>, <code>quote</code>, <code>quote_start</code>, <code>quote_end</code>, <code>source_id</code>, <code>passage_id</code>, <code>match_method</code>, <code>access_list</code>, <code>origin</code>, <code>review_state</code>, <code>created_by</code>, <code>created_at</code>, <code>version</code>.</p>
+    <h4>Claim fields (as stored in the <code>claims</code> table)</h4>
+    <p><code>workspace_id</code>, <code>ext_id</code>, <code>type</code>, <code>statement</code>, <code>label</code>, <code>access</code>, <code>origin</code>, <code>review_state</code>, <code>decided_by</code>, <code>source_ext_id</code>, <code>quote</code>, <code>claim_date</code>, <code>dispute</code>, <code>withheld_from</code>, <code>version</code>, <code>updated_at</code>.</p>
 
-    <h4>Verification Labels & Strict Meaning (PRD Section 7.3 & Section 19)</h4>
-    <p class="note"><b>Critical Rule:</b> Do NOT use the word "Verified" in the UI. Use only the exact labels below.</p>
+    <h4>Labels and what they mean</h4>
+    <p class="note">The word "Verified" is never used as a label. Only the labels below appear.</p>
     <table class="table">
       <thead><tr><th>LABEL</th><th>MEANING</th><th>WHAT IT DOES NOT PROVE</th></tr></thead>
       <tbody>
         <tr><td><span class="claim-label lbl-sourced">Sourced</span></td><td>Quote found in source (exact or fuzzy), exact-token guard passed, and support check agrees quote supports statement.</td><td>That statement is true or still current.</td></tr>
-        <tr><td><span class="claim-label">Quote-only</span></td><td>Quote found and guarded, but support check was unavailable or over budget.</td><td>Everything Sourced does not prove, plus that quote supports statement.</td></tr>
+        <tr><td><span class="claim-label">Quote-only</span></td><td>Quote found and guarded, but the support check was unavailable.</td><td>Everything Sourced does not prove, plus that quote supports statement.</td></tr>
         <tr><td><span class="claim-label lbl-inferred">Inferred</span></td><td>Support check says "partly", or derived from a pattern (e.g. commit counts), shown with numbers behind it.</td><td>Anything beyond the numbers shown.</td></tr>
         <tr><td><span class="claim-label lbl-stated">Stated by [person], [date]</span></td><td>The leaver's or reviewer's own typed words. Never labelled Sourced.</td><td>That any other source agrees.</td></tr>
         <tr><td><span class="claim-label lbl-stated">Confirmed by [person], [date]</span></td><td>Leaver confirms an extracted claim shown to them.</td><td>Truth beyond that person's word.</td></tr>
@@ -373,26 +379,32 @@
   <!-- 05 SECURITY & PERMISSIONS -->
   <article class="info-card full" id="securityInfo">
     <h3>05 · PERMISSIONS, PRIVACY & ZERO EXISTENCE LEAKAGE</h3>
-    <h4>Permission Principles (PRD Section 9.1)</h4>
+    <h4>Permission principles</h4>
     <ul>
-      <li>Each <b>source</b> has an access tag. Each extracted claim has <b>exactly one source</b> and <b>inherits</b> that source's access list.</li>
-      <li>Claims with no single source (leaver answers, reviewer edits, derived claims) carry an <b>explicit access list never wider than the claims they rest on</b>.</li>
-      <li>A claim built on several sources takes the <b>strictest</b> access tag among them unless split by the reviewer.</li>
-      <li>Permissions are enforced <b>twice</b>: (1) PostgreSQL Row-Level Security (RLS), (2) composing each handover only from claims the reader may see.</li>
+      <li>Each <b>source</b> has an access tag. Each extracted claim has <b>exactly one source</b> and <b>inherits</b> that source's tag.</li>
+      <li>Claims with no single source (leaver answers, reviewer edits) carry an explicit tag chosen by a person.</li>
+      <li>Permissions are enforced <b>twice</b>: PostgreSQL row-level security on every table, and composing each handover only from claims the reader may see.</li>
     </ul>
 
-    <h4>Zero Existence Leakage Rule (PRD Section 9.2)</h4>
-    <p>Where a reader's view has no answer, show exactly:</p>
-    <div class="quote"><b>“No answer found in your view. It may be undocumented or restricted”</b></div>
-    <p>accompanied by a <i>Request access</i> button. The row must be <b>identical whether the item is missing or hidden</b>. No counts, no stubs like "2 items need access", no existence signals.</p>
-
-    <h4>Generation Safety & Prompt Containment</h4>
+    <h4>How the database enforces it</h4>
     <ul>
-      <li>Retrieval and composition run <b>per reader and per request</b>, after database filtering.</li>
-      <li>Text the reader may not see is <b>never placed in the prompt</b>.</li>
-      <li><b>Nothing is cached across readers.</b></li>
-      <li>The composer sees only permitted claim IDs and statements, never raw sources.</li>
-      <li>Default handover is <b>rendered by code</b> from claim statements. Any model-written sentence must cite one claim ID; uncited sentences are rejected.</li>
+      <li>Supabase Auth issues a JWT; RLS reads the user from it (<code>auth.uid()</code>). The anonymous key alone reads nothing.</li>
+      <li>Roles are per workspace. The <code>x-baton-workspace</code> header only <b>selects</b> a workspace; it is honoured only for its members.</li>
+      <li><b>Workspaces are isolated by team.</b> A new workspace adds its owner and the owner's own demo team, nobody else. The probes create two workspaces in different teams and check that neither side can read or write the other.</li>
+      <li>Readers read published rows through a <code>security_invoker</code> view filtered by their access tags; they cannot read sources, the ledger or the audit log.</li>
+      <li>Triggers refuse misquoted claims, publishing by anyone but the reviewer, publishing with undecided claims or open disputes, published rows that differ from approved claims, and edits to approved versions.</li>
+    </ul>
+
+    <h4>Zero existence leakage</h4>
+    <p>Where a reader's view has no answer, Baton shows exactly:</p>
+    <div class="quote"><b>“No answer found in your view. It may be undocumented or restricted”</b></div>
+    <p>with a <i>Request access</i> button. The row is <b>identical whether the item is missing or hidden</b>. No counts, no stubs like "2 items need access", no existence signals.</p>
+
+    <h4>AI containment</h4>
+    <ul>
+      <li>The browser never talks to a model. The server function verifies the caller's token and staff role; readers never trigger model calls.</li>
+      <li>The model has no tools and sees one source chunk per call, with one access tag. Links and HTML are stripped, and quarantined passages are never sent.</li>
+      <li>Every proposal is re-checked by the same code verifier; responses are cached in a staff-only Postgres table.</li>
     </ul>
   </article>
 
@@ -405,15 +417,15 @@
       <tbody>
         <tr><td>Frontend</td><td>Static single-page app (HTML, CSS, JavaScript), GSAP + Lenis</td><td>No build step; split-pane review with the source quote highlighted.</td></tr>
         <tr><td>Server</td><td>Vercel Function (Node) for AI; Postgres triggers for trust checks</td><td>The browser never calls a model; the database re-checks quotes and the publish gate.</td></tr>
-        <tr><td>Database</td><td>PostgreSQL on Supabase with RLS on every table</td><td>Workspaces with owners and per-workspace roles; anonymous key reads nothing.</td></tr>
+        <tr><td>Database</td><td>PostgreSQL on Supabase with RLS on every table</td><td>Team-scoped workspaces with owners and per-workspace roles; anonymous key reads nothing.</td></tr>
         <tr><td>Auth</td><td>Supabase Auth (JWT), six public demo accounts</td><td>RLS reads auth.uid(); one-click demo sign-in for judges.</td></tr>
-        <tr><td>LLM</td><td>OpenAI GPT-OSS-120B (open weights) via Vercel AI Gateway free credit; Claude when an Anthropic key is set</td><td>Provider interface; responses cached in Postgres by model, task and input.</td></tr>
+        <tr><td>AI model (live)</td><td><b>Active:</b> OpenAI GPT-OSS-120B (open weights, <code>openai/gpt-oss-120b</code>) via the Vercel AI Gateway</td><td><b>Fallbacks</b>, used only if the active model is unavailable: GPT-5-mini, then Mistral Small. <b>Optional:</b> Claude through the Anthropic API if <code>ANTHROPIC_API_KEY</code> is set (not set on the live site).</td></tr>
         <tr><td>Quote Verification</td><td>Exact match + Levenshtein sliding windows, in code</td><td>Exact-token guard; repeated in Postgres (trigram match, numbers guarded).</td></tr>
         <tr><td>Support Check</td><td>Rules check + separate AI evidence check</td><td>Sees only statement and quote; doubtful claims go to a person.</td></tr>
         <tr><td>Conflict Detection</td><td>Slot rules in code + AI contradiction / outdated-decision check</td><td>Every AI finding needs a human decision before publishing.</td></tr>
         <tr><td>Sensitive Data</td><td>Regex secret &amp; PII masking; output canary scan</td><td>Honest reporting: zero canaries across the readers tested.</td></tr>
-        <tr><td>Connectors</td><td>GitHub REST API; Markdown, text, CSV (any headers), chat JSON incl. Slack</td><td>CSV column mapping; PDF import not built.</td></tr>
-        <tr><td>Testing</td><td>Engine tests, benchmark, 36 live security probes</td><td>GitHub Actions on every push against a fresh Supabase database.</td></tr>
+        <tr><td>Connectors</td><td>GitHub REST API; Markdown, text, CSV (any headers), chat JSON incl. Slack</td><td>CSV column mapping. PDF import: planned, not built.</td></tr>
+        <tr><td>Testing</td><td>20 engine tests, benchmark, 49 live security probes</td><td>GitHub Actions on every push against a fresh Supabase database.</td></tr>
         <tr><td>Hosting</td><td>Vercel (site + function), Supabase (database + auth)</td><td>Same migrations run locally with the Supabase CLI.</td></tr>
       </tbody>
     </table>
@@ -421,153 +433,155 @@
 
   <!-- 07 DATA & API -->
   <article class="info-card full" id="dataInfo">
-    <h3>07 · DATABASE SCHEMA (15 TABLES) & FASTAPI REST API</h3>
-    <h4>15 Database Tables (UUID PKs, RLS enabled, PRD Section 12)</h4>
+    <h3>07 · DATABASE SCHEMA (14 TABLES + 1 VIEW) & API</h3>
+    <h4>Tables (Supabase Postgres, RLS on every table, 7 migrations)</h4>
     <div class="chips">
-      <span class="chip">projects</span>
-      <span class="chip">users</span>
-      <span class="chip">project_members</span>
+      <span class="chip">profiles</span>
+      <span class="chip">personas</span>
+      <span class="chip">workspaces</span>
+      <span class="chip">workspace_members</span>
       <span class="chip">sources</span>
-      <span class="chip">passages</span>
       <span class="chip">claims</span>
-      <span class="chip">confirmations</span>
-      <span class="chip">review_decisions</span>
-      <span class="chip">conflicts</span>
-      <span class="chip">handover_versions</span>
+      <span class="chip">versions</span>
+      <span class="chip">handover_items</span>
       <span class="chip">receipts</span>
       <span class="chip">access_requests</span>
       <span class="chip">audit_log</span>
-      <span class="chip">jobs</span>
-      <span class="chip">llm_cache</span>
+      <span class="chip">interview_questions</span>
+      <span class="chip">interview_answers</span>
+      <span class="chip">ai_cache</span>
+      <span class="chip">reader_handover (view)</span>
     </div>
 
-    <h4>18 FastAPI Endpoints (PRD Section 13.1)</h4>
+    <h4>API</h4>
+    <p>There is no custom backend server for data. The browser talks to Supabase's REST API (PostgREST) with the signed-in user's JWT, so every read and write passes through RLS and the triggers. AI work goes through one Vercel Function:</p>
     <table class="table">
-      <thead><tr><th>METHOD</th><th>ENDPOINT</th><th>PURPOSE</th></tr></thead>
+      <thead><tr><th>CALL</th><th>WHO</th><th>PURPOSE</th></tr></thead>
       <tbody>
-        <tr><td>POST</td><td>/projects</td><td>Create project</td></tr>
-        <tr><td>POST</td><td>/projects/{id}/sources/github</td><td>Import repository</td></tr>
-        <tr><td>POST</td><td>/projects/{id}/sources/upload</td><td>Upload notes, chat or CSV</td></tr>
-        <tr><td>POST</td><td>/projects/{id}/sources/csv/mapping</td><td>Save CSV column mapping</td></tr>
-        <tr><td>PATCH</td><td>/sources/{id}/access</td><td>Set access tag per source</td></tr>
-        <tr><td>POST</td><td>/projects/{id}/reconstruct</td><td>Start extraction & verification job</td></tr>
-        <tr><td>GET</td><td>/jobs/{id}</td><td>Job status</td></tr>
-        <tr><td>GET</td><td>/projects/{id}/claims</td><td>List claims (as current reader, RLS-filtered)</td></tr>
-        <tr><td>GET</td><td>/claims/{id}/evidence</td><td>Quote + passage + highlight range</td></tr>
-        <tr><td>PATCH</td><td>/claims/{id}</td><td>Accept | edit | reject</td></tr>
-        <tr><td>GET</td><td>/projects/{id}/conflicts · /gaps</td><td>Per-reader conflicts & missing items</td></tr>
-        <tr><td>POST</td><td>/projects/{id}/interview/answers</td><td>Leaver answers → new claims</td></tr>
-        <tr><td>GET</td><td>/projects/{id}/view-as/{role}</td><td>Reviewer sees reader's real view</td></tr>
-        <tr><td>POST</td><td>/projects/{id}/hazards/check</td><td>Stale-fact hazard list per role</td></tr>
-        <tr><td>POST</td><td>/projects/{id}/handover/approve</td><td>Approve only after checks pass</td></tr>
-        <tr><td>GET</td><td>/projects/{id}/handover</td><td>Reader-specific continuation plan</td></tr>
-        <tr><td>POST</td><td>/handover/{version}/receipts</td><td>Acknowledge an item</td></tr>
-        <tr><td>POST</td><td>/access-requests</td><td>Request access to hidden item</td></tr>
+        <tr><td>GET /api/ai</td><td>Anyone</td><td>Status: provider, active model, fallback list</td></tr>
+        <tr><td>POST /api/ai · <code>extract</code></td><td>Staff</td><td>AI claim proposals, code-verified, then evidence-checked</td></tr>
+        <tr><td>POST /api/ai · <code>support</code></td><td>Staff</td><td>Does this quote support this statement?</td></tr>
+        <tr><td>POST /api/ai · <code>conflicts</code></td><td>Staff</td><td>Contradictions and outdated decisions across claims</td></tr>
+        <tr><td>POST /api/ai · <code>interview</code></td><td>Staff</td><td>Tailor the ranked gap questions</td></tr>
+        <tr><td>POST /api/ai · <code>probeModels</code></td><td>Staff</td><td>Which gateway models this account may call</td></tr>
       </tbody>
     </table>
+
+    <h4>Triggers (server-side trust checks)</h4>
+    <ul>
+      <li><code>baton_check_claim</code>: the quote must be in the stored source; numbers guarded.</li>
+      <li><code>baton_check_version</code>: reviewer only; no undecided claims or open disputes; the server sets the approver and time.</li>
+      <li><code>baton_check_item</code>: each published row must equal an approved claim.</li>
+      <li><code>baton_check_version_update</code>: approved versions are immutable except retraction.</li>
+      <li><code>baton_on_workspace_created</code>: adds the owner and the owner's own demo team only.</li>
+    </ul>
   </article>
 
   <!-- 08 DEMO & BENCHMARK -->
   <article class="info-card full" id="demoInfo">
-    <h3>08 · SYNTHETIC DEMO PROJECT & BENCHMARK (MERIDIAN)</h3>
-    <p><b>Project “Meridian” (PRD Section 16):</b> Campus-app backend handover from departing final-year lead <b>Aarav Sharma</b> to incoming lead <b>Meera Nair</b>.</p>
+    <h3>08 · SYNTHETIC DEMO PROJECT & BENCHMARK</h3>
+    <p><b>Meridian</b> (development set): a campus-app backend handover from departing lead <b>Aarav Sharma</b> to incoming lead <b>Meera Nair</b>. Six sources: sync notes, a team chat export, a task-board CSV, GitHub PR and issue comments, a commit log, and a treasurer-only funds note.</p>
     <ul>
-      <li>About <b>40 planted facts</b> across claim types, 5 existing only in leaver's answers.</li>
-      <li>Planted <b>conflicts</b> (Task board says Aarav owns deployments; 3 Oct chat says Karan handles deploys).</li>
-      <li>Planted <b>gaps</b> (Nobody named as vendor-API contact).</li>
-      <li>Planted <b>supersessions</b> (A later decision replaces an earlier one).</li>
-      <li>Planted fake secrets: <b>10–20 unique canaries</b> in a 200–500 document staging corpus.</li>
-      <li>Planted <b>injection comments</b> in issues, PR comments and chat.</li>
-      <li>Restricted note tagged <code>treasurer_only</code> about club funds (INR 1,40,000) that Meera must <b>never</b> see.</li>
+      <li>Planted <b>conflict</b>: the task board says Aarav owns deploys; the October chat says Karan handles deploys.</li>
+      <li>Planted <b>supersession</b>: Redis for session storage, later moved to Postgres.</li>
+      <li>Planted <b>gap</b> (nobody named as vendor contact) and a <b>stale-fact hazard</b> (vendor payments).</li>
+      <li>Planted <b>fake secrets</b> (canaries), an <b>injection comment</b> in the chat, and a <code>treasurer_only</code> note about club funds that Meera and Rohan must never see.</li>
     </ul>
+    <p><b>Lumen</b> (held out, written after the rules and never used to tune them): a Slack JSON export, a Jira CSV, a planning-call transcript, an email thread and a treasurer-only budget.</p>
 
-    <h4>Worked Acceptance Examples (PRD Section 16.2)</h4>
+    <h4>Benchmark results</h4>
     <table class="table">
-      <thead><tr><th>CLAIM</th><th>LABEL</th><th>EVIDENCE / OUTCOME</th></tr></thead>
+      <thead><tr><th>MEASURE</th><th>RULES ONLY</th><th>RULES + AI (GPT-OSS-120B)</th></tr></thead>
       <tbody>
-        <tr><td>Payment webhook retries stay switched off until vendor fixes duplicate events</td><td><span class="claim-label lbl-sourced">Sourced</span></td><td>Meeting notes of 12 Sep; review note on PR #48 by Aarav.</td></tr>
-        <tr><td>Aarav owns deployments vs Karan handles deploys</td><td><span class="claim-label lbl-conflict">Possible conflict</span></td><td>Task board lists Aarav (Aug 28); chat on 3 Oct says Karan.</td></tr>
-        <tr><td>Who holds vendor-API contact?</td><td><span class="claim-label lbl-missing">Missing</span></td><td>No source names anyone; becomes question for Aarav in gap interview.</td></tr>
-        <tr><td>Aarav wrote most of billing module</td><td><span class="claim-label lbl-inferred">Inferred</span></td><td>Commit history (47 of 52 commits, 90.4% in /services/billing).</td></tr>
+        <tr><td>Meridian facts found (answer key: 24)</td><td>21 / 24</td><td>23 / 24</td></tr>
+        <tr><td>Lumen facts found (answer key: 25, 13 implicit)</td><td>15 / 25 (4 / 13 implicit)</td><td>25 / 25 (13 / 13 implicit)</td></tr>
+        <tr><td>Evidence check on 20 labelled pairs</td><td>14 / 20, 6 false accepts</td><td>20 / 20, 0 false accepts</td></tr>
+        <tr><td>AI proposals refused before storage</td><td>–</td><td>1 of 53 (its quote dropped a negation)</td></tr>
+        <tr><td><b>Fabricated claims stored</b></td><td><b>0</b></td><td><b>0</b> (re-checked after the run)</td></tr>
       </tbody>
     </table>
+    <p class="hint">Small synthetic sets written by the team: the numbers show direction, not statistical significance.</p>
   </article>
 
-  <!-- 09 TEAM & BUILD PLAN -->
+  <!-- 09 TEAM -->
   <article class="info-card full" id="teamInfo">
-    <h3>09 · TEAM OWNERSHIP & STRICT BUILD SEQUENCE</h3>
+    <h3>09 · TEAM ROLES & HOW THE PLAN CHANGED</h3>
     <table class="table">
-      <thead><tr><th>TEAM MEMBER</th><th>ROLE</th><th>OWNS</th></tr></thead>
+      <thead><tr><th>TEAM MEMBER</th><th>ROLE (ROUND 1 PLAN)</th><th>AREA</th></tr></thead>
       <tbody>
-        <tr><td><b>Kaustubh Chowdhury</b></td><td>Product, UX, frontend</td><td>Reviewer workspace with view-as, evidence panel, interview cards, day-one view, demo script.</td></tr>
-        <tr><td><b>Divyansh Somani</b></td><td>Backend, ingestion, model layer</td><td>FastAPI service and jobs, schema and version history, importers with column mapping, cached model interface, versions and receipts.</td></tr>
-        <tr><td><b>Anushka Verma</b></td><td>Extraction, benchmark, demo data</td><td>Extraction and support-check prompts, rule extractors and slot definitions, conflict rules, seeded and held-out benchmark, quality report, final demo.</td></tr>
-        <tr><td><b>Saiyam Aggarwal</b></td><td>Verification, permissions, security</td><td>Quote verifier with exact-token guard, label rules, access tags and permission check with RLS, canary/differential/injection tests in CI, reviewer publish gate.</td></tr>
+        <tr><td><b>Saiyam Aggarwal</b> (team leader)</td><td>Role D</td><td>Verification, permissions and security. Built the product in Rounds 2 and 3.</td></tr>
+        <tr><td><b>Divyansh Somani</b></td><td>Role B</td><td>Backend, ingestion and the model layer.</td></tr>
+        <tr><td><b>Kaustabh Chowdhury</b></td><td>Role A</td><td>Product, UX and frontend.</td></tr>
+        <tr><td><b>Anushka Verma</b></td><td>Role C</td><td>Extraction, benchmark and demo data.</td></tr>
       </tbody>
     </table>
 
-    <h4>Build Sequence (Follow strictly, PRD Section 14)</h4>
-    <ol>
-      <li>Repo, DB schema, roles, access tags, single permission check (RLS plus app-level check).</li>
-      <li>Importers: GitHub, notes, chat, CSV with column mapping.</li>
-      <li>Ingest and protect: chunking into passages, secret and PII masking.</li>
-      <li>LLM provider interface plus extraction (JSON schema & cache).</li>
-      <li>Quote verifier with exact-token guard & sliding windows for long quotes.</li>
-      <li>Support check and label assignment.</li>
-      <li>Rule extractors, slot definitions, conflict and missing rules per reader.</li>
-      <li>Evidence panel and reviewer workspace.</li>
-      <li>View-as, hazard check, publish gate, versions, receipts.</li>
-      <li>Day-one successor view with acknowledgement.</li>
-      <li>Canary, differential and injection tests wired into CI.</li>
-      <li>Round 3: Guided gap interview, permission hardening, quality report.</li>
-      <li>Polish: Held-out benchmark, teammate pilot, failure handling.</li>
-    </ol>
-    <p><b>What to cut first:</b> Timeline polish, Presidio (keep regex), optional model narrative, PDF importer.<br>
-    <b>NEVER cut:</b> Quote verifier with exact-token guard; label assignment; permission check with canary and differential tests; reviewer view-as and publish gate.</p>
+    <h4>Round 1 plan vs what was built</h4>
+    <table class="table">
+      <thead><tr><th>ROUND 1 PLAN</th><th>BUILT</th><th>WHY</th></tr></thead>
+      <tbody>
+        <tr><td>Next.js + Tailwind frontend</td><td>Static single-page app, no build step</td><td>Simpler to host and to run from a clone.</td></tr>
+        <tr><td>FastAPI backend with jobs</td><td>Supabase REST + Postgres triggers + one Vercel Function</td><td>Trust checks live in the database, where the browser cannot skip them.</td></tr>
+        <tr><td>Claude as the model</td><td>GPT-OSS-120B on the Vercel AI Gateway free credit</td><td>The free credit excludes Claude; GPT-OSS-120B won our benchmark among the free models.</td></tr>
+        <tr><td>PDF importer, Presidio PII detection</td><td>Not built (regex masking instead)</td><td>Cut for time; listed as planned.</td></tr>
+      </tbody>
+    </table>
   </article>
 
-  <!-- 10 TESTING & DOD -->
+  <!-- 10 TESTING -->
   <article class="info-card full" id="doneInfo">
-    <h3>10 · TESTING REQUIREMENTS, SUCCESS TARGETS & DEFINITION OF DONE</h3>
+    <h3>10 · TESTS AND RESULTS</h3>
     <table class="table">
-      <thead><tr><th>TEST</th><th>PASS CONDITION</th></tr></thead>
+      <thead><tr><th>TEST</th><th>RESULT</th></tr></thead>
       <tbody>
-        <tr><td>Quote checker mutations (~100)</td><td><b>Zero false accepts</b> on digit, identifier and negation changes.</td></tr>
-        <tr><td>Canary leak test (CI)</td><td><b>0 canaries</b> across all reader roles.</td></tr>
-        <tr><td>Differential test (CI)</td><td>Removing hidden source leaves identical inputs and byte-identical output.</td></tr>
-        <tr><td>Injection test</td><td>No tool calls, no external URLs rendered, provenance visible.</td></tr>
-        <tr><td>Uncited-sentence check</td><td>Composer output containing uncited sentence is rejected.</td></tr>
-        <tr><td>Permission test</td><td>Hidden claim vs missing claim response shape and gap text are identical.</td></tr>
-        <tr><td>Support-check precision</td><td>90% or higher agreement.</td></tr>
-        <tr><td>Recall</td><td>80% or higher of planted facts found.</td></tr>
+        <tr><td>Engine tests (<code>node --test</code>)</td><td>20 / 20 pass</td></tr>
+        <tr><td>Live security probes with real tokens</td><td>49 / 49 pass, including two-workspace isolation across teams</td></tr>
+        <tr><td>Quote mutations (digits, identifiers, negations)</td><td>44 mutations, <b>0 false accepts</b></td></tr>
+        <tr><td>Canary leak scan</td><td><b>0 canaries</b> across the 3 readers tested</td></tr>
+        <tr><td>Differential test</td><td>Removing a hidden source leaves the reader's handover byte-identical</td></tr>
+        <tr><td>Injection test</td><td>Planted instruction quarantined; never a claim, never sent to the model</td></tr>
+        <tr><td>Gap-row shape</td><td>Hidden and missing items render identically</td></tr>
+        <tr><td>Try to break in (in the app)</td><td>10 / 10 attacks refused</td></tr>
+        <tr><td>CI</td><td>GitHub Actions runs the engine tests, the benchmark and the probes on every push, against a fresh Supabase stack</td></tr>
       </tbody>
     </table>
 
-    <h4>Definition of Done (PRD Section 20)</h4>
+    <h4>Definition of done</h4>
     <ul>
-      <li>[✓] A judge opens the hosted link and imports a source.</li>
+      <li>[✓] A judge opens the hosted link, signs in with a demo account and imports a source.</li>
       <li>[✓] Sources produce labelled, cited claims; failed claims are not stored.</li>
-      <li>[✓] Reviewer can accept, edit, reject, resolve conflicts, and view as each role.</li>
-      <li>[✓] Publishing is blocked until hazard checks and per-role view confirmations pass.</li>
-      <li>[✓] One approved handover reaches the incoming person; they acknowledge item by item.</li>
+      <li>[✓] The reviewer can accept, edit, reject, resolve conflicts and view as each reader.</li>
+      <li>[✓] Publishing is blocked until the gate passes, and the database enforces it.</li>
+      <li>[✓] An approved handover reaches each reader, who acknowledges it item by item.</li>
       <li>[✓] Hidden and missing items look identical to the reader.</li>
-      <li>[✓] Canary, differential and injection tests pass in CI.</li>
-      <li>[✓] Quote-checker mutation test shows zero false accepts on digits, identifiers and negations.</li>
+      <li>[✓] Canary, differential, injection and database tests pass.</li>
     </ul>
   </article>
 
-  <!-- 11 SCOPE & HONEST RULES -->
+  <!-- 11 SCOPE -->
   <article class="info-card full" id="scopeInfo">
-    <h3>11 · NON-GOALS, HONEST WORDING RULES & FUTURE SCOPE</h3>
-    <h4>Non-goals (PRD Section 3.2)</h4>
-    <p>Live Slack/Teams OAuth, real-time sync, SSO/SCIM, question-answering chatbots, unapproved publishing, real confidential data, scoring/ranking individuals.</p>
-
-    <h4>Honest Claims & Wording Rules (PRD Section 19)</h4>
+    <h3>11 · LIMITATIONS, ROADMAP & HONEST WORDING</h3>
+    <h4>Known limitations</h4>
     <ul>
-      <li>Say <i>"we found no tool that documents claim-level quote verification, a gap-targeted leaver interview, permission-first generation and per-claim approval together."</i> Never say "first", "only" or "nobody does this".</li>
-      <li>Do NOT promise reduced ramp-up time or fewer incidents. No study measures this.</li>
-      <li>Turnover evidence: use exact numbers from Avelino et al. (1,932 projects, 315 lost truck-factor, 128 survived) and Nourry et al. (36,464 projects, 32,689 affected, 27.07% recovered).</li>
-      <li>Do NOT use the word "Verified" in the UI. Use labels: Sourced, Inferred, Stated by, Confirmed by, Possible conflict, Missing.</li>
+      <li>Demo data is synthetic and the demo accounts are public; they protect synthetic data only.</li>
+      <li>Masking is heuristic: we report "zero canaries across the readers tested", never "no secrets leak".</li>
+      <li>The benchmark sets are small and team-written.</li>
+    </ul>
+
+    <h4>Planned (not built)</h4>
+    <ul>
+      <li><b>Next 4 weeks:</b> email invitations with owner-chosen roles; Slack and GitHub OAuth connectors that sync; PDF and Google Docs import; a teammate-written held-out benchmark.</li>
+      <li><b>Next 3 months:</b> continuous handovers updated weekly; an owner approval flow that grants one tag for one item; per-claim history and version diffs; an evaluation dashboard.</li>
+      <li><b>Later:</b> server-side extraction jobs; organisation-wide policies; SSO; an on-premise model option.</li>
+    </ul>
+
+    <h4>Non-goals</h4>
+    <p>Question-answering chatbots, publishing without approval, real confidential data in the demo, scoring or ranking individuals.</p>
+
+    <h4>Honest wording</h4>
+    <ul>
+      <li>We say <i>"we found no tool that documents claim-level quote verification, a gap-targeted leaver interview, permission-first generation and per-claim approval together"</i>, never "first", "only" or "nobody does this".</li>
+      <li>We do not promise reduced ramp-up time or fewer incidents; we have not measured them.</li>
     </ul>
   </article>
  </div>
@@ -609,7 +623,7 @@
 <script src="js/app.js?v=50"></script>
 <script src="js/landing.js?v=10"></script>
 <script src="js/circular-carousel.js?v=2"></script>
-<script src="js/spec-carousel.js?v=1"></script>
+<script src="js/spec-carousel.js?v=2"></script>
 <script src="js/motion.js?v=50"></script>
 </body>
 </html>

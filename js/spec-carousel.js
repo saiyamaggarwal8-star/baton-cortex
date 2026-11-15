@@ -11,15 +11,15 @@
   const SECTIONS = [
     { id: 'overviewInfo', title: 'Overview', subtitle: 'Product, problem and the core rule', motif: 'rule' },
     { id: 'workflowInfo', title: 'Workflow', subtitle: 'Connect → Reconstruct → Verify → Review → Handover', motif: 'steps' },
-    { id: 'featuresInfo', title: 'Features', subtitle: '10 core features and Round 3 improvements', motif: 'grid' },
-    { id: 'claimsInfo', title: 'Claim system', subtitle: 'Claim types, fields and labels', motif: 'pills' },
-    { id: 'securityInfo', title: 'Security', subtitle: 'Permissions, privacy and no existence leakage', motif: 'lock' },
+    { id: 'featuresInfo', title: 'Features', subtitle: 'Built features, planned features, Round 3 improvements', motif: 'grid' },
+    { id: 'claimsInfo', title: 'Claim system', subtitle: '10 claim types, fields and labels', motif: 'pills' },
+    { id: 'securityInfo', title: 'Security', subtitle: 'RLS, team-isolated workspaces, no existence leakage', motif: 'lock' },
     { id: 'architectureInfo', title: 'Architecture', subtitle: 'Pipeline and tech stack', motif: 'flow' },
-    { id: 'dataInfo', title: 'Data & API', subtitle: '15 tables and 18 FastAPI endpoints', motif: 'table' },
-    { id: 'demoInfo', title: 'Demo', subtitle: 'Synthetic Meridian project and benchmark', motif: 'target' },
-    { id: 'teamInfo', title: 'Team & plan', subtitle: 'Ownership and strict build order', motif: 'people' },
-    { id: 'doneInfo', title: 'Testing', subtitle: 'Tests, targets and definition of done', motif: 'check' },
-    { id: 'scopeInfo', title: 'Scope', subtitle: 'Non-goals and honest wording rules', motif: 'bounds' }
+    { id: 'dataInfo', title: 'Data & API', subtitle: '14 tables, 1 view, Supabase REST and /api/ai', motif: 'table' },
+    { id: 'demoInfo', title: 'Demo', subtitle: 'Meridian, held-out Lumen and benchmark results', motif: 'target' },
+    { id: 'teamInfo', title: 'Team & plan', subtitle: 'Roles and how the plan changed', motif: 'people' },
+    { id: 'doneInfo', title: 'Testing', subtitle: 'Tests, results and definition of done', motif: 'check' },
+    { id: 'scopeInfo', title: 'Scope', subtitle: 'Limitations, roadmap and honest wording', motif: 'bounds' }
   ].filter(s => document.getElementById(s.id));
 
   // Palette cycle: midnight, honey tangerine, butter cream, tangerine-soft.

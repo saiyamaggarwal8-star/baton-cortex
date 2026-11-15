@@ -1,5 +1,5 @@
 /* Browser side of the AI service (api/ai.js). The browser never talks to a model directly:
- * it sends the signed-in user's Supabase token to /api/ai, which checks it, calls Claude, and runs the
+ * it sends the signed-in user's Supabase token to /api/ai, which checks it, calls the model (GPT-OSS-120B on the live site), and runs the
  * code verifier on every proposal before anything comes back. */
 (function () {
   'use strict';

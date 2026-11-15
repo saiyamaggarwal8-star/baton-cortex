@@ -152,5 +152,56 @@ check('The server records who answered (ignores the browser)', rows(r) === 1 && 
 r = await rest('GET', 'interview_answers?select=answer', { token: T.kavya, ws });
 check('Another reader cannot read the leaver\'s answers', rows(r) === 0, rows(r) + ' rows');
 
+// --- two workspaces, two teams: A (Meridian, built above) and B (another team) -----------------
+// Dr. Iyer is a reviewer in a separate demo team. A new workspace only adds its owner's own team,
+// so nobody from Meridian is a member of B and Dr. Iyer is not a member of A.
+const OTHER = await fetch(URL_ + '/auth/v1/token?grant_type=password', {
+  method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email: 'iyer@lumen.example', password: PASSWORD })
+}).then(x => x.json()).then(j => j.access_token).catch(() => null);
+check('A reviewer from another team (Dr. Iyer) signs in', !!OTHER);
+if (OTHER) {
+  const wsB = randomUUID();
+  r = await rest('POST', 'workspaces', { token: OTHER, body: { id: wsB }, prefer: 'return=minimal' });
+  check('Dr. Iyer creates workspace B', r.ok, 'HTTP ' + r.status);
+  r = await rest('POST', 'sources', { token: OTHER, ws: wsB, body: { workspace_id: wsB, ext_id: 'B1', title: 'Lumen notes', kind: 'notes', access: 'all_members', body: 'Lumen secret: the launch moved to 3 December.' }, prefer: 'return=minimal' });
+  check('Dr. Iyer stores a source in workspace B', r.ok, 'HTTP ' + r.status);
+
+  // Membership: each side is a member only of its own workspace.
+  r = await rest('GET', 'workspace_members?select=workspace_id&workspace_id=eq.' + wsB, { token: OTHER });
+  check('Workspace B lists Dr. Iyer as a member', rows(r) === 1, rows(r) + ' rows');
+  r = await rest('GET', 'workspace_members?select=workspace_id&workspace_id=eq.' + ws, { token: OTHER });
+  check('Dr. Iyer was not added to Meridian workspace A', rows(r) === 0, rows(r) + ' rows');
+  let leakedMembers = 0;
+  for (const p of Object.keys(EMAIL)) leakedMembers += rows(await rest('GET', 'workspace_members?select=workspace_id&workspace_id=eq.' + wsB, { token: T[p] }));
+  check('No Meridian demo account was added to workspace B', leakedMembers === 0, leakedMembers + ' memberships');
+
+  // Reading across: every table returns nothing.
+  const tablesA = ['sources', 'claims', 'versions', 'reader_handover', 'audit_log', 'interview_questions', 'interview_answers'];
+  let seenA = 0;
+  for (const t of tablesA) seenA += rows(await rest('GET', t + '?select=workspace_id', { token: OTHER, ws }));
+  seenA += rows(await rest('GET', 'workspaces?select=id&id=eq.' + ws, { token: OTHER, ws }));
+  check('Dr. Iyer selecting workspace A reads nothing from any table', seenA === 0, seenA + ' rows across ' + (tablesA.length + 1) + ' tables');
+  let seenB = 0;
+  for (const p of Object.keys(EMAIL)) {
+    for (const t of ['sources', 'claims', 'reader_handover']) seenB += rows(await rest('GET', t + '?select=workspace_id', { token: T[p], ws: wsB }));
+    seenB += rows(await rest('GET', 'workspaces?select=id&id=eq.' + wsB, { token: T[p], ws: wsB }));
+  }
+  check('All six Meridian accounts selecting workspace B read nothing', seenB === 0, seenB + ' rows');
+  r = await rest('GET', 'reader_handover?select=claim_ext_id', { token: T.meera, ws });
+  check('Meera still reads her own workspace A (isolation did not break it)', rows(r) === 2, rows(r) + ' rows');
+
+  // Writing across: refused both ways, including a row smuggled in under the other id.
+  r = await rest('POST', 'sources', { token: OTHER, ws, body: { workspace_id: ws, ext_id: 'X1', title: 'x', kind: 'notes', access: 'all_members', body: 'x' }, prefer: 'return=minimal' });
+  check('Dr. Iyer cannot write into workspace A', !r.ok, 'HTTP ' + r.status);
+  r = await rest('POST', 'sources', { token: T.reviewer, ws: wsB, body: { workspace_id: wsB, ext_id: 'X2', title: 'x', kind: 'notes', access: 'all_members', body: 'x' }, prefer: 'return=minimal' });
+  check('Prof. Rao cannot write into workspace B', !r.ok, 'HTTP ' + r.status);
+  r = await rest('POST', 'sources', { token: T.reviewer, ws, body: { workspace_id: wsB, ext_id: 'X3', title: 'x', kind: 'notes', access: 'all_members', body: 'x' }, prefer: 'return=minimal' });
+  check('Prof. Rao cannot smuggle a row into B while selecting A', !r.ok, 'HTTP ' + r.status);
+  r = await rest('POST', 'workspaces', { token: T.reviewer, body: { id: wsB }, prefer: 'resolution=ignore-duplicates,return=minimal' });
+  const after = await rest('GET', 'workspace_members?select=workspace_id&workspace_id=eq.' + wsB, { token: T.reviewer });
+  check('Re-creating workspace B\'s id does not make Prof. Rao a member', rows(after) === 0, rows(after) + ' rows');
+}
+
 console.log('\n' + (results.length - failures) + ' of ' + results.length + ' checks passed');
 process.exit(failures ? 1 : 0);

@@ -23,13 +23,15 @@ Open https://baton-cortex.vercel.app → **Sign in**. Every demo account is a re
 | Kavya | kavya@baton.example | Treasurer | Sees treasurer-only items Meera and Rohan cannot. |
 | Aarav | aarav@baton.example | Departing lead | Answers the guided exit interview from his own account. |
 
-The demo accounts are public on purpose and protect synthetic data only.
+The demo accounts are public on purpose and protect synthetic data only. A seventh account, `iyer@lumen.example`, is a reviewer in a separate team; it is not on the sign-in screen and is used by the security probes to show that two teams' workspaces cannot see each other.
 
 **Path:** sign in as Prof. Rao → **Load Meridian sample** → **Reconstruct** → **Verify** (try *Plant a wrong claim*, *Run tests*, *Run database probes*, *Run benchmark*) → **Review** (or *Fast-forward the demo review*; it stops at the publish gate) → **Approve and publish**. Then switch to **Meera** from the account menu: her page is served only from Postgres; press **Try to break in**. Try **Load Lumen** for the held-out project in Slack/Jira/transcript/email formats.
 
 ---
 
 ## What is built
+
+Everything in this table is implemented and running on the live site. Work that is not built is listed separately under [Planned, not built](#planned-not-built).
 
 | Area | What works |
 |---|---|
@@ -39,10 +41,10 @@ The demo accounts are public on purpose and protect synthetic data only.
 | AI evidence check | A separate model call judges whether each quote supports its claim and finds contradictions and outdated decisions. Doubtful claims are held for a human (no bulk approval, fast-forward never decides them, publish gate stays closed). |
 | Review gate | Random sample (10%, min 5) before bulk approval of low-risk claims only, conflicts side by side, stale-fact hazards, leaver disputes, view-as for every reader, 60-claim cap, immutable versions with retraction. **The database enforces the gate: reviewer only, no undecided claims, no open disputes, every published row must equal an approved claim.** |
 | Guided interview | Ranked, targeted questions for each gap (weight × readers missing it), optional AI tailoring; sent to the departing lead's account; answers come back as "Stated by Aarav" claims. |
-| Accounts & permissions | Supabase Auth (JWT). Postgres reads the user from the token (`auth.uid()`); workspaces have owners and members with per-workspace roles; the anonymous key alone reads nothing. |
+| Accounts & permissions | Supabase Auth (JWT). Postgres reads the user from the token (`auth.uid()`); workspaces have owners and members with per-workspace roles; the anonymous key alone reads nothing. **Workspaces are isolated by team:** a new workspace adds only its owner and the owner's own demo team, and the probes check that a member of workspace A cannot read or write workspace B. |
 | Handover | Per-reader plan (ownership, first-week actions, risks, decisions, timeline), gap rows identical whether missing or hidden, request access, acknowledgements stored per reader. |
 | Quality & benchmark | Handover quality report (evidence share, gaps per reader, conflicts, AI flags, hazards, single-owner risk). Benchmark against answer keys for Meridian and the held-out Lumen project, plus a labelled evidence-check set. |
-| Tests | 20 engine tests, benchmark, 36 live security probes with real tokens; all run in GitHub Actions on every push against a **fresh** Supabase database. |
+| Tests | 20 engine tests, benchmark, 49 live security probes with real tokens (including two-workspace isolation); all run in GitHub Actions on every push against a **fresh** Supabase database. |
 
 ---
 
@@ -61,8 +63,9 @@ Browser (static SPA, no build)                      Vercel Function            S
 └─────────────────────────────────────┘          │ 5 cache in PG     │       │  interview_*              │
                                                   └──────────────────┘       │ triggers: quote check,    │
                                                      GPT-OSS-120B via         │  publish gate, immutable  │
-                                                     Vercel AI Gateway (or    │  versions, audit stamps   │
-                                                     Claude via Anthropic)    └──────────────────────────┘
+                                                     Vercel AI Gateway        │  versions, audit stamps,  │
+                                                     (active model)           │  team-scoped workspaces   │
+                                                                              └──────────────────────────┘
 ```
 
 - **Identity:** Supabase Auth issues a JWT; PostgREST verifies it; RLS helpers (`baton_ws()`, `baton_persona()`) read `auth.uid()` and the user's membership. The `x-baton-workspace` header only *selects* a workspace; it is honoured only for members.
@@ -86,17 +89,23 @@ Open http://localhost:3200. With the default `js/config.js` it uses the hosted d
 ### 2. Your own Supabase project
 
 1. Create a project at supabase.com.
-2. In the SQL editor, run `supabase/migrations/001…006` in order, then `supabase/seed/demo_accounts.sql`.
+2. In the SQL editor, run `supabase/migrations/001…007` in order, then `supabase/seed/demo_accounts.sql`.
 3. Put your project URL and **publishable** key in `js/config.js` (never the secret/service key).
 
 Or run the whole stack locally with the Supabase CLI (Docker required): `supabase start` applies every migration and the seed, then point `js/config.js` at `http://127.0.0.1:54321`.
 
 ### 3. AI extraction
 
-Deploy to Vercel (framework preset **Other**, no build command). `api/ai.js` picks its provider automatically:
+Deploy to Vercel (framework preset **Other**, no build command). `api/ai.js` picks its provider automatically.
 
-- **Vercel AI Gateway** (default): works with the deployment's built-in OIDC token. On the free credit (card verification, no charge) the function uses OpenAI's open-weights GPT-OSS-120B, then GPT-5-mini and Mistral Small; the free credit does not include Claude. The staff-only `probeModels` task reports which models an account may call.
-- **Anthropic API:** set `ANTHROPIC_API_KEY` in the project's environment variables.
+| | Model | When it is used |
+|---|---|---|
+| **Active (live demo)** | OpenAI GPT-OSS-120B, open weights (`openai/gpt-oss-120b`) via the Vercel AI Gateway | Always, on the live site. Check it at `GET /api/ai`. |
+| Fallback 1 | `openai/gpt-5-mini` via the Gateway | Only if the active model is unavailable on the account |
+| Fallback 2 | `mistral/mistral-small` via the Gateway | Only if both above are unavailable |
+| Optional provider | Claude (`claude-opus-5-5`) via the Anthropic API | Only if `ANTHROPIC_API_KEY` is set. **Not set on the live site.** |
+
+The Gateway works with the deployment's built-in OIDC token. Its free credit (card verification, no charge) does not include Claude, so we benchmarked the free models and chose GPT-OSS-120B (48 of 49 answer-key facts, against 43 for GPT-5-mini). The staff-only `probeModels` task reports which models an account may call.
 
 Optional: `BATON_MODEL`, `BATON_EFFORT`. When the AI is unavailable the Studio keeps the rule-based results and says why. On `localhost`, AI calls go to the deployed `/api/ai` (CORS allowed; your sign-in token is still required).
 
@@ -107,10 +116,22 @@ Optional: `BATON_MODEL`, `BATON_EFFORT`. When the AI is unavailable the Studio k
 ```bash
 node --test tests/engine.test.js     # 20 engine tests: verifier, permissions, leak tests, importers
 node tests/benchmark.mjs             # recall vs answer keys + evidence-check accuracy (add --ai for the live model)
-node tests/rls.probe.mjs             # 36 live security probes with real Supabase tokens
+node tests/rls.probe.mjs             # 49 live security probes with real Supabase tokens
 ```
 
 `.github/workflows/ci.yml` runs all three on every push; the probes run against a fresh local Supabase stack built from the migrations and seed.
+
+**Latest benchmark** (`docs/benchmark-results.json`):
+
+| | Rules only | Rules + AI (GPT-OSS-120B) |
+|---|---|---|
+| Meridian facts found | 21 / 24 | 23 / 24 |
+| Lumen (held out) facts found | 15 / 25 | 25 / 25 |
+| Evidence check, 20 labelled pairs | 14 / 20 (6 false accepts) | 20 / 20 (0 false accepts) |
+| AI proposals refused before storage | – | 1 of 53 (its quote dropped a negation) |
+| **Fabricated claims stored** | **0** | **0** |
+
+The one refused proposal was caught by the code verifier and never stored. After each run the benchmark re-checks every stored AI claim against its source, so "0 stored" is measured, not assumed.
 
 In the app: **Verify → Run tests** (44 quote mutations, canary scan, differential test, gap shape, planted injection), **Run database probes**, **Run benchmark**, **Plant a wrong claim**; **Meera → Try to break in**.
 
@@ -126,17 +147,24 @@ js/account.js           sign-in, account menu, reader page, break-in, leaver int
 js/db.js  js/ai.js      Supabase client and AI client
 js/sample.js            Meridian sample;  js/benchmark.js  Lumen held-out set, answer keys, labelled pairs
 api/ai.js               Vercel Function: AI extraction, evidence check, conflicts, interview
-supabase/migrations     001 schema + RLS … 006 guided interview;  supabase/seed  demo accounts
+supabase/migrations     001 schema + RLS … 007 workspace isolation;  supabase/seed  demo accounts
 tests/                  engine tests, benchmark, live security probes
 docs/                   submission notes, project PDF source, benchmark results
 ```
 
+## Planned, not built
+
+- Email invitations with owner-chosen roles (the demo uses seeded accounts).
+- Slack and GitHub OAuth connectors that sync (today: exported files and public repos).
+- PDF and Google Docs import.
+- A model-written narrative summary (the handover is rendered by code from approved claims).
+- Continuous weekly handovers, per-claim history and version diffs, an evaluation dashboard, SSO, an on-premise model option.
+
 ## Limitations (stated honestly)
 
-- Demo data is synthetic; demo accounts are public. Real teams would be invited by email (roadmap).
+- Demo data is synthetic; demo accounts are public.
 - Masking is heuristic; we report "zero canaries across the readers tested", never "no secrets leak".
 - The benchmark sets are small and written by the same person who built the importers (Lumen was written after the rules and never used to tune them). Numbers show direction, not significance.
-- PDF import and an LLM-written narrative summary are not built.
 
 ## Credits and disclosures
 

@@ -1,11 +1,16 @@
 /* Baton AI service (Vercel Function). Round 3, improvement 2.
  *
- * POST /api/ai  { task: 'extract' | 'support' | 'conflicts' | 'interview', ... }
+ * GET  /api/ai  status: provider, active model, fallback list
+ * POST /api/ai  { task: 'extract' | 'support' | 'conflicts' | 'interview' | 'probeModels', ... }
+ *
+ * Model: the live demo runs openai/gpt-oss-120b on the Vercel AI Gateway. GPT-5-mini and Mistral Small
+ * are fallbacks, used only if the active model is unavailable. Claude (claude-opus-5-5) is an optional
+ * provider, used only when ANTHROPIC_API_KEY is set; it is not set on the live site.
  *
  * Trust rules, in order:
  *  1. The caller must send a valid Supabase Auth token for a staff account (data owner or reviewer).
  *     The token is verified with Supabase, and the role is read from Postgres under that token.
- *  2. The model (Claude, through the Vercel AI Gateway) only PROPOSES. It has no tools and no network,
+ *  2. The model only PROPOSES. It has no tools and no network,
  *     sees one chunk of one source at a time (one access tag per call), with URLs and HTML stripped,
  *     and passages that look like instructions are never sent.
  *  3. Code decides what may be stored: every proposed claim goes through the same verifier the
@@ -24,14 +29,16 @@ const GATEWAY = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 // Provider interface: the Anthropic API (official SDK) when ANTHROPIC_API_KEY is set, otherwise the
 // Vercel AI Gateway with the deployment's OIDC token. Both get the same prompts and JSON schemas.
 const PROVIDER = process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'gateway';
-const MODEL = process.env.BATON_MODEL || (PROVIDER === 'anthropic' ? 'claude-opus-5-5' : 'anthropic/claude-opus-5.5');
-// The AI Gateway's free credit covers only some models. Try Claude models in this order and keep the
-// first one the account may use, so the free credit is never exceeded by a model choice.
+// Model used only with the optional Anthropic provider.
+const MODEL = process.env.BATON_MODEL || 'claude-opus-5-5';
+// Gateway models, tried in order: the first is the active model; the rest are fallbacks used only if
+// the active model is unavailable on this account.
 const GATEWAY_MODELS = process.env.BATON_MODEL ? [process.env.BATON_MODEL]
   // Models covered by the AI Gateway free credit (checked with the probeModels task), best first by
-  // our benchmark: gpt-oss-120b found 48/49 answer-key facts and judged 20/20 evidence pairs correctly.
+  // our benchmark: gpt-oss-120b found 48/49 answer-key facts and judged 20/20 evidence pairs correctly;
+  // gpt-5-mini found 43/49. Gemini 2.5 Flash was dropped: it returned malformed JSON in our tests.
   // Claude is used when ANTHROPIC_API_KEY is set, or by setting BATON_MODEL with paid gateway credit.
-  : ['openai/gpt-oss-120b', 'openai/gpt-5-mini', 'mistral/mistral-small', 'google/gemini-2.5-flash'];
+  : ['openai/gpt-oss-120b', 'openai/gpt-5-mini', 'mistral/mistral-small'];
 let activeModel = PROVIDER === 'anthropic' ? MODEL : GATEWAY_MODELS[0];
 const modelName = req => (req && req.batonModel) || activeModel;
 const EFFORT = process.env.BATON_EFFORT || 'low';

@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-15T09:45:01.332Z",
+  "at": "2026-11-15T15:07:40.535Z",
   "projects": {
     "meridian": {
       "sources": 6,
@@ -31,7 +31,7 @@
         "stored": 28,
         "proposals": 29,
         "refused": 1,
-        "fabricatedQuotes": 1,
+        "badQuotesRefusedBeforeStorage": 1,
         "refusedByEvidenceCheck": 0,
         "aiOnly": {
           "found": 20,
@@ -94,7 +94,7 @@
         "stored": 24,
         "proposals": 24,
         "refused": 0,
-        "fabricatedQuotes": 0,
+        "badQuotesRefusedBeforeStorage": 0,
         "refusedByEvidenceCheck": 0,
         "aiOnly": {
           "found": 24,
@@ -141,6 +141,5 @@
       "falseRejects": 0,
       "wrong": []
     }
-  },
-  "pinnedModel": "openai/gpt-oss-120b"
+  }
 }

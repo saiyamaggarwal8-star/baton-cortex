@@ -30,7 +30,7 @@ async function token() {
 }
 
 async function ai(tok, task, body) {
-  const r = await fetch(API, { method: 'POST', headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ task }, body)) });
+  const r = await fetch(API, { method: 'POST', headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ task }, process.env.BATON_AI_MODEL ? { model: process.env.BATON_AI_MODEL } : {}, body)) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
   return j;
@@ -75,7 +75,8 @@ if (tok) {
   } catch (e) { out.support.ai = { error: e.message }; }
 }
 
-writeFileSync(new URL('../docs/benchmark-results.json', import.meta.url), JSON.stringify(out, null, 2));
+if (process.env.BATON_AI_MODEL) out.pinnedModel = process.env.BATON_AI_MODEL;
+writeFileSync(new URL(process.env.BATON_BENCH_OUT ? '../docs/' + process.env.BATON_BENCH_OUT : '../docs/benchmark-results.json', import.meta.url), JSON.stringify(out, null, 2));
 for (const [name, e] of Object.entries(out.projects)) {
   console.log(`${name}: rules ${e.rules.found.found}/${e.rules.found.total} facts (explicit ${e.rules.explicit.found}/${e.rules.explicit.total}, implicit ${e.rules.implicit.found}/${e.rules.implicit.total})` +
     (e.ai && !e.ai.error ? ` | rules+AI ${e.ai.rulesPlusAI.found.found}/${e.ai.rulesPlusAI.found.total}, AI proposals refused ${e.ai.refused}/${e.ai.proposals}` : e.ai ? ' | AI error: ' + e.ai.error : ''));

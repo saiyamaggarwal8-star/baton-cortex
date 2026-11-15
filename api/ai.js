@@ -28,9 +28,10 @@ const MODEL = process.env.BATON_MODEL || (PROVIDER === 'anthropic' ? 'claude-opu
 // The AI Gateway's free credit covers only some models. Try Claude models in this order and keep the
 // first one the account may use, so the free credit is never exceeded by a model choice.
 const GATEWAY_MODELS = process.env.BATON_MODEL ? [process.env.BATON_MODEL]
-  : ['anthropic/claude-opus-5.5', 'anthropic/claude-sonnet-5.5', 'anthropic/claude-haiku-5.5',
-     // Covered by the AI Gateway free credit (checked with the probeModels task):
-     'google/gemini-2.5-flash', 'openai/gpt-5-mini', 'openai/gpt-oss-120b', 'mistral/mistral-small'];
+  // Models covered by the AI Gateway free credit (checked with the probeModels task), best first by
+  // our benchmark: gpt-oss-120b found 48/49 answer-key facts and judged 20/20 evidence pairs correctly.
+  // Claude is used when ANTHROPIC_API_KEY is set, or by setting BATON_MODEL with paid gateway credit.
+  : ['openai/gpt-oss-120b', 'openai/gpt-5-mini', 'mistral/mistral-small', 'google/gemini-2.5-flash'];
 let activeModel = PROVIDER === 'anthropic' ? MODEL : GATEWAY_MODELS[0];
 const modelName = req => (req && req.batonModel) || activeModel;
 const EFFORT = process.env.BATON_EFFORT || 'low';
@@ -124,9 +125,12 @@ async function model(req, who, task, system, user, input, maxTokens) {
   const key = keyOf(task, input, req);
   const hit = await cacheGet(who, key);
   if (hit) return { data: hit, cached: true };
-  const data = PROVIDER === 'anthropic'
-    ? await callAnthropic(system, user, SCHEMAS[task], maxTokens)
-    : await callGateway(req, system, user, maxTokens);
+  const once = () => PROVIDER === 'anthropic'
+    ? callAnthropic(system, user, SCHEMAS[task], maxTokens)
+    : callGateway(req, system, user, maxTokens);
+  let data;
+  try { data = await once(); }
+  catch (e) { if (!/JSON|Unexpected token|Expected/i.test(String(e.message))) throw e; data = await once(); } // one retry on malformed JSON
   await cachePut(who, key, task, data, modelName(req));
   return { data, cached: false };
 }
@@ -332,7 +336,9 @@ async function taskExtract(req, who, body) {
   });
 
   // Separate evidence check by the model: does the quote support the statement?
-  const sup = await taskSupport(req, who, proposed.map(p => ({ id: p.tmp, statement: p.statement, quote: p.quote, author: p.author, date: p.date })));
+  let sup;
+  try { sup = await taskSupport(req, who, proposed.map(p => ({ id: p.tmp, statement: p.statement, quote: p.quote, author: p.author, date: p.date }))); }
+  catch (e) { sup = { results: [], cached: false, error: String(e.message || e) }; } // every claim then waits for a person
   const verdicts = Object.fromEntries(sup.results.map(x => [x.id, x]));
   const claims = [];
   proposed.forEach(p => {

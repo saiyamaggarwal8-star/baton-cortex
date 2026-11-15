@@ -1,0 +1,151 @@
+{
+  "at": "2026-11-15T09:42:48.774Z",
+  "projects": {
+    "meridian": {
+      "sources": 6,
+      "passages": 43,
+      "quarantined": 1,
+      "masked": 3,
+      "rules": {
+        "claims": 26,
+        "found": {
+          "found": 21,
+          "total": 24
+        },
+        "explicit": {
+          "found": 21,
+          "total": 24
+        },
+        "implicit": {
+          "found": 0,
+          "total": 0
+        },
+        "missed": [
+          "M20 Karan is the contact if the login bug returns",
+          "M22 The club holds INR 1,40,000",
+          "M24 Venue invoice due 30 Nov"
+        ]
+      },
+      "ai": {
+        "model": "openai/gpt-5-mini",
+        "stored": 10,
+        "proposals": 10,
+        "refused": 0,
+        "fabricatedQuotes": 0,
+        "refusedByEvidenceCheck": 0,
+        "aiOnly": {
+          "found": 8,
+          "total": 24
+        },
+        "rulesPlusAI": {
+          "found": {
+            "found": 24,
+            "total": 24
+          },
+          "explicit": {
+            "found": 24,
+            "total": 24
+          },
+          "implicit": {
+            "found": 0,
+            "total": 0
+          }
+        },
+        "missed": [],
+        "storedFabrications": 0
+      }
+    },
+    "lumen": {
+      "sources": 5,
+      "passages": 27,
+      "quarantined": 1,
+      "masked": 1,
+      "rules": {
+        "claims": 11,
+        "found": {
+          "found": 15,
+          "total": 25
+        },
+        "explicit": {
+          "found": 11,
+          "total": 12
+        },
+        "implicit": {
+          "found": 4,
+          "total": 13
+        },
+        "missed": [
+          "L02 Rationale: Firebase per-message cost tripled",
+          "L06 v1.4 depends on legal signing off the privacy policy",
+          "L07 Recurring Android 12 crash when camera permission is denied",
+          "L08 Launch moved to 12 Dec",
+          "L13 Launch targeted for 5 Dec (outdated)",
+          "L14 Dark mode stuck waiting for design tokens",
+          "L22 Releases ship on Tuesdays (backend never answers on weekends)",
+          "L23 Ishaan is the contact for push certificates",
+          "L24 Apple developer fee USD 99 renews 9 Jan",
+          "L25 Kavya approves spend above INR 10,000"
+        ]
+      },
+      "ai": {
+        "model": "openai/gpt-5-mini",
+        "stored": 17,
+        "proposals": 18,
+        "refused": 1,
+        "fabricatedQuotes": 1,
+        "refusedByEvidenceCheck": 0,
+        "aiOnly": {
+          "found": 13,
+          "total": 25
+        },
+        "rulesPlusAI": {
+          "found": {
+            "found": 19,
+            "total": 25
+          },
+          "explicit": {
+            "found": 12,
+            "total": 12
+          },
+          "implicit": {
+            "found": 7,
+            "total": 13
+          }
+        },
+        "missed": [
+          "L02 Rationale: Firebase per-message cost tripled",
+          "L06 v1.4 depends on legal signing off the privacy policy",
+          "L07 Recurring Android 12 crash when camera permission is denied",
+          "L08 Launch moved to 12 Dec",
+          "L13 Launch targeted for 5 Dec (outdated)",
+          "L22 Releases ship on Tuesdays (backend never answers on weekends)"
+        ],
+        "storedFabrications": 0
+      }
+    }
+  },
+  "support": {
+    "rules": {
+      "correct": 14,
+      "total": 20,
+      "falseAccepts": 6,
+      "falseRejects": 0,
+      "wrong": [
+        "S09 Meera owns the billing module.",
+        "S11 Webhook retries are switched on.",
+        "S15 Legal has signed off the new privacy policy.",
+        "S16 Attendance sync is no longer blocked.",
+        "S17 Meera handles vendor payments for the club.",
+        "S18 The Redis cache fills up every Friday."
+      ]
+    },
+    "ai": {
+      "correct": 20,
+      "total": 20,
+      "falseAccepts": 0,
+      "falseRejects": 0,
+      "wrong": []
+    }
+  },
+  "pinnedModel": "openai/gpt-5-mini"
+}

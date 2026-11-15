@@ -144,7 +144,8 @@
       const requests = me.data.requests.map(r => ({ readerId: s.persona, gapKey: r.gap_key, status: r.status }));
       const total = Object.values(ho.sections).flat().length;
       const acked = Object.values(ho.sections).flat().filter(i => receipts[i.claimId]).length;
-      body = '<div class="db-note is-ok"><b>Served by Postgres row-level security</b> with your own sign-in token: ' + rows.length + ' rows for ' + h(s.name) + '. Items you may not see never left the server; they appear below as gaps, exactly like missing items.</div>' +
+      const superseded = E.computeView(rows, p).items.filter(c => c.displayLabel === 'Superseded').length;
+      body = '<div class="db-note is-ok"><b>Served by Postgres row-level security</b> with your own sign-in token: ' + rows.length + ' rows for ' + h(s.name) + (superseded ? ' (' + superseded + ' superseded, shown only on the timeline)' : '') + '. Items you may not see never left the server; they appear below as gaps, exactly like missing items.</div>' +
         '<div class="notice info" style="margin:0 0 14px">Acknowledged <b>' + acked + ' of ' + total + '</b> items. Tick each one once you have read it.</div>' +
         window.BatonStudio.handoverBody(ho, { reader: p, versionId: me.data.ver, receipts, requests });
     }

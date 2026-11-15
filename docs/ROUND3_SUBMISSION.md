@@ -26,7 +26,7 @@ Draft text for the Round 3 form. Put it in your own words before submitting.
 16. **Try to break in.** Ten live attacks as the signed-in reader: read sources, the ledger, higher-tag rows, the audit log and the leaver's answers; forge headers; tamper with the token; approve a version; use only the public key.
 17. **Handover quality report.** A score out of 100 from evidence share, gaps per reader, conflicts, AI flags, stale facts and areas only the leaver owns.
 18. **Benchmark.** Recall against answer keys for Meridian and the held-out Lumen project (Slack JSON, Jira CSV, call transcript, email thread), and evidence-check accuracy on 20 labelled pairs, in the app and in CI.
-19. **Leak and guard tests in the app.** 44 quote mutations, canary scan, differential test, gap-row shape, planted injection, and database probes with each account's token.
+19. **Leak and guard tests in the app.** Quote mutations (44 on the rules-only ledger, 63 with AI claims), canary scan, differential test, gap-row shape, planted injection, and database probes with each account's token.
 20. **Audit log** with the real account stamped by the server.
 21. **Guidance for judges.** A next-step bar on every screen, and a fast-forward that stops at the publish gate.
 
@@ -82,7 +82,7 @@ Draft text for the Round 3 form. Put it in your own words before submitting.
   - Rules + AI (GPT-OSS-120B): Meridian 23/24, Lumen 25/25 (13/13 implicit); AI evidence check 20/20 with 0 false accepts.
   - **Zero fabricated claims were stored.** The AI proposed 53 claims; the code verifier refused 1 before storage (its quote dropped a negation, so it did not match the source). That refused proposal was never saved. After the run, the benchmark re-checks every stored AI claim against its source: 0 failures.
 - **Live AI:** Meridian +7 claims in 16 s, Lumen +17 in 22 s with the moved launch date flagged. The planted claim "Rohan owns the billing module" passed the quote check, token guard and rules support check, but the AI evidence check said "contradicted", so it was held and rejected.
-- **In-app:** 44 quote mutations with 0 false accepts, 0 canaries across 3 readers, a byte-identical differential test, the injection quarantined, and 10/10 break-in attempts blocked.
+- **In-app:** quote mutations with 0 false accepts (44 on the rules-only ledger, 63 with AI claims), 0 canaries across 3 readers, a byte-identical differential test, the injection quarantined, and 10/10 break-in attempts blocked.
 - **End-to-end journeys** were tested locally and live:
   - Reviewer: load → reconstruct → verify → review → publish (26 claims, v1 with 25; Meera 23 rows, Rohan 16, Kavya 17, matching the in-app check).
   - Reader: sign in → handover → acknowledge → reload → break in.

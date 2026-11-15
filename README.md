@@ -133,7 +133,7 @@ node tests/rls.probe.mjs             # 49 live security probes with real Supabas
 
 The one refused proposal was caught by the code verifier and never stored. After each run the benchmark re-checks every stored AI claim against its source, so "0 stored" is measured, not assumed.
 
-In the app: **Verify → Run tests** (44 quote mutations, canary scan, differential test, gap shape, planted injection), **Run database probes**, **Run benchmark**, **Plant a wrong claim**; **Meera → Try to break in**.
+In the app: **Verify → Run tests** (quote mutations: 44 on the rules-only ledger, 63 with AI claims, 0 false accepts; canary scan, differential test, gap shape, planted injection), **Run database probes**, **Run benchmark**, **Plant a wrong claim**; **Meera → Try to break in**.
 
 ---
 

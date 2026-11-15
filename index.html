@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
 <link rel="stylesheet" href="css/base.css?v=50">
 <link rel="stylesheet" href="css/studio.css?v=10">
-<link rel="stylesheet" href="css/theme.css?v=50">
+<link rel="stylesheet" href="css/theme.css?v=52">
 <link rel="stylesheet" href="css/account.css?v=4">
 <link rel="stylesheet" href="css/circular-carousel.css?v=1">
 <link rel="stylesheet" href="vendor/lenis.css">
@@ -148,7 +148,7 @@
  <div class="detail-head">
    <div>
      <button class="back-btn" id="backBtn">← Back to library</button>
-     <div class="eyebrow" style="margin-top:18px" id="detailEyebrow">PROJECT DOSSIER · PRD SPECIFICATION</div>
+     <div class="eyebrow" style="margin-top:18px" id="detailEyebrow">PROJECT DOSSIER · PRODUCT SPEC</div>
      <h1 class="detail-title" id="detailTitle">Baton<span style="color:var(--mint)">.</span> Knowledge, carried forward.</h1>
      <p class="detail-lede" id="detailLede">A verifiable knowledge-handover tool that rebuilds a project's current state from authorised sources as a ledger of small, checkable claims. This page expands the project file into its product, technical, security and delivery details.</p>
    </div>
@@ -164,8 +164,7 @@
        <option value="sentinel">SENTINEL // Verifier Lab (example)</option>
      </select>
      <a class="btn btn-primary btn-sm" href="#/studio/connect" data-start-sample>Try it in the Studio →</a>
-     <a class="action-btn" href="https://pin.it/5luAy0Tds" target="_blank" rel="noopener noreferrer">Design inspiration ↗</a>
-     <button class="action-btn" onclick="window.print()">Print PRD File</button>
+     <button class="action-btn" onclick="window.print()">Print spec</button>
    </div>
  </div>
 
@@ -173,7 +172,7 @@
  <div class="illustrative-banner" id="illustrativeBanner" role="note" hidden><span aria-hidden="true">◇</span><div><b>Illustrative example.</b> This file shows what a Baton handover looks like for another kind of project. Its claims and numbers are examples, not results. Only the Meridian sample runs end to end in the Handover Studio.</div></div>
  <div class="hero-stats">
   <div class="stat"><b id="statSteps">5 steps</b><span>CONNECT → HANDOVER</span></div>
-  <div class="stat"><b id="statFeatures">10 core</b><span>PRODUCT FEATURES</span></div>
+  <div class="stat"><b id="statFeatures">13 built</b><span>PRODUCT FEATURES</span></div>
   <div class="stat"><b id="statRoles">3 reader views</b><span>SYNTHETIC READER VIEWS</span></div>
   <div class="stat"><b id="statSourced">Not run</b><span>CHECKS RUN AFTER RECONSTRUCTION</span></div>
  </div>
@@ -192,7 +191,7 @@
    </div>
  </div>
 
- <!-- PRD SPECIFICATION QUICK TABS -->
+ <!-- PRODUCT SPEC QUICK TABS -->
  <div class="detail-nav" id="detailNav">
   <button class="active" data-target="overviewInfo">01 Overview</button>
   <button data-target="workflowInfo">02 Workflow</button>
@@ -536,7 +535,7 @@
       <tbody>
         <tr><td>Engine tests (<code>node --test</code>)</td><td>20 / 20 pass</td></tr>
         <tr><td>Live security probes with real tokens</td><td>49 / 49 pass, including two-workspace isolation across teams</td></tr>
-        <tr><td>Quote mutations (digits, identifiers, negations)</td><td>44 mutations, <b>0 false accepts</b></td></tr>
+        <tr><td>Quote mutations (digits, identifiers, negations)</td><td>44 mutations on the rules-only ledger, 63 with AI claims: <b>0 false accepts</b></td></tr>
         <tr><td>Canary leak scan</td><td><b>0 canaries</b> across the 3 readers tested</td></tr>
         <tr><td>Differential test</td><td>Removing a hidden source leaves the reader's handover byte-identical</td></tr>
         <tr><td>Injection test</td><td>Planted instruction quarantined; never a claim, never sent to the model</td></tr>
@@ -614,12 +613,12 @@
 <script src="js/engine.js?v=12"></script>
 <script src="js/sample.js?v=10"></script>
 <script src="js/benchmark.js?v=1"></script>
-<script src="js/dock.js?v=50"></script>
+<script src="js/dock.js?v=51"></script>
 <script src="js/config.js?v=3"></script>
 <script src="js/db.js?v=4"></script>
 <script src="js/ai.js?v=1"></script>
-<script src="js/studio.js?v=25"></script>
-<script src="js/account.js?v=2"></script>
+<script src="js/studio.js?v=26"></script>
+<script src="js/account.js?v=3"></script>
 <script src="js/app.js?v=50"></script>
 <script src="js/landing.js?v=10"></script>
 <script src="js/circular-carousel.js?v=2"></script>

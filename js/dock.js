@@ -16,7 +16,7 @@ const DOCK_PROJECTS = [
     conflictsCount: 0,
     canariesCount: 0,
     cssClass: 'dock-cosmic',
-    stats: { steps: '5 steps', features: '10 core', roles: '3 roles', sourced: '94%' },
+    stats: { steps: '5 steps', features: '13 built', roles: '3 roles', sourced: '94%' },
     claims: [
       { id: 'CLM-C01', type: 'decision', topic: 'Prompt Guardrails Schema', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Router responses must conform to strict JSON-schema definition before output parsing.', quote: 'Router responses must conform to strict JSON-schema definition before output parsing.', source: 'System Router PR #19' },
       { id: 'CLM-C02', type: 'risk', topic: 'Temperature Lockout', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Temperature locked at 0.1 for high-stakes routing classification pipelines.', quote: 'Temperature locked at 0.1 for high-stakes routing classification pipelines.', source: 'Architecture Sync Note' },
@@ -37,7 +37,7 @@ const DOCK_PROJECTS = [
     conflictsCount: 1,
     canariesCount: 0,
     cssClass: 'dock-precision',
-    stats: { steps: '5 steps', features: '10 core', roles: '4 roles', sourced: '89%' },
+    stats: { steps: '5 steps', features: '13 built', roles: '4 roles', sourced: '89%' },
     claims: [
       { id: 'CLM-P01', type: 'decision', topic: 'Spindle Telemetry Baud Rate', label: 'Possible conflict', lblClass: 'lbl-conflict', stmt: 'Baud rate set to 115200 on v1.2 controllers vs 921600 on v2.0 telemetry bus.', quote: 'Baud rate 115200 on v1.2 controllers vs 921600 on v2.0 telemetry bus.', source: 'Firmware Spec vs Slack Chat' },
       { id: 'CLM-P02', type: 'dependency', topic: 'CAN Bus Isolation', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'CAN bus optocoupler isolation must remain active during spindle acceleration cycles.', quote: 'CAN bus optocoupler isolation must remain active during spindle acceleration cycles.', source: 'Hardware Runbook' },
@@ -58,7 +58,7 @@ const DOCK_PROJECTS = [
     conflictsCount: 0,
     canariesCount: 0,
     cssClass: 'dock-modular',
-    stats: { steps: '5 steps', features: '10 core', roles: '3 roles', sourced: '91%' },
+    stats: { steps: '5 steps', features: '13 built', roles: '3 roles', sourced: '91%' },
     claims: [
       { id: 'CLM-M01', type: 'decision', topic: 'AudioBuffer Quantum Size', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'AudioWorklet processing quantum locked at 128 frames for sub-5ms latency.', quote: 'AudioWorklet processing quantum locked at 128 frames for sub-5ms latency.', source: 'DSP Engine Architecture' },
       { id: 'CLM-M02', type: 'risk', topic: 'Wasm Memory Garbage Collection', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Avoid dynamic JS object allocations inside the DSP rendering loop to prevent glitch clicks.', quote: 'Avoid dynamic JS object allocations inside the DSP rendering loop.', source: 'Audio Performance Doc' },
@@ -78,7 +78,7 @@ const DOCK_PROJECTS = [
     conflictsCount: 0,
     canariesCount: 0,
     cssClass: 'dock-silicon',
-    stats: { steps: '5 steps', features: '10 core', roles: '4 roles', sourced: '96%' },
+    stats: { steps: '5 steps', features: '13 built', roles: '4 roles', sourced: '96%' },
     claims: [
       { id: 'CLM-S01', type: 'decision', topic: 'Setup Slack Budget', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Worst negative slack must remain above +12ps at the 0.75V slow-slow corner.', quote: 'Worst negative slack must remain above +12ps at the 0.75V slow-slow corner.', source: 'Timing Closure Report' },
       { id: 'CLM-S02', type: 'dependency', topic: 'Standard Cell Library', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Synthesis links against 7nm FinFET PDK v3.1 tracks exclusively.', quote: 'Synthesis links against 7nm FinFET PDK v3.1 tracks exclusively.', source: 'EDA Synthesis Makefile' },
@@ -98,7 +98,7 @@ const DOCK_PROJECTS = [
     conflictsCount: 2,
     canariesCount: 0,
     cssClass: 'dock-hyve',
-    stats: { steps: '5 steps', features: '10 core', roles: '4 roles', sourced: '88%' },
+    stats: { steps: '5 steps', features: '13 built', roles: '4 roles', sourced: '88%' },
     claims: [
       { id: 'CLM-H01', type: 'decision', topic: 'mTLS Strict Mode', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Istio PeerAuthentication set to STRICT across all production namespaces.', quote: 'Istio PeerAuthentication set to STRICT across all production namespaces.', source: 'Ingress Mesh Manifest' },
       { id: 'CLM-H02', type: 'risk', topic: 'Cross-Region Latency Failover', label: 'Possible conflict', lblClass: 'lbl-conflict', stmt: 'Route53 failover TTL set to 10s (Runbook) vs 60s (Terraform live state).', quote: 'Route53 failover TTL set to 10s vs 60s.', source: 'Runbook vs Terraform State' },
@@ -119,7 +119,7 @@ const DOCK_PROJECTS = [
     canariesCount: 0,
     cssClass: 'dock-meridian',
     isPrimaryDemo: true,
-    stats: { steps: '5 steps', features: '10 core', roles: '4 roles', sourced: '92%' },
+    stats: { steps: '5 steps', features: '13 built', roles: '4 roles', sourced: '92%' },
     claims: [
       { id: 'CLM-101', type: 'decision', topic: 'Payment Webhook Retries', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Payment webhook retries stay switched off until vendor fixes duplicate events in their v2.4 sandbox.', quote: 'Payment webhook retries stay switched off until vendor fixes duplicate events in their v2.4 sandbox.', source: 'GitHub • PR #48 review note by Aarav Sharma' },
       { id: 'CLM-102', type: 'owner', topic: 'Production Deployments', label: 'Possible conflict', lblClass: 'lbl-conflict', stmt: 'Aarav owns production deployments (Aug 28 task board) vs. Karan handles deploys starting Oct 3 (team chat).', quote: 'Karan handles deploys starting today for the production cluster.', source: 'Q3 Task Board (Aug 28) vs Engineering Chat (Oct 3)' },
@@ -144,7 +144,7 @@ const DOCK_PROJECTS = [
     conflictsCount: 1,
     canariesCount: 0,
     cssClass: 'dock-archon',
-    stats: { steps: '5 steps', features: '10 core', roles: '3 roles', sourced: '90%' },
+    stats: { steps: '5 steps', features: '13 built', roles: '3 roles', sourced: '90%' },
     claims: [
       { id: 'CLM-A01', type: 'decision', topic: 'License Revocation Webhook', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Enterprise license keys expire immediately on contract termination webhook.', quote: 'Enterprise license keys expire immediately on contract termination webhook.', source: 'API Provisioning Contract' },
       { id: 'CLM-A02', type: 'risk', topic: 'Escrow Key Sharding', label: 'Possible conflict', lblClass: 'lbl-conflict', stmt: 'Shamir secret shares 3-of-5 required (Docs) vs 2-of-3 configured in KMS.', quote: 'Shamir secret shares 3-of-5 required vs 2-of-3.', source: 'Security Audit vs Cloud KMS' },
@@ -164,7 +164,7 @@ const DOCK_PROJECTS = [
     conflictsCount: 0,
     canariesCount: 0,
     cssClass: 'dock-sentinel',
-    stats: { steps: '5 steps', features: '10 core', roles: '4 roles', sourced: '100%' },
+    stats: { steps: '5 steps', features: '13 built', roles: '4 roles', sourced: '100%' },
     claims: [
       { id: 'CLM-T01', type: 'decision', topic: 'Exact-Token Guard Rules', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Zero false accepts on 100 programmatic digit, identifier and negation mutations.', quote: 'Zero false accepts on 100 programmatic digit, identifier and negation mutations.', source: 'Sentinel Verification CI Suite' },
       { id: 'CLM-T02', type: 'risk', topic: 'Differential Leak Check', label: 'Sourced', lblClass: 'lbl-sourced', stmt: 'Rebuilding view with hidden claim produces byte-identical model inputs and outputs.', quote: 'Rebuilding view with hidden claim produces byte-identical output.', source: 'Differential Test Runner' },
@@ -181,7 +181,7 @@ Object.assign(meridianSample, {
   claimsCount: 0,
   conflictsCount: 0,
   canariesCount: null,
-  stats: { steps: '5 steps', features: '10 core', roles: '3 reader views', sourced: 'Not run' },
+  stats: { steps: '5 steps', features: '13 built', roles: '3 reader views', sourced: 'Not run' },
   claims: []
 });
 DOCK_PROJECTS.forEach(p => { p.illustrative = p.id !== 'meridian'; });
@@ -388,7 +388,7 @@ window.addEventListener('keydown', e => {
   }
 });
 
-// OPEN PROJECT DOSSIER ACCORDING TO PRD
+// OPEN PROJECT DOSSIER
 function renderDossier(projectId) {
   const proj = DOCK_PROJECTS.find(p => p.id === projectId) || DOCK_PROJECTS[0];
   currentSelectedProject = proj.id;
@@ -396,7 +396,7 @@ function renderDossier(projectId) {
   projectSwitcher.value = proj.id;
 
   // Update Detail Header
-  document.getElementById('detailEyebrow').textContent = `PROJECT DOSSIER · ${proj.brand} · PRD SPECIFICATION`;
+  document.getElementById('detailEyebrow').textContent = `PROJECT DOSSIER · ${proj.brand}${proj.illustrative ? ' · ILLUSTRATIVE EXAMPLE' : ' · PRODUCT SPEC'}`;
   document.getElementById('detailTitle').innerHTML = `${proj.headline}<span style="color:var(--mint)">.</span>`;
   document.getElementById('detailLede').innerHTML = proj.illustrative
     ? `<b>Illustrative example:</b> <b>${esc(proj.leaver)}</b> → <b>${esc(proj.incoming)}</b> · ${esc(proj.subtitle)}. This file shows the handover format with example claims; it is not connected to live data.`
@@ -411,7 +411,7 @@ function renderDossier(projectId) {
   document.getElementById('statSourced').textContent = proj.stats.sourced;
 
   // Update Active Project Dossier Claims
-  document.getElementById('dossierTitle').textContent = `Meridian handover: ${proj.headline}`;
+  document.getElementById('dossierTitle').textContent = proj.illustrative ? `${proj.brand} handover (illustrative example)` : `Meridian handover: ${proj.headline}`;
   document.getElementById('dossierPill').textContent = `${proj.leaver.toUpperCase()} → ${proj.incoming.toUpperCase()}`;
 
   const claimsContainer = document.getElementById('dossierClaimsGrid');

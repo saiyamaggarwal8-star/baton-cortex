@@ -895,7 +895,7 @@
     const dropped = a.dropped || [];
     const fabricated = dropped.filter(d => d.fabricated).length;
     const flaggedN = (a.support ? a.support.flagged : 0) + (a.findings || []).filter(f => !f.alsoByRules).length;
-    let html = '<div class="card ai-run" style="margin-top:14px"><div class="card-head"><div><h3>Rules vs AI</h3><p class="sub" style="margin:4px 0 0">' + h(a.model || '') + (a.cached ? ' · answered from the Postgres cache' : '') + (a.ms ? ' · ' + (a.ms / 1000).toFixed(1) + ' s' : '') + '</p></div><button class="btn btn-ghost btn-sm" data-action="runAI">Run AI again</button></div>' +
+    let html = '<div class="card ai-run" style="margin-top:14px"><div class="card-head"><div><h3>Rules vs AI</h3><p class="sub" style="margin:4px 0 0">' + h(a.model || '') + (a.cached ? ' · extraction answered from the Postgres cache' : '') + (a.ms ? ' · ' + (a.ms / 1000).toFixed(1) + ' s' : '') + '</p></div><button class="btn btn-ghost btn-sm" data-action="runAI">Run AI again</button></div>' +
       '<div class="pipeline"><div class="pipe"><b>' + rulesOnly + '</b><span>Found by rules only</span></div><div class="pipe"><b>' + both + '</b><span>Found by both</span></div><div class="pipe"><b class="ok">' + ai.length + '</b><span>Found only by the AI</span></div>' +
       '<div class="pipe"><b class="' + (dropped.length ? 'bad' : '') + '">' + dropped.length + '</b><span>AI proposals refused</span></div><div class="pipe"><b class="' + (flaggedN ? 'bad' : '') + '">' + flaggedN + '</b><span>Flagged for a human</span></div></div>';
     if (ai.length) html += '<div class="lbl" style="margin:10px 0 8px">What the AI found that the rules missed</div><div class="log">' + ai.slice(0, 10).map(c => '<div class="log-item"><b>' + h(TYPE_LABEL[c.type] || c.type) + ':</b> ' + h(c.statement) +
@@ -1248,7 +1248,7 @@
   // Rendering helpers
   // ---------------------------------------------------------------------------
   function actorBar(personaId, text) {
-    const p = personaId === 'system' ? { name: 'System', role: 'Plain code, no model calls', initials: '{ }' } : PERSONA[personaId];
+    const p = personaId === 'system' ? { name: 'System', role: state.aiMode === 'ai' ? 'Plain code; every AI proposal is re-checked by code' : 'Plain code, no model calls', initials: '{ }' } : PERSONA[personaId];
     return '<div class="actor"><div class="avatar">' + h(p.initials) + '</div><div>Acting as <b>' + h(p.name) + '</b> · ' + h(p.role) + '</div><div class="hint" style="margin-left:auto">' + text + '</div></div>';
   }
 

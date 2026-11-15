@@ -108,7 +108,7 @@
   <tr><td>Accounts</td><td>Supabase Auth sign-in; six public demo accounts with one-click buttons; account menu with switch and sign out; session refresh; local mode when the database is unreachable.</td></tr>
   <tr><td>Connect</td><td>Paste or upload Markdown, text, CSV and JSON; chat exports including Slack; CSV column mapping for unfamiliar headers; public GitHub import (README plus 20 issues and PRs); access tag per source; masking of keys, tokens, passwords, emails and phone numbers on import; Meridian and Lumen samples.</td></tr>
   <tr><td>Reconstruct</td><td>Passages that keep source, position, author and date; rule-based extraction of 10 claim types; AI extraction with rationale, owners and deadlines; injection quarantine; ownership inferred from commit counts (numbers shown); rules-vs-AI comparison; review cap of 60; rejections survive a re-run; timeline.</td></tr>
-  <tr><td>Verify</td><td>Quote match (exact, fuzzy sliding windows), exact-token guard, rules support check, AI evidence check; Quote guard lab; <b>Plant a wrong claim</b>; leak tests (44 quote mutations, canary scan, differential test, gap shape, planted injection); database probes with each account's token; benchmark.</td></tr>
+  <tr><td>Verify</td><td>Quote match (exact, fuzzy sliding windows), exact-token guard, rules support check, AI evidence check; Quote guard lab; <b>Plant a wrong claim</b>; leak tests (44 quote mutations, 63 with AI claims, canary scan, differential test, gap shape, planted injection); database probes with each account's token; benchmark.</td></tr>
   <tr><td>Review</td><td>Random sample before bulk approval; bulk approval only for low-risk Sourced claims; AI-flagged claims held for a person; conflicts side by side; stale-fact hazards; leaver disputes; guided interview sent to the leaver's account; sudden-exit answers by the reviewer; view-as every reader; publish gate (9 checks); quality report; fast-forward that stops at the gate.</td></tr>
   <tr><td>Handover</td><td>Per-reader plan (ownership, first-week actions, risks, decisions, timeline); gap rows identical whether missing or hidden; request access (only the reviewer sees the real reason); acknowledgements; immutable versions with SHA-256 hash and retraction; audit log.</td></tr>
   <tr><td>Reader and leaver pages</td><td>Reader page served only from Postgres; ten-attack <b>Try to break in</b> panel; the leaver's exit-interview page.</td></tr>
@@ -137,7 +137,7 @@
 <div class="kpis">
   <div class="box"><span class="num">20 / 20</span><small>engine tests pass</small></div>
   <div class="box"><span class="num">49 / 49</span><small>live security probes (real tokens)</small></div>
-  <div class="box"><span class="num">0</span><small>false accepts in 44 quote mutations</small></div>
+  <div class="box"><span class="num">0</span><small>false accepts in 44 quote mutations (63 with AI claims)</small></div>
   <div class="box"><span class="num">10 / 10</span><small>break-in attempts blocked (Meera)</small></div>
 </div>
 <table>

@@ -4,6 +4,7 @@
   "private": true,
   "description": "Baton: verifiable knowledge handover (CodersInPune Hackathon, Team Cortex)",
   "scripts": {
+    "start": "python -m http.server 3200",
     "test": "node --test tests/engine.test.js",
     "test:security": "node tests/rls.probe.mjs"
   },

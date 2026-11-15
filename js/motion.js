@@ -97,13 +97,19 @@
         start: 'top 92%', once: true,
         onEnter: batch => gsap.to(batch, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08, overwrite: true })
       });
-      gsap.from('.dock-section', {
-        autoAlpha: 0, y: 40, duration: 0.9,
-        scrollTrigger: { trigger: '.dock-section', start: 'top 88%', once: true }
-      });
       // Safety net: never leave a reveal hidden if a trigger cannot fire.
       setTimeout(() => gsap.set('.how-step', { autoAlpha: 1, y: 0, overwrite: false }), 4000);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Library entrance
+  // ---------------------------------------------------------------------------
+  function libraryIn() {
+    if (!motionOK()) return;
+    const tl = gsap.timeline();
+    tl.fromTo('#libraryView .library-head > *', { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.55, stagger: 0.07, clearProps: 'opacity,visibility,transform' }, 0)
+      .fromTo('#dockSection', { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.65, clearProps: 'opacity,visibility,transform' }, 0.1);
   }
 
   // ---------------------------------------------------------------------------
@@ -176,9 +182,16 @@
       if (window.ScrollTrigger) ScrollTrigger.refresh();
       if (!entered) return;
       if (view === 'home') landingIntro();
+      else if (view === 'library') libraryIn();
       else if (view === 'spec') dossierIn();
     }
   };
   // First paint: app.js has already routed once before this file loaded.
-  window.BatonMotion.afterRoute((location.hash || '').indexOf('#/studio') === 0 ? 'studio' : (location.hash || '').indexOf('#/spec') === 0 ? 'spec' : 'home', true);
+  window.BatonMotion.afterRoute(
+    (location.hash || '').indexOf('#/studio') === 0 ? 'studio' :
+    (location.hash || '').indexOf('#/spec') === 0 ? 'spec' :
+    (location.hash || '').indexOf('#/library') === 0 ? 'library' :
+    'home',
+    true
+  );
 })();

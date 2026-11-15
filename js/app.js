@@ -5,6 +5,7 @@
 (function () {
   'use strict';
   const landingEl = document.getElementById('landing');
+  const libraryEl = document.getElementById('libraryView');
   const studioEl = document.getElementById('studio');
   const detailEl = document.getElementById('detail');
   const accountEl = document.getElementById('accountView');
@@ -14,12 +15,19 @@
 
   function parse() {
     const parts = (location.hash || '#/').replace(/^#\/?/, '').split('/');
-    const v = parts[0] === 'studio' ? 'studio' : parts[0] === 'spec' ? 'spec' : parts[0] === 'login' ? 'login' : parts[0] === 'me' ? 'me' : 'home';
+    const v = parts[0] === 'studio' ? 'studio'
+            : parts[0] === 'spec' ? 'spec'
+            : parts[0] === 'login' ? 'login'
+            : parts[0] === 'me' ? 'me'
+            : parts[0] === 'library' ? 'library'
+            : 'home';
     return { view: v, arg: parts[1] };
   }
 
   function show(view) {
+    const libEl = document.getElementById('libraryView') || libraryEl;
     landingEl.classList.toggle('hide', view !== 'home');
+    if (libEl) libEl.classList.toggle('show', view === 'library');
     studioEl.classList.toggle('show', view === 'studio');
     detailEl.classList.toggle('show', view === 'spec');
     accountEl.classList.toggle('show', view === 'login' || view === 'me');
@@ -62,9 +70,12 @@
       renderDossier(r.arg || 'meridian');
       show('spec');
       toTop();
+    } else if (r.view === 'library') {
+      show('library');
+      if (typeof renderDock === 'function') renderDock();
+      if (changed) toTop();
     } else {
       show('home');
-      renderDock();
       if (changed) toTop();
     }
   }

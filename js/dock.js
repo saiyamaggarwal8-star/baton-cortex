@@ -371,8 +371,10 @@ dockSection.addEventListener('wheel', e => {
 // Keyboard: arrows step through files on the workspace view, Enter opens, Escape goes back.
 window.addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('input, textarea, select, [contenteditable], dialog')) return;
-  if (!landing.classList.contains('hide')) {
-    const dockVisible = dockSection.getBoundingClientRect().top < window.innerHeight;
+  const libraryView = document.getElementById('libraryView');
+  const isLibraryActive = libraryView && libraryView.classList.contains('show');
+  if (isLibraryActive || !landing.classList.contains('hide')) {
+    const dockVisible = isLibraryActive || (dockSection.getBoundingClientRect().top < window.innerHeight);
     if (!dockVisible) return;
     if (e.key === 'ArrowUp') { e.preventDefault(); setActive(currentHoverIndex - 1); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); setActive(currentHoverIndex + 1); }
@@ -444,7 +446,7 @@ function openProjectDossier(projectId, sourceEl) {
   if (sourceEl && 'startViewTransition' in document) sourceEl.style.viewTransitionName = 'dossier-hero';
   location.hash = '#/spec/' + projectId;
 }
-function closeProjectDossier() { location.hash = '#/'; }
+function closeProjectDossier() { location.hash = '#/library'; }
 
 document.getElementById('backBtn').addEventListener('click', closeProjectDossier);
 

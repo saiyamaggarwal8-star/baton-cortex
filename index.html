@@ -8,13 +8,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
-<link rel="stylesheet" href="css/base.css?v=12">
+<link rel="stylesheet" href="css/base.css?v=25">
 <link rel="stylesheet" href="css/studio.css?v=10">
-<link rel="stylesheet" href="css/theme.css?v=19">
+<link rel="stylesheet" href="css/theme.css?v=25">
 <link rel="stylesheet" href="css/account.css?v=4">
 <link rel="stylesheet" href="css/circular-carousel.css?v=1">
 <link rel="stylesheet" href="vendor/lenis.css">
-<link rel="stylesheet" href="css/motion.css?v=10">
+<link rel="stylesheet" href="css/motion.css?v=25">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23F28C38'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-family='Arial' font-weight='900' font-size='32' fill='%23192720'%3Eb.%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -29,6 +29,7 @@
  </a>
  <nav class="topnav" aria-label="Main">
    <a href="#/" data-nav="home">Workspace</a>
+   <a href="#/library" data-nav="library">Library</a>
    <a href="#/studio/connect" data-nav="studio">Handover Studio</a>
    <a href="#/spec/meridian" data-nav="spec">Product Specs</a>
  </nav>
@@ -77,37 +78,59 @@
    <div class="how-step"><span class="how-num">05 · HANDOVER</span><b>Day-one plan</b><span>Per-reader plan with receipts. Hidden and missing items look identical.</span></div>
  </div>
 
- <!-- =========================================================================
-      CASCADING 3D FILE DOCK (PLACED DIRECTLY BENEATH THE 2 MENUS)
-      ========================================================================= -->
- <section class="dock-section" id="dockSection">
-   <div class="dock-topbar">
-     <div class="dock-badge">
-       <span class="dock-badge-pulse"></span>
-      <span>BATON // HANDOVER FILES</span>
-     </div>
-     <div class="dock-hint">
-       <span>Hover, scroll or use ↑ ↓ to lift a file · Meridian is the working sample, the others are illustrative</span>
-     </div>
-     <div class="dock-counter" id="dockCounter" aria-live="polite">06 / 08 · WORKING SAMPLE</div>
-   </div>
+  <div class="landing-library-banner">
+    <div class="llb-left">
+      <div class="llb-badge">HANDOVER ARCHIVE · 8 PROJECTS</div>
+      <h3>Handover Library</h3>
+      <p>Browse live and illustrative handover ledgers across 8 engineering and product domains.</p>
+    </div>
+    <a class="btn btn-primary btn-lg" href="#/library">Open Handover Library &rarr;</a>
+  </div>
+</section>
 
-   <!-- 3D cascading handover files (built once by js/dock.js, animated with GSAP) -->
-   <div class="dock-stage" id="dockStage">
-     <!-- Rendered dynamically by JavaScript with physics & full PRD linkage -->
-   </div>
+<!-- =========================================================================
+     HANDOVER LIBRARY (DEDICATED PANEL ACCESSIBLE FROM TOP MENU)
+     ========================================================================= -->
+<section class="library-view" id="libraryView" aria-label="Library">
+  <div class="library-head">
+    <div>
+      <div class="eyebrow">HANDOVER ARCHIVE &amp; PROJECT LEDGERS</div>
+      <h1 class="library-title">Handover Library<span style="color:var(--tangerine)">.</span></h1>
+      <p class="library-lede">Explore live and illustrative project handover ledgers. Hover, scroll or use arrow keys to lift a file · click any card or &ldquo;View example&rdquo; to open its full dossier, evidence quotes, and product specifications.</p>
+    </div>
+    <div class="library-actions">
+      <a class="btn btn-primary btn-sm" href="#/studio/connect" data-start-sample>Try Meridian in Studio &rarr;</a>
+    </div>
+  </div>
 
-   <!-- Dock Bottom Navigation & Direct Project Selector -->
-   <div class="dock-footer">
-     <div class="dock-pill-selector" id="dockPillSelector">
-       <!-- Pills 1..8 populated by JS -->
-     </div>
-     <div class="dock-kb-help">
-       <span>[↑ / ↓] Step through files</span>
-       <span>[Enter] Open</span>
-     </div>
-   </div>
- </section>
+  <section class="dock-section" id="dockSection">
+    <div class="dock-topbar">
+      <div class="dock-badge">
+        <span class="dock-badge-pulse"></span>
+       <span>BATON // HANDOVER FILES</span>
+      </div>
+      <div class="dock-hint">
+        <span>Hover, scroll or use ↑ ↓ to lift a file · Meridian is the working sample, the others are illustrative</span>
+      </div>
+      <div class="dock-counter" id="dockCounter" aria-live="polite">06 / 08 · WORKING SAMPLE</div>
+    </div>
+
+    <!-- 3D cascading handover files (built once by js/dock.js, animated with GSAP) -->
+    <div class="dock-stage" id="dockStage">
+      <!-- Rendered dynamically by JavaScript with physics & full PRD linkage -->
+    </div>
+
+    <!-- Dock Bottom Navigation & Direct Project Selector -->
+    <div class="dock-footer">
+      <div class="dock-pill-selector" id="dockPillSelector">
+        <!-- Pills 1..8 populated by JS -->
+      </div>
+      <div class="dock-kb-help">
+        <span>[↑ / ↓] Step through files</span>
+        <span>[Enter] Open</span>
+      </div>
+    </div>
+  </section>
 </section>
 
 <!-- SIGN-IN AND THE READER'S OWN HANDOVER (js/account.js) -->
@@ -124,7 +147,7 @@
 <section class="detail" id="detail">
  <div class="detail-head">
    <div>
-     <button class="back-btn" id="backBtn">← Back to workspace</button>
+     <button class="back-btn" id="backBtn">← Back to library</button>
      <div class="eyebrow" style="margin-top:18px" id="detailEyebrow">PROJECT DOSSIER · PRD SPECIFICATION</div>
      <h1 class="detail-title" id="detailTitle">Baton<span style="color:var(--mint)">.</span> Knowledge, carried forward.</h1>
      <p class="detail-lede" id="detailLede">A verifiable knowledge-handover tool that rebuilds a project's current state from authorised sources as a ledger of small, checkable claims. This page expands the project file into its product, technical, security and delivery details.</p>
@@ -577,16 +600,16 @@
 <script src="js/engine.js?v=12"></script>
 <script src="js/sample.js?v=10"></script>
 <script src="js/benchmark.js?v=1"></script>
-<script src="js/dock.js?v=15"></script>
+<script src="js/dock.js?v=25"></script>
 <script src="js/config.js?v=3"></script>
 <script src="js/db.js?v=4"></script>
 <script src="js/ai.js?v=1"></script>
 <script src="js/studio.js?v=24"></script>
 <script src="js/account.js?v=2"></script>
-<script src="js/app.js?v=15"></script>
+<script src="js/app.js?v=25"></script>
 <script src="js/landing.js?v=10"></script>
 <script src="js/circular-carousel.js?v=2"></script>
 <script src="js/spec-carousel.js?v=1"></script>
-<script src="js/motion.js?v=14"></script>
+<script src="js/motion.js?v=25"></script>
 </body>
 </html>

@@ -47,7 +47,7 @@ a{color:var(--tangerine-ink)}
 :focus-visible{outline:2px solid var(--tangerine);outline-offset:2px}
 
 /* ---------- Type ---------- */
-.hero h1,.studio-head h1,.detail-title,.dock-title,.bento-title,.card h3,.kpi b,.pipe b,.stat b,.brandname,.info-card h3,.dossier-head h3{font-family:var(--display);letter-spacing:-.025em}
+.hero h1,.studio-head h1,.detail-title,.dock-title,.bento-title,.library-title,.card h3,.kpi b,.pipe b,.stat b,.brandname,.info-card h3,.dossier-head h3{font-family:var(--display);letter-spacing:-.025em}
 .eyebrow{color:var(--muted)}
 
 /* ---------- Header / footer ---------- */

@@ -60,9 +60,9 @@ Browser (static SPA, no build)                      Vercel Function            S
 │ js/ai.js      calls /api/ai         │          │ 4 evidence check  │       │  audit_log, ai_cache,     │
 └─────────────────────────────────────┘          │ 5 cache in PG     │       │  interview_*              │
                                                   └──────────────────┘       │ triggers: quote check,    │
-                                                     Claude via Vercel        │  publish gate, immutable  │
-                                                     AI Gateway (or the       │  versions, audit stamps   │
-                                                     Anthropic API)           └──────────────────────────┘
+                                                     GPT-OSS-120B via         │  publish gate, immutable  │
+                                                     Vercel AI Gateway (or    │  versions, audit stamps   │
+                                                     Claude via Anthropic)    └──────────────────────────┘
 ```
 
 - **Identity:** Supabase Auth issues a JWT; PostgREST verifies it; RLS helpers (`baton_ws()`, `baton_persona()`) read `auth.uid()` and the user's membership. The `x-baton-workspace` header only *selects* a workspace; it is honoured only for members.
@@ -95,7 +95,7 @@ Or run the whole stack locally with the Supabase CLI (Docker required): `supabas
 
 Deploy to Vercel (framework preset **Other**, no build command). `api/ai.js` picks its provider automatically:
 
-- **Vercel AI Gateway** (default): works with the deployment's built-in OIDC token; enable AI Gateway credits on the Vercel team.
+- **Vercel AI Gateway** (default): works with the deployment's built-in OIDC token. On the free credit (card verification, no charge) the function uses OpenAI's open-weights GPT-OSS-120B, then GPT-5-mini and Mistral Small; the free credit does not include Claude. The staff-only `probeModels` task reports which models an account may call.
 - **Anthropic API:** set `ANTHROPIC_API_KEY` in the project's environment variables.
 
 Optional: `BATON_MODEL`, `BATON_EFFORT`. When the AI is unavailable the Studio keeps the rule-based results and says why. On `localhost`, AI calls go to the deployed `/api/ai` (CORS allowed; your sign-in token is still required).

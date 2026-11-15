@@ -1,7 +1,7 @@
 # Baton: Round 3 (final) submission notes
 
 Draft text for the Round 3 form. Put it in your own words before submitting, and fill the marked
-placeholders: the AI numbers after the live run, and the teammates' contributions.
+placeholders: the teammates' contributions.
 
 - **Final working project link:** https://baton-cortex.vercel.app (demo accounts on the sign-in screen; password `baton-demo-2026`)
 - **Final source-code repository:** https://github.com/saiyamaggarwal8-star/baton-cortex
@@ -13,7 +13,7 @@ placeholders: the AI numbers after the live run, and the teammates' contribution
 2. **Source import.** Paste or upload Markdown, text, CSV and JSON. Chat exports, including Slack JSON. Task CSVs with any headers (column mapping). Public GitHub repos (README plus 20 issues and PRs). An access tag on every source.
 3. **Masking on import.** Keys, tokens, passwords (including "password was …"), PINs, emails and phone numbers are masked before anything is stored or sent to a model.
 4. **Rule-based extraction.** Ten claim types, each carrying its exact source sentence; ownership inferred from commit counts with the numbers shown.
-5. **AI extraction.** A server function asks Claude for decisions with their rationale, tasks with owners and deadlines, dependencies, risks, open questions and contacts. Every proposal must quote its source. The model has no tools and sees one source chunk per call, with links, HTML and instruction-like text removed.
+5. **AI extraction.** A server function asks an AI model (OpenAI's open-weights GPT-OSS-120B through the Vercel AI Gateway; Claude when an Anthropic key is set) for decisions with their rationale, tasks with owners and deadlines, dependencies, risks, open questions and contacts. Every proposal must quote its source. The model has no tools and sees one source chunk per call, with links, HTML and instruction-like text removed.
 6. **Code verification, twice.** Exact match, fuzzy sliding-window match, an exact-token guard (numbers, versions, paths, identifiers, negations) and a support check, in code. Postgres re-checks every extracted quote against the stored source on save.
 7. **AI evidence check.** A separate model call judges whether each quote supports its claim, and an AI audit finds contradictions and outdated decisions. Doubtful claims are held for a person: never bulk-approved, never decided by fast-forward, and the publish gate stays closed until a reviewer rules.
 8. **Plant a wrong claim.** A real quote with a wrong statement shows which checks catch it (the rules' word-overlap check alone accepts it).
@@ -46,7 +46,7 @@ placeholders: the AI numbers after the live run, and the teammates' contribution
   - server-stamped audit and interview rows.
 - **AI (`api/ai.js`, a Vercel Function):**
   1. Verifies the caller's Supabase token and staff role.
-  2. Calls Claude through a provider interface (Vercel AI Gateway or the Anthropic API) with JSON-schema output.
+  2. Calls the model through a provider interface: GPT-OSS-120B on the Vercel AI Gateway free credit (GPT-5-mini and Mistral Small as fallbacks), or Claude through the Anthropic API when a key is set.
   3. Runs the code verifier on every proposal.
   4. Makes a separate evidence-check call.
   5. Caches responses in Postgres by model, task and input.
@@ -57,7 +57,7 @@ placeholders: the AI numbers after the live run, and the teammates' contribution
 
 **The three named in Round 2:**
 1. **Real accounts and hardened permissions.** Supabase Auth with RLS reading the token, user-owned workspaces, and server-side quote and publish-gate checks. Reviewer sign-off is enforced by the database. The security tests run in CI on every push against a fresh database.
-2. **AI-assisted extraction and a guided interview.** Claude behind a provider interface with cached responses, code verification of every proposal, a separate AI evidence check and contradiction audit, and a ranked, cross-account exit interview. {{AI_STATUS}}
+2. **AI-assisted extraction and a guided interview.** An AI model behind a provider interface with cached responses, code verification of every proposal, a separate AI evidence check and contradiction audit, and a ranked, cross-account exit interview. Live on the deployed site: the Vercel AI Gateway free credit excludes Claude, so the demo runs GPT-OSS-120B, chosen by benchmark (48 of 49 facts vs 43 for GPT-5-mini). Adding an Anthropic key switches to Claude with no code change.
 3. **Quality report and held-out benchmark.** A scored quality report, plus answer keys for Meridian and the held-out Lumen project in four new export formats, with recall, refused AI proposals and evidence-check accuracy.
 
 **Also:**
@@ -77,8 +77,9 @@ placeholders: the AI numbers after the live run, and the teammates' contribution
 - **CI:** GitHub Actions runs the engine tests, the benchmark and the 36 probes on every push. The probes run against a fresh Supabase stack built from the migrations and seed.
 - **Benchmark:**
   - Rules: Meridian 21/24 facts, Lumen 15/25 (4/13 implicit). The rules evidence check is 14/20 with 6 false accepts.
-  - Rules + AI: Meridian {{AI_MERIDIAN}}, Lumen {{AI_LUMEN}}; AI evidence check {{AI_SUPPORT}}.
+  - Rules + AI (GPT-OSS-120B): Meridian 23/24, Lumen 25/25 (13/13 implicit); AI evidence check 20/20 with 0 false accepts. The code verifier refused 1 of 53 AI proposals (a quote that dropped a negation).
   - Stored fabrications: 0 by construction.
+- **Live AI:** Meridian +7 claims in 16 s, Lumen +17 in 22 s with the moved launch date flagged. The planted claim "Rohan owns the billing module" passed the quote check, token guard and rules support check, but the AI evidence check said "contradicted", so it was held and rejected.
 - **In-app:** 44 quote mutations with 0 false accepts, 0 canaries across 3 readers, a byte-identical differential test, the injection quarantined, and 10/10 break-in attempts blocked.
 - **End-to-end journeys** were tested locally and live:
   - Reviewer: load → reconstruct → verify → review → publish (26 claims, v1 with 25; Meera 23 rows, Rohan 16, Kavya 17, matching the in-app check).

@@ -102,10 +102,10 @@ Draft text for the Round 3 form. Put it in your own words before submitting.
 
 ## Team-member contributions
 
-- **Divyansh Somani (team leader):** role B in the Round 1 plan: backend, ingestion and the model layer.
-- **Saiyam Aggarwal:** role D in the Round 1 plan: verification, permissions and security. Built the product in Rounds 2 and 3.
-- **Kaustabh Chowdhury:** role A in the Round 1 plan: product, UX and frontend.
-- **Anushka Verma:** role C in the Round 1 plan: extraction, benchmark and demo data.
+- **Divyansh Somani (team leader):** Backend, source ingestion and the model layer.
+- **Saiyam Aggarwal:** Verification, permissions and security: the quote verifier, row-level security policies, team-isolated workspaces, leak tests and security probes. Assembled the full product.
+- **Kaustabh Chowdhury:** Product, UX and frontend.
+- **Anushka Verma:** Extraction, benchmark and demo data.
 
 ## AI tools and third-party code
 
